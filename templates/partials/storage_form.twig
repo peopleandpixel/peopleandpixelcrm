@@ -1,0 +1,29 @@
+<section>
+    <h2>{{ title|default('')|e }}</h2>
+    <form method="post" class="form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
+        {{ csrf_field()|raw }}
+        {% if item is defined and item.id %}
+            <input type="hidden" name="id" value="{{ (item.id)|int }}">
+        {% endif %}
+        <div class="form-row">
+            <label for="name">{{ __('Name')|e }} *</label>
+            <input type="text" id="name" name="name" value="{{ name|default(item.name|default(''))|e }}" required>
+        </div>
+        <div class="form-row">
+            <label for="qty">{{ __('Quantity')|e }}</label>
+            <input type="number" id="qty" name="qty" value="{{ qty|default(item.qty|default(0))|e }}">
+        </div>
+        <div class="form-row">
+            <label for="location">{{ __('Location')|e }}</label>
+            <input type="text" id="location" name="location" value="{{ location|default(item.location|default(''))|e }}">
+        </div>
+        <div class="form-row">
+            <label for="notes">{{ __('Notes')|e }}</label>
+            <textarea id="notes" name="notes" rows="3">{{ notes|default(item.notes|default(''))|e }}</textarea>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url('/storage') }}">{{ __('Cancel')|e }}</a>
+            <button class="btn" type="submit">{{ submit_label|default(__('Save')|e) }}</button>
+        </div>
+    </form>
+</section>

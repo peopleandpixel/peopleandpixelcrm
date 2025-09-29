@@ -1,0 +1,35 @@
+<section>
+    <h2>{{ title|default('')|e }}</h2>
+    <form method="post" class="ui form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
+        {{ csrf_field()|raw }}
+        {% if id is defined and id %}
+            <input type="hidden" name="id" value="{{ id|int }}">
+        {% endif %}
+        <div class="form-row">
+            <label for="name">{{ __('Name')|e }} *</label>
+            <input type="text" id="name" name="name" value="{{ name|default('')|e }}" required>
+        </div>
+        <div class="form-row">
+            <label for="company">{{ __('Company')|e }}</label>
+            <input type="text" id="company" name="company" value="{{ company|default('')|e }}">
+        </div>
+        <div class="form-row">
+            <label for="email">{{ __('Email')|e }}</label>
+            <input type="email" id="email" name="email" value="{{ email|default('')|e }}">
+        </div>
+        <div class="form-row">
+            <label for="phone">{{ __('Phone')|e }}</label>
+            <input type="text" id="phone" name="phone" value="{{ phone|default('')|e }}">
+        </div>
+        <div class="form-row">
+            <label for="notes">{{ __('Notes')|e }}</label>
+            <textarea id="notes" name="notes" rows="4">{{ notes|default('')|e }}</textarea>
+        </div>
+        <div class="form-actions">
+            <a class="ui red labeled icon button" href="{{ url('/contacts') }}"><i class="cancel icon"></i> {{ __('Cancel')|e }}</a>
+            <span class="ui right aligned">
+                <button class="ui green labeled icon button" type="submit"><i class="save icon"></i> {{ submit_label|default(__('Save')|e) }}</button>
+            </span>
+        </div>
+    </form>
+</section>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="{{ currentLang|default('en')|e }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ __('People & Pixel - Basic CRM')|e }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="canonical" href="{{ canonical_url() }}">
+    <!-- Fomantic UI CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.4/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.4/dist/semantic.min.js"></script>
+    <!-- Custom overrides (optional) -->
+    <link rel="stylesheet" href="{{ url('/style.css') }}">
+</head>
+<body>
+{% include 'partials/header.twig' %}
+<main id="main" class="ui container" tabindex="-1">
+    {% include 'partials/flashes.twig' %}
+    {% block content %}{% endblock %}
+</main>
+{% include 'partials/footer.twig' %}
+<!-- jQuery (required by Fomantic UI) -->
+<script>
+    $(function() {
+        // Initialize all Fomantic dropdowns
+        $('.ui.dropdown').dropdown();
+        // Language dropdown: when user selects a language, reload with ?lang=code
+        var $langDd = $('input[name="lang"]').closest('.ui.dropdown');
+        if ($langDd.length) {
+            // Apply onChange even if already initialized
+            $langDd.dropdown('setting', 'onChange', function(value) {
+                if (!value) return;
+                try {
+                    var url = new URL(window.location.href);
+                    url.searchParams.set('lang', value);
+                    window.location.href = url.toString();
+                } catch (e) {
+                    // Fallback for older browsers
+                    var loc = window.location;
+                    var query = loc.search ? loc.search.substring(1) : '';
+                    var params = new URLSearchParams(query);
+                    params.set('lang', value);
+                    var q = params.toString();
+                    window.location.href = loc.pathname + (q ? ('?' + q) : '');
+                }
+            });
+        }
+
+        // THEME: apply saved or preferred theme on load
+        var storageKey = 'pp.theme';
+        function getStoredTheme(){
+            try { return localStorage.getItem(storageKey); } catch(e){ return null; }
+        }
+        function storeTheme(t){ try { localStorage.setItem(storageKey, t); } catch(e){} }
+        function systemPrefersDark(){
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+        function applyTheme(theme){
+            var t = theme || 'light';
+            // set on :root (html)
+            document.documentElement.setAttribute('data-theme', t);
+            // also set on body for robustness
+            document.body.setAttribute('data-theme', t);
+            // update icon
+            var $btn = $('#theme-toggle');
+            if ($btn.length){
+                var $icon = $btn.find('i.icon');
+                $icon.removeClass('sun moon');
+                if (t === 'dark') { $icon.addClass('moon'); $btn.attr('aria-pressed','true').attr('title','Toggle theme'); }
+                else { $icon.addClass('sun'); $btn.attr('aria-pressed','false').attr('title','Toggle theme'); }
+            }
+        }
+        var initial = getStoredTheme();
+        if (!initial) { initial = systemPrefersDark() ? 'dark' : 'light'; }
+        applyTheme(initial);
+
+        // Toggle handler
+        $('#theme-toggle').on('click', function(ev){
+            ev.preventDefault();
+            var cur = document.documentElement.getAttribute('data-theme') || 'light';
+            var next = (cur === 'dark') ? 'light' : 'dark';
+            applyTheme(next);
+            storeTheme(next);
+            // announce for screen readers
+            try {
+                var live = document.getElementById('sr-live');
+                if (live) live.textContent = (next === 'dark') ? 'Dark theme enabled' : 'Light theme enabled';
+            } catch(e){}
+        });
+
+        // Also watch system preference changes if user hasn't chosen explicitly
+        if (!getStoredTheme() && window.matchMedia) {
+            var mq = window.matchMedia('(prefers-color-scheme: dark)');
+            mq.addEventListener ? mq.addEventListener('change', function(e){ applyTheme(e.matches ? 'dark' : 'light'); })
+                                : mq.addListener && mq.addListener(function(e){ applyTheme(e.matches ? 'dark' : 'light'); });
+        }
+    });
+</script>
+</body>
+</html>

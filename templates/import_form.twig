@@ -1,0 +1,35 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<h1>Data Import</h1>
+{% if error %}<div class="alert alert-error">{{ error|e }}</div>{% endif %}
+<form method="post" action="{{ url('/import') }}">
+  {{ csrf_field()|raw }}
+  <div class="field">
+    <label for="entity">Entity</label>
+    <select id="entity" name="entity" required>
+      {% for e in entities %}
+        <option value="{{ e|e }}" {% if old and old.entity==e %}selected{% endif %}>{{ e|e }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>Format</label>
+    <label><input type="radio" name="format" value="json" {% if not old or old.format!='csv' %}checked{% endif %}> JSON</label>
+    <label><input type="radio" name="format" value="csv" {% if old and old.format=='csv' %}checked{% endif %}> CSV</label>
+  </div>
+  <div class="field">
+    <label for="payload">Data (JSON array or CSV with header)</label>
+    <textarea id="payload" name="payload" rows="12" required>{{ old and old.payload ? old.payload : '' }}</textarea>
+  </div>
+  <div class="field">
+    <label><input type="checkbox" name="dry_run" value="1" {% if not old or old.dryRun %}checked{% endif %}> Dry-run (validate only, do not save)</label>
+  </div>
+  <div class="actions">
+    <button type="submit" class="btn">Validate Import</button>
+  </div>
+</form>
+<p class="mt">
+  Tip: You can export current data using the export endpoints, e.g.:<br>
+  <code>/export/contacts.json</code>, <code>/export/contacts.csv</code>
+</p>
+{% endblock %}

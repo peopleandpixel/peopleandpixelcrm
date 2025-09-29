@@ -1,0 +1,209 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Container;
+use App\Router;
+use App\Util\Auth;
+use App\Controller\HomeController;
+use App\Controller\InstallerController;
+use App\Controller\ContactsController;
+use App\Controller\TimesController;
+use App\Controller\TasksController;
+use App\Controller\EmployeesController;
+use App\Controller\CandidatesController;
+use App\Controller\PaymentsController;
+use App\Controller\StorageController;
+use App\Controller\ExportController;
+use App\Controller\ImportController;
+use App\Controller\UploadController;
+
+/**
+ * Register application routes.
+ */
+return static function (Container $container, Router $router): void {
+    // 404 handler
+    $router->setNotFoundHandler(function(string $path, string $method) {
+        http_response_code(404);
+        render('errors/404', ['path' => $path, 'method' => $method]);
+    });
+
+    // 405 handler
+    $router->setMethodNotAllowedHandler(function(string $path, array $allowed) {
+        http_response_code(405);
+        render('errors/405', ['path' => $path, 'allowed' => $allowed]);
+    });
+
+    // Installer
+    $router->get('/install', function() use ($container) {
+        InstallerController::form($container->get('config'));
+    });
+    $router->post('/install', function() use ($container) {
+        InstallerController::submit($container->get('config'));
+    });
+
+    // Home
+    $router->get('/', [$container->get('homeController') ?? HomeController::class, 'index']);
+
+    // Auth
+    $router->get('/login', function() {
+        $error = $_GET['error'] ?? null;
+        $return = isset($_GET['return']) ? (string)$_GET['return'] : '/';
+        render('login', ['error' => is_string($error) ? $error : null, 'return' => $return]);
+    });
+    $router->post('/login', function() use ($container) {
+        $config = $container->get('config');
+        $username = isset($_POST['username']) ? (string)$_POST['username'] : '';
+        $password = isset($_POST['password']) ? (string)$_POST['password'] : '';
+        $return = isset($_POST['return']) ? (string)$_POST['return'] : '/';
+        if (Auth::login($config, $username, $password)) {
+            redirect($return ?: '/');
+        }
+        $q = http_build_query(['error' => __('Invalid username or password'), 'return' => $return]);
+        redirect('/login?' . $q);
+    });
+    $router->get('/logout', function() {
+        Auth::logout();
+        redirect('/');
+    });
+
+    // Generic upload endpoint (for AJAX file uploads)
+    $router->post('/upload', [$container->get('uploadController') ?? UploadController::class, 'handle']);
+
+    // Contacts
+    $router->get('/contacts', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) {
+            send_list_cache_headers([$cfg->jsonPath('contacts.json')], 60);
+        }
+        ($container->get('contactsController'))->list();
+    });
+    $router->get('/contacts/view', [$container->get('contactsController'), 'view']);
+    $router->get('/contacts/new', [$container->get('contactsController'), 'newForm']);
+    $router->post('/contacts/new', [$container->get('contactsController'), 'create']);
+    $router->get('/contacts/edit', [$container->get('contactsController'), 'editForm']);
+    $router->post('/contacts/edit', [$container->get('contactsController'), 'update']);
+    $router->post('/contacts/delete', [$container->get('contactsController'), 'delete']);
+
+    // Times
+    $router->get('/times', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) {
+            send_list_cache_headers([$cfg->jsonPath('times.json'), $cfg->jsonPath('contacts.json'), $cfg->jsonPath('employees.json')], 60);
+        }
+        ($container->get('timesController'))->list();
+    });
+    $router->get('/times/new', [$container->get('timesController'), 'newForm']);
+    $router->get('/times/view', [$container->get('timesController'), 'view']);
+    $router->post('/times/new', [$container->get('timesController'), 'create']);
+
+    // Tasks
+    $router->get('/tasks', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) {
+            send_list_cache_headers([$cfg->jsonPath('tasks.json'), $cfg->jsonPath('contacts.json'), $cfg->jsonPath('employees.json')], 60);
+        }
+        ($container->get('tasksController'))->list();
+    });
+    $router->get('/tasks/new', [$container->get('tasksController'), 'newForm']);
+    $router->get('/tasks/view', [$container->get('tasksController'), 'view']);
+    $router->post('/tasks/new', [$container->get('tasksController'), 'create']);
+
+    // Employees
+    $router->get('/employees', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) {
+            send_list_cache_headers([$cfg->jsonPath('employees.json')], 120);
+        }
+        ($container->get('employeesController'))->list();
+    });
+    $router->get('/employees/view', [$container->get('employeesController'), 'view']);
+    $router->get('/employees/new', [$container->get('employeesController'), 'newForm']);
+    $router->post('/employees/new', [$container->get('employeesController'), 'create']);
+
+    // Candidates
+    $router->get('/candidates', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) { send_list_cache_headers([$cfg->jsonPath('candidates.json')], 120); }
+        ($container->get('candidatesController'))->list();
+    });
+    $router->get('/candidates/view', [$container->get('candidatesController'), 'view']);
+    $router->get('/candidates/new', [$container->get('candidatesController'), 'newForm']);
+    $router->post('/candidates/new', [$container->get('candidatesController'), 'create']);
+
+    // Payments
+    $router->get('/payments', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) { send_list_cache_headers([$cfg->jsonPath('payments.json')], 120); }
+        ($container->get('paymentsController'))->list();
+    });
+    $router->get('/payments/export.csv', [$container->get('paymentsController'), 'exportCsv']);
+    $router->get('/payments/new', [$container->get('paymentsController'), 'newForm']);
+    $router->get('/payments/view', [$container->get('paymentsController'), 'view']);
+    $router->post('/payments/new', [$container->get('paymentsController'), 'create']);
+
+    // Storage
+    $router->get('/storage', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) { send_list_cache_headers([$cfg->jsonPath('storage.json')], 60); }
+        ($container->get('storageController'))->list();
+    });
+    $router->get('/storage/new', [$container->get('storageController'), 'newForm']);
+    $router->get('/storage/view', [$container->get('storageController'), 'view']);
+    $router->post('/storage/new', function() use ($container) { ($container->get('storageController'))->create($container->get('storageStore')); });
+    $router->post('/storage/adjust', function() use ($container) { ($container->get('storageController'))->adjust($container->get('storageStore'), $container->get('storage_adjustmentsStore')); });
+    $router->get('/storage/history', function() use ($container) { $cfg = $container->get('config'); if (!$cfg->useDb()) { send_list_cache_headers([$cfg->jsonPath('storage.json'), $cfg->jsonPath('storage_adjustments.json')], 60); } ($container->get('storageController'))->history($container->get('storageStore'), $container->get('storage_adjustmentsStore')); });
+
+    // Edit & Delete
+    $router->get('/times/edit', [$container->get('timesController'), 'editForm']);
+    $router->post('/times/edit', [$container->get('timesController'), 'update']);
+    $router->post('/times/delete', [$container->get('timesController'), 'delete']);
+
+    $router->get('/tasks/edit', [$container->get('tasksController'), 'editForm']);
+    $router->post('/tasks/edit', [$container->get('tasksController'), 'update']);
+    $router->post('/tasks/delete', [$container->get('tasksController'), 'delete']);
+
+    $router->get('/employees/edit', [$container->get('employeesController'), 'editForm']);
+    $router->post('/employees/edit', [$container->get('employeesController'), 'update']);
+    $router->post('/employees/delete', [$container->get('employeesController'), 'delete']);
+
+    $router->get('/candidates/edit', [$container->get('candidatesController'), 'editForm']);
+    $router->post('/candidates/edit', [$container->get('candidatesController'), 'update']);
+    $router->post('/candidates/delete', [$container->get('candidatesController'), 'delete']);
+
+    $router->get('/payments/edit', [$container->get('paymentsController'), 'editForm']);
+    $router->post('/payments/edit', [$container->get('paymentsController'), 'update']);
+    $router->post('/payments/delete', [$container->get('paymentsController'), 'delete']);
+
+    $router->get('/storage/edit', [$container->get('storageController'), 'editForm']);
+    $router->post('/storage/edit', [$container->get('storageController'), 'update']);
+    $router->post('/storage/delete', [$container->get('storageController'), 'delete']);
+
+    // Export
+    $router->get('/export/contacts.json', function() use ($container) { ExportController::json($container, 'contacts'); });
+    $router->get('/export/contacts.csv', function() use ($container) { ExportController::csv($container, 'contacts'); });
+    $router->get('/export/times.json', function() use ($container) { ExportController::json($container, 'times'); });
+    $router->get('/export/times.csv', function() use ($container) { ExportController::csv($container, 'times'); });
+    $router->get('/export/tasks.json', function() use ($container) { ExportController::json($container, 'tasks'); });
+    $router->get('/export/tasks.csv', function() use ($container) { ExportController::csv($container, 'tasks'); });
+    $router->get('/export/employees.json', function() use ($container) { ExportController::json($container, 'employees'); });
+    $router->get('/export/employees.csv', function() use ($container) { ExportController::csv($container, 'employees'); });
+    $router->get('/export/candidates.json', function() use ($container) { ExportController::json($container, 'candidates'); });
+    $router->get('/export/candidates.csv', function() use ($container) { ExportController::csv($container, 'candidates'); });
+    $router->get('/export/payments.json', function() use ($container) { ExportController::json($container, 'payments'); });
+    $router->get('/export/payments.csv', function() use ($container) { ExportController::csv($container, 'payments'); });
+    $router->get('/export/storage.json', function() use ($container) { ExportController::json($container, 'storage'); });
+    $router->get('/export/storage.csv', function() use ($container) { ExportController::csv($container, 'storage'); });
+
+    // Import
+    $router->get('/import', [ImportController::class, 'form']);
+    $router->post('/import', function() use ($container) { ImportController::submit($container); });
+
+    // Admin - Users management
+    $router->get('/admin/users', [$container->get('usersController'), 'list']);
+    $router->get('/admin/users/new', [$container->get('usersController'), 'newForm']);
+    $router->post('/admin/users/new', [$container->get('usersController'), 'create']);
+    $router->get('/admin/users/edit', [$container->get('usersController'), 'editForm']);
+    $router->post('/admin/users/edit', [$container->get('usersController'), 'update']);
+    $router->post('/admin/users/delete', [$container->get('usersController'), 'delete']);
+};

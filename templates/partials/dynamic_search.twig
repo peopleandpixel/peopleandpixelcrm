@@ -1,0 +1,26 @@
+{# Generic dynamic search form.
+Expects:
+- path: action URL (default current_path())
+- q: current query string
+- sort: current sort field (optional)
+- dir: current sort direction (asc|desc) (optional)
+- placeholder: optional placeholder text
+- button_label: optional submit button label
+- extra: optional map of extra hidden inputs (e.g., per/page)
+- classes: optional classes for the form
+#}
+<form method="get" action="{{ (path|default(current_path()))|e }}" class="{{ classes|default('ui form inline')|e }}">
+    <label for="q" class="visually-hidden">{{ __('Search')|e }}</label>
+    <div class="ui icon input">
+        <input type="search" id="q" name="q" value="{{ q|default('')|e }}" placeholder="{{ (placeholder|default(__('Search…')))|e }}">
+        <i class="search icon"></i>
+    </div>
+    {% if sort is defined %}<input type="hidden" name="sort" value="{{ sort|e }}">{% endif %}
+    {% if dir is defined %}<input type="hidden" name="dir" value="{{ dir|e }}">{% endif %}
+    {% if extra is defined and extra %}
+        {% for k,v in extra %}
+            <input type="hidden" name="{{ k|e }}" value="{{ v|e }}">
+        {% endfor %}
+    {% endif %}
+    <button class="ui button" type="submit">{{ button_label|default(__('Search'))|e }}</button>
+</form>

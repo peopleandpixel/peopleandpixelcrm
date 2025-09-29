@@ -1,0 +1,52 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+    <div class="section-header">
+        <h2>{{ __('Working Times')|e }}</h2>
+        <div class="actions-right">
+            {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('date'), dir: dir|default('desc'), classes: 'inline' } %}
+            <a class="ui button" href="{{ url('/times/new') }}">{{ __('+ Add Time Entry')|e }}</a>
+        </div>
+    </div>
+
+    {% set totalsByContact = totalsByContact|default({}) %}
+    {% set totalsByMonth = totalsByMonth|default({}) %}
+    {% if totalsByContact %}
+        <div class="grid two-cols">
+            <div>
+                <h3>{{ __('Totals by Contact')|e }}</h3>
+                <table class="table table-compact">
+                    <thead><tr><th>{{ __('Contact')|e }}</th><th>{{ __('Hours')|e }}</th></tr></thead>
+                    <tbody>
+                    {% for name, h in totalsByContact %}
+                        <tr><td>{{ name|e }}</td><td>{{ h is not null ? h|number_format(2, '.', ',') : '' }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h3>{{ __('Totals by Month')|e }}</h3>
+                <table class="table table-compact">
+                    <thead><tr><th>{{ __('Month')|e }}</th><th>{{ __('Hours')|e }}</th></tr></thead>
+                    <tbody>
+                    {% for ym, h in totalsByMonth %}
+                        <tr><td>{{ ym|e }}</td><td>{{ h is not null ? h|number_format(2, '.', ',') : '' }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    {% include 'partials/dynamic_list.twig' with {
+        title: '',
+        items: times|default([]),
+        columns: columns,
+        actions: { edit_url: url('/times/edit'), delete_url: url('/times/delete'), id_field: 'id' }
+    } %}
+    <div class="list-footer">
+        {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
+        {{ paginate(total|default(times|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('date'), dir: dir|default('desc')}))|raw }}
+    </div>
+</section>
+{% endblock %}

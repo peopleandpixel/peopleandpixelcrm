@@ -1,0 +1,13 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% set isEdit = edit is defined and edit %}
+{% set data = isEdit ? (employee|default({})) : ({}) %}
+{% include 'partials/dynamic_form.twig' with {
+    title: isEdit ? __('Edit Employee') : __('Add Employee'),
+    submit_label: __('Save Employee'),
+    form_action: isEdit ? url('/employees/edit') : url('/employees/new'),
+    fields: fields,
+    data: data,
+    cancel_url: cancel_url|default(url('/employees'))
+} %}
+{% endblock %}

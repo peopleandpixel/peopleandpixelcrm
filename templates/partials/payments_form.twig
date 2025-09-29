@@ -1,0 +1,37 @@
+<section>
+    <h2>{{ title|default('')|e }}</h2>
+    <form method="post" class="form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
+        {{ csrf_field()|raw }}
+        {% if payment is defined and payment.id %}
+            <input type="hidden" name="id" value="{{ (payment.id)|int }}">
+        {% endif %}
+        <div class="form-row">
+            <label for="date">{{ __('Date')|e }} *</label>
+            <input type="date" id="date" name="date" value="{{ date|default(payment.date|default(''))|e }}" required>
+        </div>
+        <div class="form-row">
+            <label for="contact_id">{{ __('Contact')|e }}</label>
+            <select id="contact_id" name="contact_id">
+                <option value="0">{{ __('Select contact…')|e }}</option>
+                {% for c in contacts|default([]) %}
+                    {% set selId = contact_id|default(payment.contact_id|default(0)) %}
+                    <option value="{{ (c.id|default(0))|int }}" {{ (selId|int) == (c.id|default(0)) ? 'selected' : '' }}>
+                        {{ (c.name|default(''))|e }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="amount">{{ __('Amount')|e }} *</label>
+            <input type="number" id="amount" name="amount" step="0.01" value="{{ amount|default(payment.amount|default(''))|e }}" required>
+        </div>
+        <div class="form-row">
+            <label for="description">{{ __('Description')|e }}</label>
+            <input type="text" id="description" name="description" value="{{ description|default(payment.description|default(''))|e }}">
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url('/payments') }}">{{ __('Cancel')|e }}</a>
+            <button class="btn" type="submit">{{ submit_label|default(__('Save Payment')|e) }}</button>
+        </div>
+    </form>
+</section>

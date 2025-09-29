@@ -1,0 +1,22 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% set isEdit = edit is defined and edit %}
+{% set data = {
+    id: (id|default(task.id|default(0)))|int,
+    contact_id: contact_id|default(contactId|default(task.contact_id|default(''))),
+    employee_id: employee_id|default(employeeId|default(task.employee_id|default(''))),
+    title: title|default(task.title|default('')),
+    due_date: due_date|default(task.due_date|default('')),
+    done_date: done_date|default(task.done_date|default('')),
+    status: status|default(task.status|default('open')),
+    notes: notes|default(task.notes|default(''))
+} %}
+{% include 'partials/dynamic_form.twig' with {
+    title: isEdit ? __('Edit Task') : __('Add Task'),
+    submit_label: __('Save Task'),
+    form_action: isEdit ? url('/tasks/edit') : url('/tasks/new'),
+    fields: fields,
+    data: data,
+    cancel_url: cancel_url|default(url('/tasks'))
+} %}
+{% endblock %}

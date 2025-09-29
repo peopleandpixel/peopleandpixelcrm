@@ -1,0 +1,25 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% if fields is defined and fields %}
+    {% set data = {
+        id: (id|default(contact.id|default(0)))|int,
+        name: name|default(contact.name|default('')),
+        company: company|default(contact.company|default('')),
+        birthdate: birthdate|default(contact.birthdate|default('')),
+        picture: picture|default(contact.picture|default('')),
+        phones_text: phones_text|default(contact.phones_text|default('')),
+        emails_text: emails_text|default(contact.emails_text|default('')),
+        websites_text: websites_text|default(contact.websites_text|default('')),
+        socials_text: socials_text|default(contact.socials_text|default('')),
+        notes: notes|default(contact.notes|default(''))
+    } %}
+    {% include 'partials/dynamic_form.twig' with {
+        title: __('Edit Contact'),
+        submit_label: __('Save Changes'),
+        form_action: url('/contacts/edit'),
+        fields: fields,
+        data: data,
+        cancel_url: cancel_url|default(url('/contacts'))
+    } %}
+    {% endif %}
+{% endblock %}

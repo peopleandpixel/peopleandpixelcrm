@@ -1,0 +1,39 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<h1>Import Result</h1>
+<p>
+  <strong>Entity:</strong> {{ entity|e }}<br>
+  <strong>Format:</strong> {{ format|e }}<br>
+  <strong>Dry-run:</strong> {{ dry_run ? 'Yes' : 'No' }}
+</p>
+<p>
+  <strong>Total rows:</strong> {{ total|int }}<br>
+  <strong>Valid:</strong> {{ valid_count|int }}<br>
+  <strong>Invalid:</strong> {{ invalid_count|int }}
+</p>
+{% if invalid_count > 0 %}
+  <h2>Errors</h2>
+  <ol>
+  {% for item in invalid %}
+    <li>
+      <div><strong>Row #{{ (item.index + 1)|int }}</strong></div>
+      <ul>
+        {% for field, errs in item.errors %}
+          {% for err in errs %}
+            {% set msg = (attribute(err, 'key') is defined) ? __(err.key, attribute(err, 'params') is defined ? err.params : {}) : ((attribute(err, 'code') is defined) ? __('validation.' ~ err.code) : (attribute(err, 'message') is defined ? err.message : err)) %}
+            <li>{{ field|e }}: {{ msg|e }} ({{ err.code|e }})</li>
+          {% endfor %}
+        {% endfor %}
+      </ul>
+      <details>
+        <summary>Row data</summary>
+        <pre>{{ item.data|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+      </details>
+    </li>
+  {% endfor %}
+  </ol>
+{% else %}
+  <div class="alert alert-success">Validation passed. {% if dry_run %}You can go back and uncheck dry-run to import.{% else %}Data imported successfully.{% endif %}</div>
+{% endif %}
+<p><a href="{{ url('/import') }}" class="btn">Back to Import</a></p>
+{% endblock %}

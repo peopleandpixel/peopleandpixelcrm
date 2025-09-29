@@ -1,0 +1,31 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+    <div class="section-header">
+        <h2>{{ __('Tasks')|e }}</h2>
+        <div class="ui secondary menu">
+            {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('due_date'), dir: dir|default('asc'), classes: 'inline' } %}
+            <div class="right menu">
+            <a class="ui green icon button" href="{{ url('/tasks/new') }}"><i class="plus icon"></i> {{ __('Add Task')|e }}</a>
+            </div>
+        </div>
+    </div>
+    {% if counts is defined and counts %}
+        <p>
+            <strong>{{ __('Open')|e }}:</strong> {{ (counts.open|default(0))|int }}
+            &nbsp;|&nbsp;
+            <strong>{{ __('Done')|e }}:</strong> {{ (counts.done|default(0))|int }}
+        </p>
+    {% endif %}
+    {% include 'partials/dynamic_list.twig' with {
+        title: '',
+        items: tasks|default([]),
+        columns: columns,
+        actions: { edit_url: url('/tasks/edit'), delete_url: url('/tasks/delete'), id_field: 'id' }
+    } %}
+    <div class="list-footer">
+        {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
+        {{ paginate(total|default(tasks|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('due_date'), dir: dir|default('asc')}))|raw }}
+    </div>
+</section>
+{% endblock %}

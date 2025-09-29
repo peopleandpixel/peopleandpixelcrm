@@ -1,0 +1,59 @@
+{% extends 'layout.twig' %}
+{% block content %}
+    {%
+    set array = {
+        'contacts': {
+            'title': __('Contacts'),
+            'description': __('Add and manage your contacts with essential details.')
+        },
+        'times': {
+            'title': __('Working Times'),
+            'description': __('Track work you have done for contacts, by date and hours.')
+        },
+        'tasks' : {
+            'title': __('Tasks'),
+            'description': __('Create and track tasks that can be assigned to contacts.')
+        },
+        'employees' : {
+            'title': __('Employees'),
+            'description': __('Maintain your team roster with roles, salary, and hire dates.')
+        },
+        'candidates' : {
+            'title': __('Recruiting'),
+            'description': __('Track candidates, positions, and hiring status.')
+        },
+        'payments' : {
+            'title': __('Payments'),
+            'description': __('Record income and expenses for simple accounting.')
+        },
+        'storage' : {
+            'title': __('Storage'),
+            'description': __('Track inventory items and quantities at locations.')
+        },
+    }
+    %}
+<section>
+    <h2>{{ __('Welcome to People & Pixel')|e }}</h2>
+    <p>{{ __('This is a lightweight CRM to manage your company contacts, team, tasks, time tracking, payments, and inventory.')|e }}</p>
+    <div class="ui cards">
+        {% for key, item in array %}
+            <div class="ui card">
+                <div class="content">
+                    <div class="header">
+                        {{ item.title|e }}
+                    </div>
+                    <div class="description">
+                        {{ item.description|e }}
+                    </div>
+                    <div class = "extra content">
+                    <span class="right floated">
+                        <a class="tiny ui button" href="{{ url('/' ~ key ) }}"><i class="list icon"></i></a>
+                        <a class="tiny ui button" href="{{ url('/' ~ key ~ '/new') }}"><i class="plus icon"></i></a>
+                    </span>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

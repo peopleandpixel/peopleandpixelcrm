@@ -1,0 +1,13 @@
+{# Flash and error messages partial #}
+{% if error is defined and error %}
+  <div class="ui negative message" role="alert">{{ error|e }}</div>
+{% endif %}
+
+{% if flashes is defined and flashes %}
+  {# flashes is expected as an array like [{type: 'success'|'error'|'info', message: '...'}] #}
+  {% for f in flashes %}
+    {% set type = f.type|default('info') %}
+    {% set ui = type == 'success' ? 'positive' : (type == 'error' ? 'negative' : 'info') %}
+    <div class="ui {{ ui }} message" role="status">{{ f.message|default('')|e }}</div>
+  {% endfor %}
+{% endif %}

@@ -1,0 +1,13 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% if fields is defined and fields %}
+    {% include 'partials/dynamic_form.twig' with {
+        title: __('Add Contact'),
+        submit_label: __('Save Contact'),
+        form_action: url('/contacts/new'),
+        fields: fields,
+        data: {},
+        cancel_url: cancel_url|default(url('/contacts'))
+    } %}
+{% endif %}
+{% endblock %}

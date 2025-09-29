@@ -1,0 +1,12 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+  {% include 'partials/dynamic_view.twig' with {
+    title: title|default(''),
+    fields: fields|default([]),
+    data: item|default({}),
+    back_url: back_url|default('/'),
+    edit_url: edit_url|default(null)
+  } %}
+</section>
+{% endblock %}

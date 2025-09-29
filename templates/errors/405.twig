@@ -1,0 +1,8 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+  <h2>405 – {{ __('Method Not Allowed')|e }}</h2>
+  <p>{{ __('The HTTP method used is not allowed for this URL.')|e }}</p>
+  <p><a href="{{ url('/') }}">&larr; {{ __('Back to home')|e }}</a></p>
+</section>
+{% endblock %}

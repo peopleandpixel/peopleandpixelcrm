@@ -1,0 +1,43 @@
+<?php
+// Portuguese translations (partial)
+return [
+    'People & Pixel - Basic CRM' => 'People & Pixel - CRM Básico',
+    'People & Pixel' => 'People & Pixel',
+    'All rights reserved.' => 'Todos os direitos reservados.',
+    'Logout' => 'Sair',
+    'Login' => 'Entrar',
+    'Home' => 'Início',
+    'Contacts' => 'Contatos',
+    'Working Times' => 'Horas de Trabalho',
+    'Tasks' => 'Tarefas',
+    'Employees' => 'Funcionários',
+    'Recruiting' => 'Recrutamento',
+    'Payments' => 'Pagamentos',
+    'Storage' => 'Estoque',
+    'Language' => 'Idioma',
+
+    // Errors
+    '404 - Page Not Found' => '404 - Página não encontrada',
+    'The requested URL' => 'A URL solicitada',
+    'was not found on this server.' => 'não foi encontrada neste servidor.',
+    'Back to home' => 'Voltar para a página inicial',
+    '405 - Method Not Allowed' => '405 - Método não permitido',
+    'The requested method is not allowed for URL' => 'O método solicitado não é permitido para a URL',
+    'Allowed methods:' => 'Métodos permitidos:',
+    'An error occurred' => 'Ocorreu um erro',
+    'Sorry, something went wrong on our side. Please try again later.' => 'Desculpe, aconteceu um problema do nosso lado. Tente novamente mais tarde.',
+    'Debug details' => 'Detalhes de depuração',
+
+    // Login
+    'Username' => 'Usuário',
+    'Password' => 'Senha',
+    'Sign in' => 'Entrar',
+    'Cancel' => 'Cancelar',
+
+    // Example pluralization pattern
+    'items.count' => '{count, plural, one {# item} other {# itens}}',
+
+        // Tasks extras
+        'Done date' => 'Data de conclusão',
+        'Edit Task' => 'Editar tarefa',
+];

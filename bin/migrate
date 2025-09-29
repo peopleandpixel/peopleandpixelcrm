@@ -1,0 +1,45 @@
+#!/usr/bin/env php
+<?php
+
+use App\Config;
+use App\Migrator;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+// Load .env if present
+$projectRoot = dirname(__DIR__);
+$envPath = $projectRoot;
+if (class_exists(\Dotenv\Dotenv::class) && file_exists($projectRoot.'/.env')) {
+    $dotenv = \Dotenv\Dotenv::createImmutable($envPath);
+    $dotenv->safeLoad();
+}
+
+$config = new Config($projectRoot);
+$dsn = $config->getDbDsn();
+$user = $config->getDbUser() ?? '';
+$pass = $config->getDbPass() ?? '';
+if (!$dsn) {
+    fwrite(STDERR, "DB_DSN is not set. Set USE_DB=1 and DB_DSN in your .env to use the DB.\n");
+    exit(1);
+}
+
+$options = [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+];
+$pdo = new PDO($dsn, $user ?: null, $pass ?: null, $options);
+// Enable foreign keys for SQLite
+if (stripos($dsn, 'sqlite:') === 0) {
+    $pdo->exec('PRAGMA foreign_keys = ON');
+}
+
+$migrator = new Migrator($pdo, $projectRoot . '/migrations');
+
+try {
+    $migrator->migrate();
+    fwrite(STDOUT, "Migrations applied successfully.\n");
+    exit(0);
+} catch (Throwable $e) {
+    fwrite(STDERR, "Migration failed: " . $e->getMessage() . "\n");
+    exit(2);
+}

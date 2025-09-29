@@ -1,0 +1,23 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+    <div class="section-header">
+        <h2>{{ __('Employees')|e }}</h2>
+        <div class="actions-right">
+            {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('name'), dir: dir|default('asc'), classes: 'inline' } %}
+            <a class="ui button" href="{{ url('/employees/new') }}">{{ __('+ Add Employee')|e }}</a>
+        </div>
+    </div>
+
+    {% include 'partials/dynamic_list.twig' with {
+        title: '',
+        items: employees|default([]),
+        columns: columns,
+        actions: { view_url: url('/employees/view'), edit_url: url('/employees/edit'), delete_url: url('/employees/delete'), id_field: 'id' }
+    } %}
+    <div class="list-footer">
+        {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
+        {{ paginate(total|default(employees|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('name'), dir: dir|default('asc')}))|raw }}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,79 @@
+/* Basic theming using CSS variables */
+:root {
+  --bg: #ffffff;
+  --text: #1b1c1d; /* Fomantic default text */
+  --muted: #666;
+  --card: #ffffff;
+  --border: #d4d4d5;
+  --primary: #21ba45; /* green */
+  --menu-bg: #f9fafb;
+}
+
+:root[data-theme="dark"] {
+  --bg: #121212;
+  --text: #e6e6e6;
+  --muted: #a0a0a0;
+  --card: #1b1b1b;
+  --border: #333;
+  --primary: #21ba45; /* keep brand color */
+  --menu-bg: #1a1a1a;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Ensure the attribute can be set on either html or body */
+html[data-theme="dark"], body[data-theme="dark"] {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Header/menu */
+header.ui.menu, .ui.menu {
+  background: var(--menu-bg) !important;
+  border-bottom: 1px solid var(--border);
+}
+.ui.menu .item, .ui.menu .item > i.icon {
+  color: var(--text) !important;
+}
+.ui.menu .item.active {
+  background: transparent !important;
+  border-bottom: 2px solid var(--primary) !important;
+}
+
+/* Cards, segments, tables */
+.ui.segment, .ui.card, .ui.table, .ui.form, .ui.message, .ui.dropdown .menu, .ui.menu .menu, .ui.input > input, textarea, select {
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+.ui.table thead th, .ui.table tbody td {
+  background: var(--card) !important;
+  color: var(--text) !important;
+}
+
+/* Buttons */
+.ui.button {
+  border-color: var(--border) !important;
+}
+.ui.green.button, .ui.green.labeled.icon.button {
+  background: var(--primary) !important;
+  color: #fff !important;
+}
+
+/* Links */
+a { color: #4183c4; }
+:root[data-theme="dark"] a { color: #7ab0ff; }
+
+/* Misc helpers */
+.visually-hidden { position:absolute; left:-9999px; }
+.skip-link { position:absolute; left:-9999px; }
+
+/* Flash messages tinting */
+:root[data-theme="dark"] .ui.negative.message { background:#3a1f1f !important; color:#ffd2d2 !important; }
+:root[data-theme="dark"] .ui.positive.message { background:#1f3a26 !important; color:#d2ffd2 !important; }
+
+/* Dropdown text contrast */
+:root[data-theme="dark"] .ui.dropdown .menu > .item { color: var(--text) !important; }

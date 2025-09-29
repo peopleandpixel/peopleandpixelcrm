@@ -1,0 +1,13 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% set isEdit = edit is defined and edit %}
+{% set data = isEdit ? (payment|default({})) : ({}) %}
+{% include 'partials/dynamic_form.twig' with {
+    title: isEdit ? __('Edit Payment') : __('Add Payment'),
+    submit_label: __('Save Payment'),
+    form_action: isEdit ? url('/payments/edit') : url('/payments/new'),
+    fields: fields,
+    data: data,
+    cancel_url: cancel_url|default(url('/payments'))
+} %}
+{% endblock %}

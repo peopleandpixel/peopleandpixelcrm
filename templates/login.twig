@@ -1,0 +1,25 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+    <h2>{{ __('Login')|e }}</h2>
+    {% if error is defined and error %}
+        <div class="alert alert-error">{{ error|e }}</div>
+    {% endif %}
+    <form method="post" action="{{ url('/login') }}" class="ui form">
+        {{ csrf_field()|raw }}
+        <input type="hidden" name="return" value="{{ (return|default('/'))|e }}">
+        <div class="field">
+            <label for="username">{{ __('Username')|e }}</label>
+            <input class="ui massive input" type="text" id="username" name="username" required>
+        </div>
+        <div class="field">
+            <label for="password">{{ __('Password')|e }}</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-actions">
+            <button class="ui green button" type="submit">{{ __('Sign in')|e }}</button>
+            <a class="ui red button" href="{{ (return|default('/'))|e }}">{{ __('Cancel')|e }}</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

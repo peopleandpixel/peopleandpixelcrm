@@ -1,0 +1,13 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% set isEdit = edit is defined and edit %}
+{% set data = isEdit ? (item|default({})) : ({}) %}
+{% include 'partials/dynamic_form.twig' with {
+    title: isEdit ? __('Edit Item') : __('Add Item'),
+    submit_label: __('Save'),
+    form_action: isEdit ? url('/storage/edit') : url('/storage/new'),
+    fields: fields,
+    data: data,
+    cancel_url: cancel_url|default(url('/storage'))
+} %}
+{% endblock %}

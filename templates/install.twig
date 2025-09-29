@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{{ __('Installation')|e }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url('/assets/app.css') }}">
+</head>
+<body>
+<main class="container">
+    <h1>{{ __('Installation')|e }}</h1>
+    <p>{{ __('Welcome! Please provide the initial configuration to set up the application.')|e }}</p>
+
+    <form method="post">
+        {{ csrf_field()|raw }}
+        <fieldset>
+            <legend>{{ __('Admin user')|e }}</legend>
+            <div class="form-row">
+                <label for="admin_email">{{ __('Email')|e }}</label>
+                <input type="email" id="admin_email" name="admin_email" value="{{ admin_email|default('')|e }}" required>
+            </div>
+            <div class="form-row">
+                <label for="admin_password">{{ __('Password')|e }}</label>
+                <input type="password" id="admin_password" name="admin_password" required>
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend>{{ __('Localization')|e }}</legend>
+            <div class="form-row">
+                <label for="locale">{{ __('Language')|e }}</label>
+                <select id="locale" name="locale">
+                    {% for code, label in locales|default({'en':'English','de':'Deutsch'}) %}
+                        <option value="{{ code|e }}" {{ (currentLang|default('en')) == code ? 'selected' : '' }}>{{ label|e }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </fieldset>
+        <div class="form-actions">
+            <button class="btn" type="submit">{{ __('Install')|e }}</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

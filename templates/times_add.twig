@@ -1,0 +1,22 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% set isEdit = edit is defined and edit %}
+{% set data = {
+    id: (id|default(time.id|default(0)))|int,
+    contact_id: contact_id|default(contactId|default(time.contact_id|default(''))),
+    employee_id: employee_id|default(employeeId|default(time.employee_id|default(''))),
+    date: date|default(time.date|default("now"|date('Y-m-d'))),
+    start_time: start_time|default(time.start_time|default('')),
+    end_time: end_time|default(time.end_time|default('')),
+    hours: hours|default(time.hours|default('')),
+    description: description|default(time.description|default(''))
+} %}
+{% include 'partials/dynamic_form.twig' with {
+    title: isEdit ? __('Edit Time Entry') : __('Add Time Entry'),
+    submit_label: __('Save Time Entry'),
+    form_action: isEdit ? url('/times/edit') : url('/times/new'),
+    fields: fields,
+    data: data,
+    cancel_url: cancel_url|default(url('/times'))
+} %}
+{% endblock %}

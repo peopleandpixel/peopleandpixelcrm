@@ -1,0 +1,78 @@
+{# Generic dynamic list renderer. Expects:
+ - title (optional)
+ - items: array of associative arrays
+ - columns: array of {name,label}
+ - actions: { edit_url: '/contacts/edit', delete_url: '/contacts/delete', id_field: 'id' } (optional)
+ - path, page, per, total, q, sort, dir (optional for pagination/sorting UI; minimal rendering only)
+#}
+<section>
+    <h2>{{ title|default('')|e }}</h2>
+
+    <table class="ui table list">
+        <thead>
+        <tr>
+            {% for col in columns %}
+                <th>{{ col.label|default(col.name)|e }}</th>
+            {% endfor %}
+            {% if actions is defined and (actions.edit_url or actions.delete_url) %}
+                <th>{{ __('Actions')|e }}</th>
+            {% endif %}
+        </tr>
+        </thead>
+        <tbody>
+        {% if items|length == 0 %}
+            <tr><td colspan="{{ columns|length + (actions is defined and (actions.edit_url or actions.delete_url) ? 1 : 0) }}">{{ __('No records found')|e }}</td></tr>
+        {% else %}
+            {% for it in items %}
+                <tr>
+                    {% for col in columns %}
+                        {% set value = attribute(it, col.name)|default('') %}
+                        {% if loop.first and actions is defined and actions.view_url %}
+                            {% set idf = actions.id_field|default('id') %}
+                            {% set idv = attribute(it, idf)|default('') %}
+                            <td>
+                                {% if col.name in ['picture','image','avatar','photo'] and value %}
+                                    <a href="{{ actions.view_url }}?id={{ idv|e }}">
+                                        <img src="{{ value|e }}" alt="" style="width:36px; height:36px; object-fit:cover; border-radius:50%; border:1px solid #ddd;">
+                                    </a>
+                                {% else %}
+                                    <a href="{{ actions.view_url }}?id={{ idv|e }}">{{ value|e }}</a>
+                                {% endif %}
+                            </td>
+                        {% else %}
+                            <td>
+                                {% if col.name in ['picture','image','avatar','photo'] and value %}
+                                    <img src="{{ value|e }}" alt="" style="width:36px; height:36px; object-fit:cover; border-radius:50%; border:1px solid #ddd;">
+                                {% else %}
+                                    {# Render links for URLs #}
+                                    {% if value matches '/^https?:\\/\\//i' %}
+                                        <a href="{{ value|e }}" target="_blank" rel="noopener">{{ value|e }}</a>
+                                    {% else %}
+                                        {{ value|e }}
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                    {% endfor %}
+                    {% if actions is defined and (actions.edit_url or actions.delete_url) %}
+                        {% set idf = actions.id_field|default('id') %}
+                        {% set idv = attribute(it, idf)|default('') %}
+                        <td class="actions">
+                            {% if actions.edit_url %}
+                                <a class="ui blue icon button" href="{{ actions.edit_url }}?id={{ idv|e }}"><i class="edit icon"></i> {{ __('Edit')|e }}</a>
+                            {% endif %}
+                            {% if actions.delete_url %}
+                                <form method="post" action="{{ actions.delete_url }}" style="display:inline" onsubmit="return confirm('{{ __('Are you sure?')|e }}');">
+                                    {{ csrf_field()|raw }}
+                                    <input type="hidden" name="id" value="{{ idv|e }}">
+                                    <button class="ui red icon button" type="submit"><i class="delete icon"></i> {{ __('Delete')|e }}</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        {% endif %}
+        </tbody>
+    </table>
+</section>

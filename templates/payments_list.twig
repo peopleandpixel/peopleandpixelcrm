@@ -1,0 +1,23 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+    <div class="section-header">
+        <h2>{{ __('Payments')|e }}</h2>
+        <div class="actions-right">
+            {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('date'), dir: dir|default('desc'), classes: 'inline' } %}
+            <a class="ui button" href="{{ url('/payments/new') }}">{{ __('+ Add Payment')|e }}</a>
+        </div>
+    </div>
+
+    {% include 'partials/dynamic_list.twig' with {
+        title: '',
+        items: payments|default([]),
+        columns: columns,
+        actions: { edit_url: url('/payments/edit'), delete_url: url('/payments/delete'), id_field: 'id' }
+    } %}
+    <div class="list-footer">
+        {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
+        {{ paginate(total|default(payments|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('date'), dir: dir|default('desc')}))|raw }}
+    </div>
+</section>
+{% endblock %}

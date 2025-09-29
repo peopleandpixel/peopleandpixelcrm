@@ -1,0 +1,27 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+    <div class="section-header">
+        <h2>{{ __('Contacts')|e }}</h2>
+        <div class="ui secondary menu">
+            {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('name'), dir: dir|default('asc'), classes: 'ui form inline' } %}
+            <div class="right menu">
+                <a class="ui green  icon button" href="{{ url('/contacts/new') }}"><i class="plus icon"></i> {{ __('Add Contact')|e }}</a>
+            </div>
+        </div>
+    </div>
+
+    {% if columns is defined and columns %}
+        {% include 'partials/dynamic_list.twig' with {
+            title: '',
+            items: contacts|default([]),
+            columns: columns,
+            actions: { view_url: url('/contacts/view'), edit_url: url('/contacts/edit'), delete_url: url('/contacts/delete'), id_field: 'id' }
+        } %}
+        <div class="list-footer">
+            {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
+            {{ paginate(total|default(contacts|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('name'), dir: dir|default('asc')}))|raw }}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

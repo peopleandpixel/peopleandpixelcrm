@@ -1,0 +1,148 @@
+{# Generic dynamic form renderer. Expects:
+ - title (optional)
+ - form_action (optional)
+ - submit_label (optional)
+ - fields: array of {name,label,type,required,options?,placeholder?,rows?}
+ - data: associative array with values (e.g., entity data)
+ - cancel_url: URL to go back
+#}
+<section>
+    <h2>{{ title|default('')|e }}</h2>
+    {# Determine if we need multipart form (file upload). If any field has type 'file' or field name is 'picture', enable it. #}
+    {% set hasFile = false %}
+    {% for f in fields %}
+        {% if (f.type is defined and f.type == 'file') or (f.name is defined and f.name == 'picture') %}
+            {% set hasFile = true %}
+        {% endif %}
+    {% endfor %}
+    <form method="post" class="ui form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}{% if hasFile %} enctype="multipart/form-data"{% endif %}>
+        {{ csrf_field()|raw }}
+        {% if error is defined and error %}
+            <div class="ui negative message">{{ error|e }}</div>
+        {% endif %}
+        {% if data.id is defined and data.id %}
+            <input type="hidden" name="id" value="{{ (data.id)|int }}">
+        {% endif %}
+
+        {% for f in fields %}
+            {% set fname = f.name %}
+            {% set ftype = f.type|default('text') %}
+            {% set flabel = f.label|default(fname)|e %}
+            {% set fval = attribute(data, fname)|default('') %}
+            {% set ferr = (errors is defined) ? attribute(errors, fname)|default(null) : null %}
+            {# Normalize error to a message string if Validator provided an array of errors #}
+            {% set ferrMsg = null %}
+            {% if ferr is iterable %}
+                {% set first = ferr|first %}
+                {% if first is iterable %}
+                    {# Prefer localization via key or code, fallback to provided message or raw #}
+                    {% if attribute(first, 'key') is defined %}
+                        {% set ferrMsg = __(first.key, attribute(first, 'params') is defined ? first.params : {}) %}
+                    {% elseif attribute(first, 'code') is defined %}
+                        {% set ferrMsg = __('validation.' ~ first.code) %}
+                    {% elseif attribute(first, 'message') is defined %}
+                        {% set ferrMsg = first.message %}
+                    {% else %}
+                        {% set ferrMsg = first|default('') %}
+                    {% endif %}
+                {% else %}
+                    {% set ferrMsg = first %}
+                {% endif %}
+            {% else %}
+                {% set ferrMsg = ferr %}
+            {% endif %}
+            <div class="form-row{% if ferrMsg %} has-error{% endif %}">
+                <label for="{{ fname }}">{{ flabel }}{% if f.required %} *{% endif %}</label>
+                {# Special handling for contact picture: render URL + file input together #}
+                {% if fname == 'picture' %}
+                    <div class="two fields">
+                        <div class="twelve wide field">
+                            <input id="{{ fname }}" name="{{ fname }}" type="text" value="{{ fval|e }}"{% if f.placeholder %} placeholder="{{ f.placeholder|e }}"{% endif %}{% if f.required %} required{% endif %}>
+                            <small>{{ __('You can paste an image URL or upload a file below.')|e }}</small>
+                            {% if fval %}
+                                <div style="margin-top:.5rem;">
+                                    <img src="{{ fval|e }}" alt="{{ __('Current picture')|e }}" style="max-width:120px; max-height:120px; border-radius:6px; border:1px solid #ccc;">
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="four wide field">
+                            <input name="picture_file" type="file" accept="image/*" data-upload="image" data-url-target="#picture">
+                        </div>
+                    </div>
+                {% elseif ftype == 'textarea' %}
+                    <textarea id="{{ fname }}" name="{{ fname }}" rows="{{ f.rows|default(4) }}"{% if f.required %} required{% endif %}>{{ fval|e }}</textarea>
+                {% elseif ftype == 'select' %}
+                    {% set cur = fval|default('') %}
+                    <select id="{{ fname }}" name="{{ fname }}"{% if f.required %} required{% endif %}>
+                        {% for key,label in f.options %}
+                            <option value="{{ key|e }}" {{ cur == key ? 'selected' : '' }}>{{ label|e }}</option>
+                        {% endfor %}
+                    </select>
+                {% elseif ftype == 'file' %}
+                    <input id="{{ fname }}" name="{{ fname }}" type="file"{% if f.accept %} accept="{{ f.accept|e }}"{% endif %}{% if f.required %} required{% endif %}>
+                {% else %}
+                    <input id="{{ fname }}" name="{{ fname }}" type="{{ ftype }}" value="{{ fval|e }}"{% if f.placeholder %} placeholder="{{ f.placeholder|e }}"{% endif %}{% if f.required %} required{% endif %}>
+                {% endif %}
+                {% if ferrMsg %}
+                    <div class="ui pointing red basic label">{{ ferrMsg|e }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            {% if cancel_url is defined and cancel_url %}
+                <a class="ui red labeled icon button" href="{{ cancel_url }}"><i class="cancel icon"></i> {{ __('Cancel')|e }}</a>
+            {% endif %}
+            <span class="ui right aligned">
+            <button class="ui green labeled icon button" type="submit"><i class="save icon"></i> {{ submit_label|default(__('Save')|e) }}</button>
+            </span>
+        </div>
+    </form>
+    {% if hasFile %}
+    <script>
+    (function(){
+      function findPreview(urlInput){
+        // find an img preview near the URL input
+        var wrap = urlInput.closest('.field') || document;
+        var img = wrap.querySelector('img');
+        return img;
+      }
+      async function uploadFile(input){
+        const file = input.files && input.files[0];
+        if(!file) return;
+        const form = input.closest('form');
+        const fd = new FormData();
+        fd.append('file', file);
+        const csrf = form ? form.querySelector('input[type="hidden"]') : null;
+        const headers = {};
+        if (csrf && csrf.value) headers['X-CSRF-Token'] = csrf.value;
+        input.disabled = true;
+        input.style.opacity = '0.6';
+        try {
+          const res = await fetch("{{ url('/upload') }}", { method: 'POST', body: fd, headers: headers });
+          const data = await res.json();
+          if(!res.ok || !data.ok){ throw new Error(data && data.error ? data.error : 'upload_failed'); }
+          const targetSel = input.getAttribute('data-url-target');
+          if (targetSel){
+            const urlInput = form ? form.querySelector(targetSel) : document.querySelector(targetSel);
+            if (urlInput){ urlInput.value = data.url; }
+            const img = urlInput ? findPreview(urlInput) : null;
+            if (img){ img.src = data.url; }
+          }
+        } catch (e) {
+          alert('{{ __('Upload failed')|e }}: ' + (e && e.message ? e.message : e));
+        } finally {
+          input.disabled = false;
+          input.style.opacity = '';
+        }
+      }
+      document.addEventListener('change', function(ev){
+        const el = ev.target;
+        if (el && el.matches('input[type="file"][data-upload]')){
+          uploadFile(el);
+        }
+      });
+    })();
+    </script>
+    {% endif %}
+</section>

@@ -1,0 +1,38 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+    <div class="section-header">
+        <h2>{{ __('Storage History')|e }}</h2>
+        <div class="actions-right">
+            <a class="btn" href="{{ url('/storage') }}">{{ __('Back to list')|e }}</a>
+        </div>
+    </div>
+
+    {% if history is not defined or history is empty %}
+        <div role="status">
+            <p>{{ __('No history yet.')|e }}</p>
+        </div>
+    {% else %}
+        <table class="ui celled table">
+            <thead>
+            <tr>
+                <th>{{ __('Date')|e }}</th>
+                <th>{{ __('Item')|e }}</th>
+                <th class="numeric">{{ __('Change')|e }}</th>
+                <th>{{ __('Note')|e }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for h in history %}
+                <tr>
+                    <td>{{ format_datetime(h.created_at|default(''))|e }}</td>
+                    <td>{{ (h.item_name|default(''))|e }}</td>
+                    <td class="numeric">{{ (h.delta|default(0))|e }}</td>
+                    <td>{{ (h.note|default(''))|e }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</section>
+{% endblock %}

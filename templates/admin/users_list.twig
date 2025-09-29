@@ -1,0 +1,43 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section>
+  <div class="section-header">
+    <h2>{{ __('Users')|e }}</h2>
+    <div class="actions-right">
+      <a class="ui button" href="{{ url('/admin/users/new') }}">{{ __('+ Add User')|e }}</a>
+    </div>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ __('Login')|e }}</th>
+        <th>{{ __('Full name')|e }}</th>
+        <th>{{ __('Email')|e }}</th>
+        <th>{{ __('Role')|e }}</th>
+        <th>{{ __('Actions')|e }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.login|e }}</td>
+        <td>{{ u.fullname|e }}</td>
+        <td>{{ u.email|e }}</td>
+        <td>{{ u.role|e }}</td>
+        <td>
+          <a class="ui button small" href="{{ url('/admin/users/edit', {id: u.id}) }}">{{ __('Edit')|e }}</a>
+          <form method="post" action="{{ url('/admin/users/delete') }}" style="display:inline" onsubmit="return confirm('{{ __('Are you sure?')|e }}')">
+            {{ csrf_field()|raw }}
+            <input type="hidden" name="id" value="{{ u.id|e }}">
+            <button class="ui button small danger" type="submit">{{ __('Delete')|e }}</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">{{ __('No users yet')|e }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
