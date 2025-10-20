@@ -9,12 +9,12 @@ Expects:
 - extra: optional map of extra hidden inputs (e.g., per/page)
 - classes: optional classes for the form
 #}
-<form method="get" action="{{ (path|default(current_path()))|e }}" class="{{ classes|default('ui form inline')|e }}">
-    <label for="q" class="visually-hidden">{{ __('Search')|e }}</label>
-    <div class="ui icon input">
-        <input type="search" id="q" name="q" value="{{ q|default('')|e }}" placeholder="{{ (placeholder|default(__('Search…')))|e }}">
-        <i class="search icon"></i>
-    </div>
+<form method="get" action="{{ (path|default(current_path()))|e }}" class="{{ classes|default('flex items-center gap-2')|e }}">
+    <label for="q" class="sr-only">{{ __('Search')|e }}</label>
+    <label class="input input-bordered flex items-center gap-2">
+      <input class="grow" type="search" id="q" name="q" value="{{ q|default('')|e }}" placeholder="{{ (placeholder|default(__('Search…')))|e }}">
+      <span aria-hidden="true">🔍</span>
+    </label>
     {% if sort is defined %}<input type="hidden" name="sort" value="{{ sort|e }}">{% endif %}
     {% if dir is defined %}<input type="hidden" name="dir" value="{{ dir|e }}">{% endif %}
     {% if extra is defined and extra %}
@@ -22,5 +22,5 @@ Expects:
             <input type="hidden" name="{{ k|e }}" value="{{ v|e }}">
         {% endfor %}
     {% endif %}
-    <button class="ui button" type="submit">{{ button_label|default(__('Search'))|e }}</button>
+    <button class="btn" type="submit">{{ button_label|default(__('Search'))|e }}</button>
 </form>

@@ -32,24 +32,18 @@
         },
     }
     %}
-<section>
-    <h2>{{ __('Welcome to People & Pixel')|e }}</h2>
-    <p>{{ __('This is a lightweight CRM to manage your company contacts, team, tasks, time tracking, payments, and inventory.')|e }}</p>
-    <div class="ui cards">
+<section class="space-y-4">
+    <h2 class="text-3xl font-bold">{{ __('Welcome to People & Pixel')|e }}</h2>
+    <p class="opacity-80">{{ __('This is a lightweight CRM to manage your company contacts, team, tasks, time tracking, payments, and inventory.')|e }}</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for key, item in array %}
-            <div class="ui card">
-                <div class="content">
-                    <div class="header">
-                        {{ item.title|e }}
-                    </div>
-                    <div class="description">
-                        {{ item.description|e }}
-                    </div>
-                    <div class = "extra content">
-                    <span class="right floated">
-                        <a class="tiny ui button" href="{{ url('/' ~ key ) }}"><i class="list icon"></i></a>
-                        <a class="tiny ui button" href="{{ url('/' ~ key ~ '/new') }}"><i class="plus icon"></i></a>
-                    </span>
+            <div class="card bg-base-200 shadow">
+                <div class="card-body">
+                    <h3 class="card-title">{{ item.title|e }}</h3>
+                    <p>{{ item.description|e }}</p>
+                    <div class="card-actions justify-end">
+                        <a class="btn btn-sm" href="{{ url('/' ~ key ) }}">{{ __('Open')|e }}</a>
+                        <a class="btn btn-sm btn-primary" href="{{ url('/' ~ key ~ '/new') }}">{{ __('New')|e }}</a>
                     </div>
                 </div>
             </div>

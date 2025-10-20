@@ -1,33 +1,11 @@
-<header class="ui menu">
-    <div class="ui container">
-        <div class="ui menu">
-            <a href="{{ url('/') }}" class="item {{ active_class('/') ? 'active' : '' }}" {{ active_class('/') ? 'aria-current="page"' : '' }}><i class="home icon"></i> {{ __('Home')|e }}</a>
-            <a href="{{ url('/contacts') }}" class="item {{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current="page"' : '' }}><i class="address book icon"></i> {{ __('Contacts')|e }}</a>
-            <a href="{{ url('/tasks') }}" class="item {{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}><i class="tasks icon"></i> {{ __('Tasks')|e }}</a>
-            <a href="{{ url('/employees') }}" class="item {{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}><i class="id badge icon"></i> {{ __('Employees')|e }}</a>
-            <a href="{{ url('/times') }}" class="item {{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}><i class="table icon"></i> {{ __('Working Times')|e }}</a>
-            <a href="{{ url('/candidates') }}" class="item {{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}><i class="user plus icon"></i> {{ __('Recruiting')|e }}</a>
-            <a href="{{ url('/payments') }}" class="item {{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}><i class="coins icon"></i> {{ __('Payments')|e }}</a>
-            <a href="{{ url('/storage') }}" class="item {{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}><i class="warehouse icon"></i> {{ __('Storage')|e }}</a>
-            {% if is_admin() %}
-            <a href="{{ url('/admin/users') }}" class="item {{ active_class('/admin') ? 'active' : '' }}" {{ active_class('/admin') ? 'aria-current="page"' : '' }}><i class="shield alternate icon"></i> {{ __('Users')|e }}</a>
-            {% endif %}
-            <div class="right menu">
-                <a href="#" id="theme-toggle" class="ui icon button" title="{{ __('Toggle theme')|e }}" aria-label="{{ __('Toggle theme')|e }}">
-                    <i class="sun icon"></i>
-                </a>
-                <div class="ui compact selection dropdown">
-                    <input type="hidden" name="lang" value="{{ currentLang }}">
-                    <i class="dropdown icon"></i>
-                    <div class="default text">{{ currentLang }}</div>
-                    <div class="scrollhint menu">
-                        <div class="selected item" data-value="en"><i class="gb flag"></i>EN</div>
-                        <div class="item" data-value="de"><i class="de flag"></i>DE</div>
-                        <div class="item" data-value="pt"><i class="pt flag"></i>PT</div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
+<header class="navbar bg-base-200">
+  <div class="flex-1">
+    <a href="{{ url('/') }}" class="btn btn-ghost text-xl">People & Pixel</a>
+  </div>
+  <div class="flex-none">
+    <button id="theme-toggle" class="btn btn-ghost btn-circle" title="{{ __('Toggle theme')|e }}" aria-label="{{ __('Toggle theme')|e }}" aria-pressed="false">
+      <span data-icon role="img" aria-hidden="true">☀️</span>
+    </button>
+    <span id="sr-live" class="sr-only" aria-live="polite"></span>
+  </div>
 </header>

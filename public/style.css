@@ -40,7 +40,7 @@ header.ui.menu, .ui.menu {
 }
 .ui.menu .item.active {
   background: transparent !important;
-  border-bottom: 2px solid var(--primary) !important;
+  border-right: 6px solid var(--primary) !important;
 }
 
 /* Cards, segments, tables */

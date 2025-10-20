@@ -1,11 +1,11 @@
 {% extends 'layout.twig' %}
 {% block content %}
-<section>
-    <h2>{{ title|default(__('Add Contact'))|e }}</h2>
-    <form method="post" enctype="multipart/form-data" class="ui form"{% if form_action %} action="{{ form_action }}"{% endif %}>
+<section class="space-y-4">
+    <h2 class="text-2xl font-bold">{{ title|default(__('Add Contact'))|e }}</h2>
+    <form method="post" enctype="multipart/form-data" class="space-y-4"{% if form_action %} action="{{ form_action }}"{% endif %}>
         {{ csrf_field()|raw }}
         {% if error is defined and error %}
-            <div class="ui negative message">{{ error|e }}</div>
+            <div class="alert alert-error"><span>{{ error|e }}</span></div>
         {% endif %}
         {% set data = {
             id: (id|default(contact.id|default(0)))|int,
@@ -62,7 +62,7 @@
             <textarea id="notes" name="notes" rows="3">{{ data.notes|e }}</textarea>
         </div>
 
-        <h3 class="ui dividing header">{{ __('Phones')|e }}</h3>
+        <h3 class="text-xl font-semibold border-b pb-2">{{ __('Phones')|e }}</h3>
         {% if errors.phones_text is defined %}
             {% set e = errors.phones_text|first %}
             {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}
@@ -105,7 +105,7 @@
             <button class="ui small green icon button repeater-add" type="button"><i class="plus icon"></i> {{ __('Add')|e }}</button>
         </div>
 
-        <h3 class="ui dividing header">{{ __('Emails')|e }}</h3>
+        <h3 class="text-xl font-semibold border-b pb-2">{{ __('Emails')|e }}</h3>
         {% if errors.emails_text is defined %}
             {% set e = errors.emails_text|first %}
             {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}

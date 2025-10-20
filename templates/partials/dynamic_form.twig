@@ -6,8 +6,8 @@
  - data: associative array with values (e.g., entity data)
  - cancel_url: URL to go back
 #}
-<section>
-    <h2>{{ title|default('')|e }}</h2>
+<section class="space-y-4">
+    <h2 class="text-2xl font-semibold">{{ title|default('')|e }}</h2>
     {# Determine if we need multipart form (file upload). If any field has type 'file' or field name is 'picture', enable it. #}
     {% set hasFile = false %}
     {% for f in fields %}
@@ -15,10 +15,10 @@
             {% set hasFile = true %}
         {% endif %}
     {% endfor %}
-    <form method="post" class="ui form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}{% if hasFile %} enctype="multipart/form-data"{% endif %}>
+    <form method="post" class="space-y-4"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}{% if hasFile %} enctype="multipart/form-data"{% endif %}>
         {{ csrf_field()|raw }}
         {% if error is defined and error %}
-            <div class="ui negative message">{{ error|e }}</div>
+            <div class="alert alert-error"><span>{{ error|e }}</span></div>
         {% endif %}
         {% if data.id is defined and data.id %}
             <input type="hidden" name="id" value="{{ (data.id)|int }}">
@@ -51,51 +51,47 @@
             {% else %}
                 {% set ferrMsg = ferr %}
             {% endif %}
-            <div class="form-row{% if ferrMsg %} has-error{% endif %}">
-                <label for="{{ fname }}">{{ flabel }}{% if f.required %} *{% endif %}</label>
+            <div class="form-control">
+                <label class="label" for="{{ fname }}"><span class="label-text">{{ flabel }}{% if f.required %} *{% endif %}</span></label>
                 {# Special handling for contact picture: render URL + file input together #}
                 {% if fname == 'picture' %}
-                    <div class="two fields">
-                        <div class="twelve wide field">
-                            <input id="{{ fname }}" name="{{ fname }}" type="text" value="{{ fval|e }}"{% if f.placeholder %} placeholder="{{ f.placeholder|e }}"{% endif %}{% if f.required %} required{% endif %}>
-                            <small>{{ __('You can paste an image URL or upload a file below.')|e }}</small>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
+                        <div class="md:col-span-2 space-y-2">
+                            <input class="input input-bordered w-full" id="{{ fname }}" name="{{ fname }}" type="text" value="{{ fval|e }}"{% if f.placeholder %} placeholder="{{ f.placeholder|e }}"{% endif %}{% if f.required %} required{% endif %}>
+                            <small class="opacity-70">{{ __('You can paste an image URL or upload a file below.')|e }}</small>
                             {% if fval %}
-                                <div style="margin-top:.5rem;">
-                                    <img src="{{ fval|e }}" alt="{{ __('Current picture')|e }}" style="max-width:120px; max-height:120px; border-radius:6px; border:1px solid #ccc;">
-                                </div>
+                                <img class="mt-2 rounded border border-base-300 max-w-[120px] max-h-[120px] object-cover" src="{{ fval|e }}" alt="{{ __('Current picture')|e }}">
                             {% endif %}
                         </div>
-                        <div class="four wide field">
-                            <input name="picture_file" type="file" accept="image/*" data-upload="image" data-url-target="#picture">
+                        <div>
+                            <input class="file-input file-input-bordered w-full" name="picture_file" type="file" accept="image/*" data-upload="image" data-url-target="#picture">
                         </div>
                     </div>
                 {% elseif ftype == 'textarea' %}
-                    <textarea id="{{ fname }}" name="{{ fname }}" rows="{{ f.rows|default(4) }}"{% if f.required %} required{% endif %}>{{ fval|e }}</textarea>
+                    <textarea class="textarea textarea-bordered w-full" id="{{ fname }}" name="{{ fname }}" rows="{{ f.rows|default(4) }}"{% if f.required %} required{% endif %}>{{ fval|e }}</textarea>
                 {% elseif ftype == 'select' %}
                     {% set cur = fval|default('') %}
-                    <select id="{{ fname }}" name="{{ fname }}"{% if f.required %} required{% endif %}>
+                    <select class="select select-bordered w-full" id="{{ fname }}" name="{{ fname }}"{% if f.required %} required{% endif %}>
                         {% for key,label in f.options %}
                             <option value="{{ key|e }}" {{ cur == key ? 'selected' : '' }}>{{ label|e }}</option>
                         {% endfor %}
                     </select>
                 {% elseif ftype == 'file' %}
-                    <input id="{{ fname }}" name="{{ fname }}" type="file"{% if f.accept %} accept="{{ f.accept|e }}"{% endif %}{% if f.required %} required{% endif %}>
+                    <input class="file-input file-input-bordered w-full" id="{{ fname }}" name="{{ fname }}" type="file"{% if f.accept %} accept="{{ f.accept|e }}"{% endif %}{% if f.required %} required{% endif %}>
                 {% else %}
-                    <input id="{{ fname }}" name="{{ fname }}" type="{{ ftype }}" value="{{ fval|e }}"{% if f.placeholder %} placeholder="{{ f.placeholder|e }}"{% endif %}{% if f.required %} required{% endif %}>
+                    <input class="input input-bordered w-full" id="{{ fname }}" name="{{ fname }}" type="{{ ftype }}" value="{{ fval|e }}"{% if f.placeholder %} placeholder="{{ f.placeholder|e }}"{% endif %}{% if f.required %} required{% endif %}>
                 {% endif %}
                 {% if ferrMsg %}
-                    <div class="ui pointing red basic label">{{ ferrMsg|e }}</div>
+                    <div class="text-error text-sm mt-1">{{ ferrMsg|e }}</div>
                 {% endif %}
             </div>
         {% endfor %}
 
-        <div class="form-actions">
+        <div class="flex items-center gap-2 justify-end">
             {% if cancel_url is defined and cancel_url %}
-                <a class="ui red labeled icon button" href="{{ cancel_url }}"><i class="cancel icon"></i> {{ __('Cancel')|e }}</a>
+                <a class="btn" href="{{ cancel_url }}">{{ __('Cancel')|e }}</a>
             {% endif %}
-            <span class="ui right aligned">
-            <button class="ui green labeled icon button" type="submit"><i class="save icon"></i> {{ submit_label|default(__('Save')|e) }}</button>
-            </span>
+            <button class="btn btn-primary" type="submit">{{ submit_label|default(__('Save')|e) }}</button>
         </div>
     </form>
     {% if hasFile %}

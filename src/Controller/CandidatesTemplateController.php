@@ -9,16 +9,17 @@ use App\Domain\Schemas;
 use App\Http\Request;
 use App\Http\UrlGenerator;
 use App\Util\Dates;
+use App\Util\ListSort;
 use JetBrains\PhpStorm\NoReturn;
 use function redirect;
 use function render;
 
-class CandidatesController
+readonly class CandidatesTemplateController implements TemplateControllerInterface
 {
     public function __construct(
-        private readonly object $candidatesStore,
-        private readonly Request $request,
-        private readonly UrlGenerator $url
+        private object       $candidatesStore,
+        private Request      $request,
+        private UrlGenerator $url
     ) {}
 
     public function view(): void
@@ -41,55 +42,7 @@ class CandidatesController
 
     public function list(): void
     {
-        $path = $this->request->path();
-        $q = ($this->request->get('q') !== null) ? trim((string)$this->request->get('q')) : '';
-        $sort = ($this->request->get('sort') !== null) ? (string)$this->request->get('sort') : 'name';
-        $dir = strtolower((string)($this->request->get('dir') ?? 'asc')) === 'desc' ? 'desc' : 'asc';
-        $page = max(1, (int)($this->request->get('page') ?? 1));
-        $per = max(1, min(100, (int)($this->request->get('per') ?? 10)));
-
-        $items = $this->candidatesStore->all();
-
-        // Filter
-        if ($q !== '') {
-            $needle = mb_strtolower($q);
-            $items = array_values(array_filter($items, function($it) use ($needle) {
-                foreach (['name','email','position','status','phone','notes'] as $field) {
-                    $v = (string)($it[$field] ?? '');
-                    if ($v !== '' && str_contains(mb_strtolower($v), $needle)) {
-                        return true;
-                    }
-                }
-                return false;
-            }));
-        }
-
-        // Sort
-        $allowed = ['name','position','status','email','created_at'];
-        if (!in_array($sort, $allowed, true)) { $sort = 'name'; }
-        usort($items, function($a, $b) use ($sort, $dir) {
-            $va = (string)($a[$sort] ?? '');
-            $vb = (string)($b[$sort] ?? '');
-            $cmp = strcmp($va, $vb);
-            return $dir === 'asc' ? $cmp : -$cmp;
-        });
-
-        $total = count($items);
-        $offset = ($page - 1) * $per;
-        $paged = array_slice($items, $offset, $per);
-
-        $schema = Schemas::get('candidates');
-        render('candidates_list', [
-            'candidates' => $paged,
-            'total' => $total,
-            'page' => $page,
-            'per' => $per,
-            'sort' => $sort,
-            'dir' => $dir,
-            'q' => $q,
-            'path' => $path,
-            'columns' => $schema['columns']
-        ]);
+        ListSort::getSortedList('Candidate', 'candidates', $this->candidatesStore, ['name','position','status','email','created_at']);
     }
 
     public function newForm(): void

@@ -1,13 +1,17 @@
-{# Flash and error messages partial #}
+{# Flash and error messages partial (DaisyUI) #}
 {% if error is defined and error %}
-  <div class="ui negative message" role="alert">{{ error|e }}</div>
+  <div class="alert alert-error" role="alert">
+    <span>{{ error|e }}</span>
+  </div>
 {% endif %}
 
 {% if flashes is defined and flashes %}
   {# flashes is expected as an array like [{type: 'success'|'error'|'info', message: '...'}] #}
   {% for f in flashes %}
     {% set type = f.type|default('info') %}
-    {% set ui = type == 'success' ? 'positive' : (type == 'error' ? 'negative' : 'info') %}
-    <div class="ui {{ ui }} message" role="status">{{ f.message|default('')|e }}</div>
+    {% set cls = type == 'success' ? 'alert-success' : (type == 'error' ? 'alert-error' : 'alert-info') %}
+    <div class="alert {{ cls }}" role="status">
+      <span>{{ f.message|default('')|e }}</span>
+    </div>
   {% endfor %}
 {% endif %}

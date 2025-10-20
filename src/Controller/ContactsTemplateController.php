@@ -8,17 +8,19 @@ use App\Domain\Contact as ContactDTO;
 use App\Domain\Schemas;
 use App\Util\Dates;
 use App\Util\Flash;
+use App\Util\ListSort;
+use App\Util\Uploader;
 use JetBrains\PhpStorm\NoReturn;
 use function __;
 use function redirect;
 use function render;
 
-class ContactsController
+readonly class ContactsTemplateController
 {
     public function __construct(
-        private readonly object $contactsStore,
-        private readonly ?object $timesStore = null,
-        private readonly ?object $tasksStore = null,
+        private object  $contactsStore,
+        private ?object $timesStore = null,
+        private ?object $tasksStore = null,
     ) {}
 
     public function view(): void
@@ -40,82 +42,7 @@ class ContactsController
         ]);
     }
 
-    private static function saveUploadedPicture(): ?string
-    {
-        if (!isset($_FILES['picture_file']) || !is_array($_FILES['picture_file'])) {
-            return null;
-        }
-        $f = $_FILES['picture_file'];
-        if (($f['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-            return null; // nothing uploaded
-        }
-        // Basic validations
-        $tmp = (string)($f['tmp_name'] ?? '');
-        $size = (int)($f['size'] ?? 0);
-        if (!is_uploaded_file($tmp)) { return null; }
-        if ($size <= 0 || $size > 5 * 1024 * 1024) { // 5MB limit
-            return null;
-        }
-        // Detect mime/type using finfo if available; otherwise fall back to exif_imagetype()/getimagesize()
-        $mime = '';
-        if (function_exists('finfo_open')) {
-            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
-            if ($finfo) {
-                $mime = (string)@finfo_file($finfo, $tmp);
-                @finfo_close($finfo);
-            }
-        }
-        $allowed = [
-            'image/jpeg' => 'jpg',
-            'image/png'  => 'png',
-            'image/gif'  => 'gif',
-            'image/webp' => 'webp',
-        ];
-        $ext = '';
-        if ($mime !== '' && isset($allowed[$mime])) {
-            $ext = $allowed[$mime];
-        } else {
-            // Try exif_imagetype
-            $type = function_exists('exif_imagetype') ? @exif_imagetype($tmp) : false;
-            if ($type) {
-                $map = [
-                    IMAGETYPE_JPEG => 'jpg',
-                    IMAGETYPE_PNG  => 'png',
-                    IMAGETYPE_GIF  => 'gif',
-                    IMAGETYPE_WEBP => 'webp',
-                ];
-                if (isset($map[$type])) { $ext = $map[$type]; }
-            }
-            if ($ext === '') {
-                // Last resort: getimagesize
-                $info = @getimagesize($tmp);
-                if (is_array($info) && isset($info[2])) {
-                    $type = (int)$info[2];
-                    $map = [
-                        IMAGETYPE_JPEG => 'jpg',
-                        IMAGETYPE_PNG  => 'png',
-                        IMAGETYPE_GIF  => 'gif',
-                        IMAGETYPE_WEBP => 'webp',
-                    ];
-                    if (isset($map[$type])) { $ext = $map[$type]; }
-                }
-            }
-        }
-        if ($ext === '') { return null; }
-        // Build upload path
-        $root = dirname(__DIR__, 2);
-        $uploadDir = $root . '/public/uploads';
-        if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0777, true); }
-        // Safe filename
-        $rand = bin2hex(random_bytes(8));
-        $namePart = pathinfo((string)($f['name'] ?? ''), PATHINFO_FILENAME);
-        $namePart = preg_replace('/[^a-zA-Z0-9_-]+/', '-', (string)$namePart) ?: 'img';
-        $fileName = date('Ymd_His') . '_' . $rand . '_' . $namePart . '.' . $ext;
-        $dest = $uploadDir . '/' . $fileName;
-        if (!move_uploaded_file($tmp, $dest)) { return null; }
-        // Return public path
-        return '/uploads/' . $fileName;
-    }
+
 
     private static function implodeTagged(array $items): string
     {
@@ -148,53 +75,7 @@ class ContactsController
     }
     public function list(): void
     {
-        $path = current_path();
-        $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
-        $sort = isset($_GET['sort']) ? (string)$_GET['sort'] : 'name';
-        $dir = strtolower((string)($_GET['dir'] ?? 'asc')) === 'desc' ? 'desc' : 'asc';
-        $page = max(1, (int)($_GET['page'] ?? 1));
-        $per = max(1, min(100, (int)($_GET['per'] ?? 10)));
-
-        $items = $this->contactsStore->all();
-
-        if ($q !== '') {
-            $needle = mb_strtolower($q);
-            $items = array_values(array_filter($items, function($it) use ($needle) {
-                foreach (['name','email','company','phone','notes'] as $field) {
-                    $v = (string)($it[$field] ?? '');
-                    if ($v !== '' && str_contains(mb_strtolower($v), $needle)) {
-                        return true;
-                    }
-                }
-                return false;
-            }));
-        }
-
-        $allowed = ['name','company','email','created_at'];
-        if (!in_array($sort, $allowed, true)) { $sort = 'name'; }
-        usort($items, function($a, $b) use ($sort, $dir) {
-            $va = (string)($a[$sort] ?? '');
-            $vb = (string)($b[$sort] ?? '');
-            $cmp = strcmp($va, $vb);
-            return $dir === 'asc' ? $cmp : -$cmp;
-        });
-
-        $total = count($items);
-        $offset = ($page - 1) * $per;
-        $paged = array_slice($items, $offset, $per);
-
-        $schema = Schemas::get('contacts');
-        render('contacts_list', [
-            'contacts' => $paged,
-            'total' => $total,
-            'page' => $page,
-            'per' => $per,
-            'sort' => $sort,
-            'dir' => $dir,
-            'q' => $q,
-            'path' => $path,
-            'columns' => $schema['columns']
-        ]);
+        ListSort::getSortedList('Contact', 'contacts', $this->contactsStore, ['name','company','email','created_at'],);
     }
 
     public function newForm(): void
@@ -208,7 +89,7 @@ class ContactsController
 
     public function create(): void
     {
-        $uploaded = self::saveUploadedPicture();
+        $uploaded = Uploader::saveUploadedPicture();
         if ($uploaded) { $_POST['picture'] = $uploaded; }
         $dto = ContactDTO::fromInput($_POST);
         $errors = $dto->validate();
@@ -237,7 +118,7 @@ class ContactsController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) { redirect('/contacts'); }
-        $uploaded = self::saveUploadedPicture();
+        $uploaded = Uploader::saveUploadedPicture();
         if ($uploaded) { $_POST['picture'] = $uploaded; }
         $dto = ContactDTO::fromInput($_POST);
         $errors = $dto->validate();

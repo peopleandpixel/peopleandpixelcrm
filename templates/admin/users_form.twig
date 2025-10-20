@@ -1,67 +1,69 @@
 {% extends 'layout.twig' %}
 {% block content %}
-<section>
-  <h2>{{ action == 'edit' ? __('Edit User')|e : __('Create User')|e }}</h2>
-  <form class="ui form" method="post" action="{{ action == 'edit' ? url('/admin/users/edit') : url('/admin/users/new') }}">
+<section class="space-y-6">
+  <h2 class="text-2xl font-bold">{{ action == 'edit' ? __('Edit User')|e : __('Create User')|e }}</h2>
+  <form class="space-y-4" method="post" action="{{ action == 'edit' ? url('/admin/users/edit') : url('/admin/users/new') }}">
     {{ csrf_field()|raw }}
     {% if user.id %}<input type="hidden" name="id" value="{{ user.id|e }}">{% endif %}
 
-    <div class="form-row">
-      <label>{{ __('Login')|e }}</label>
-      <input type="text" name="login" value="{{ user.login|e }}" required>
+    <div class="form-control">
+      <label class="label"><span class="label-text">{{ __('Login')|e }}</span></label>
+      <input class="input input-bordered" type="text" name="login" value="{{ user.login|e }}" required>
     </div>
-    <div class="form-row">
-      <label>{{ __('Full name')|e }}</label>
-      <input type="text" name="fullname" value="{{ user.fullname|e }}">
+    <div class="form-control">
+      <label class="label"><span class="label-text">{{ __('Full name')|e }}</span></label>
+      <input class="input input-bordered" type="text" name="fullname" value="{{ user.fullname|e }}">
     </div>
-    <div class="form-row">
-      <label>{{ __('Email')|e }}</label>
-      <input type="email" name="email" value="{{ user.email|e }}">
+    <div class="form-control">
+      <label class="label"><span class="label-text">{{ __('Email')|e }}</span></label>
+      <input class="input input-bordered" type="email" name="email" value="{{ user.email|e }}">
     </div>
-    <div class="form-row">
-      <label>{{ __('Role')|e }}</label>
-      <select name="role">
+    <div class="form-control">
+      <label class="label"><span class="label-text">{{ __('Role')|e }}</span></label>
+      <select class="select select-bordered" name="role">
         {% set role = user.role|default('user') %}
         <option value="user" {{ role=='user'?'selected':'' }}>{{ __('User')|e }}</option>
         <option value="viewer" {{ role=='viewer'?'selected':'' }}>{{ __('Viewer')|e }}</option>
         <option value="admin" {{ role=='admin'?'selected':'' }}>{{ __('Admin')|e }}</option>
       </select>
     </div>
-    <div class="form-row">
-      <label>{{ __('Password')|e }}</label>
-      <input type="password" name="password" value="">
-      {% if action=='edit' %}<small>{{ __('Leave empty to keep current password')|e }}</small>{% endif %}
+    <div class="form-control">
+      <label class="label"><span class="label-text">{{ __('Password')|e }}</span></label>
+      <input class="input input-bordered" type="password" name="password" value="">
+      {% if action=='edit' %}<small class="text-xs opacity-70">{{ __('Leave empty to keep current password')|e }}</small>{% endif %}
     </div>
 
     {% set entities = ['contacts','times','tasks','employees','candidates','payments','storage'] %}
-    <h3>{{ __('Permissions')|e }}</h3>
-    <table class="ui compact table">
-      <thead>
-        <tr>
-          <th>{{ __('Entity')|e }}</th>
-          <th>{{ __('View')|e }}</th>
-          <th>{{ __('Create')|e }}</th>
-          <th>{{ __('Edit')|e }}</th>
-          <th>{{ __('Delete')|e }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for e in entities %}
-          {% set p = user.permissions[e]|default({}) %}
+    <h3 class="text-xl font-semibold">{{ __('Permissions')|e }}</h3>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
           <tr>
-            <td>{{ e|capitalize|e }}</td>
-            <td><div class="ui checkbox"><input type="checkbox" name="perm[{{e}}][view]" value="1" {{ (p.view|default(0)) ? 'checked' : '' }}></div></td>
-            <td><div class="ui checkbox"><input type="checkbox" name="perm[{{e}}][create]" value="1" {{ (p.create|default(0)) ? 'checked' : '' }}></div></td>
-            <td><div class="ui checkbox"><input type="checkbox" name="perm[{{e}}][edit]" value="1" {{ (p.edit|default(0)) ? 'checked' : '' }}></div></td>
-            <td><div class="ui checkbox"><input type="checkbox" name="perm[{{e}}][delete]" value="1" {{ (p.delete|default(0)) ? 'checked' : '' }}></div></td>
+            <th>{{ __('Entity')|e }}</th>
+            <th>{{ __('View')|e }}</th>
+            <th>{{ __('Create')|e }}</th>
+            <th>{{ __('Edit')|e }}</th>
+            <th>{{ __('Delete')|e }}</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for e in entities %}
+            {% set p = user.permissions[e]|default({}) %}
+            <tr>
+              <td>{{ e|capitalize|e }}</td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][view]" value="1" {{ (p.view|default(0)) ? 'checked' : '' }}></td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][create]" value="1" {{ (p.create|default(0)) ? 'checked' : '' }}></td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][edit]" value="1" {{ (p.edit|default(0)) ? 'checked' : '' }}></td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][delete]" value="1" {{ (p.delete|default(0)) ? 'checked' : '' }}></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
-    <div class="form-actions">
-      <button class="ui button primary" type="submit">{{ __('Save')|e }}</button>
-      <a class="ui button" href="{{ url('/admin/users') }}">{{ __('Cancel')|e }}</a>
+    <div class="flex gap-2">
+      <button class="btn btn-primary" type="submit">{{ __('Save')|e }}</button>
+      <a class="btn" href="{{ url('/admin/users') }}">{{ __('Cancel')|e }}</a>
     </div>
   </form>
 </section>

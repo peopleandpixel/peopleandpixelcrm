@@ -5,16 +5,16 @@
  - data: associative array for the entity
  - back_url: URL for back navigation
 #}
-<section class="ui segment">
-  {% if title is defined and title %}<h2 class="ui header">{{ title|e }}</h2>{% endif %}
+<section class="space-y-4">
+  {% if title is defined and title %}<h2 class="text-2xl font-semibold">{{ title|e }}</h2>{% endif %}
 
   {% if data.picture is defined and data.picture %}
-    <div class="ui small left floated image" style="margin-right:1rem;">
-      <img src="{{ data.picture|e }}" alt="" style="max-width:160px; border-radius:6px;">
+    <div class="float-left mr-4 mb-2">
+      <img src="{{ data.picture|e }}" alt="" class="max-w-[160px] rounded border border-base-300">
     </div>
   {% endif %}
 
-  <div class="ui relaxed divided list">
+  <div class="space-y-3 clear-both">
     {# If fields provided, render in that order; otherwise iterate over data keys #}
     {% set entries = [] %}
     {% if fields is defined and fields %}
@@ -31,63 +31,61 @@
       {% if fname in ['id'] %}{# show id too #}{% endif %}
       {% set val = attribute(data, fname)|default(null) %}
       {% if val is not null and val is not same as(false) and val != '' %}
-        <div class="item">
-          <div class="content">
-            <div class="header" style="margin-bottom:.25rem;">{{ flabel|e }}</div>
-            <div class="description">
-              {# Render arrays as bulleted lists; objects/assoc arrays as key: value pairs #}
-              {% if val is iterable and val is not same as('') %}
-                {% if val|length == 0 %}
-                  <span class="muted">—</span>
-                {% else %}
-                  <div class="ui list">
-                    {% for row in val %}
-                      <div class="item">
-                        {% if row is iterable %}
-                          {# Try common patterns for contacts arrays #}
-                          {% if row.value is defined %}
-                            {% set bits = [] %}
-                            {% if row.kind is defined and row.kind %}{% set bits = bits|merge([row.kind]) %}{% endif %}
-                            {% if row.tag is defined and row.tag %}{% set bits = bits|merge([row.tag]) %}{% endif %}
-                            {% if bits %}<span class="ui tiny label">{{ bits|join(' • ')|e }}</span> {% endif %}
-                            {% set v = row.value %}
-                            {% if v starts with 'http://' or v starts with 'https://' %}
-                              <a href="{{ v|e }}" target="_blank" rel="noopener">{{ v|e }}</a>
-                            {% else %}
-                              {{ v|e }}
-                            {% endif %}
+        <div>
+          <div class="font-semibold mb-1">{{ flabel|e }}</div>
+          <div class="prose max-w-none">
+            {# Render arrays as bulleted lists; objects/assoc arrays as key: value pairs #}
+            {% if val is iterable and val is not same as('') %}
+              {% if val|length == 0 %}
+                <span class="opacity-60">—</span>
+              {% else %}
+                <ul class="list-disc pl-5 space-y-1">
+                  {% for row in val %}
+                    <li>
+                      {% if row is iterable %}
+                        {# Try common patterns for contacts arrays #}
+                        {% if row.value is defined %}
+                          {% set bits = [] %}
+                          {% if row.kind is defined and row.kind %}{% set bits = bits|merge([row.kind]) %}{% endif %}
+                          {% if row.tag is defined and row.tag %}{% set bits = bits|merge([row.tag]) %}{% endif %}
+                          {% if bits %}<span class="badge badge-ghost mr-1">{{ bits|join(' • ')|e }}</span> {% endif %}
+                          {% set v = row.value %}
+                          {% if v starts with 'http://' or v starts with 'https://' %}
+                            <a href="{{ v|e }}" target="_blank" rel="noopener" class="link">{{ v|e }}</a>
                           {% else %}
-                            {{ row|json_encode(constant('JSON_UNESCAPED_UNICODE'))|e }}
+                            {{ v|e }}
                           {% endif %}
                         {% else %}
-                          {{ row|e }}
+                          {{ row|json_encode(constant('JSON_UNESCAPED_UNICODE'))|e }}
                         {% endif %}
-                      </div>
-                    {% endfor %}
-                  </div>
-                {% endif %}
-              {% else %}
-                {% set text = val %}
-                {% if text starts with 'http://' or text starts with 'https://' %}
-                  <a href="{{ text|e }}" target="_blank" rel="noopener">{{ text|e }}</a>
-                {% else %}
-                  {{ text|e }}
-                {% endif %}
+                      {% else %}
+                        {{ row|e }}
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
               {% endif %}
-            </div>
+            {% else %}
+              {% set text = val %}
+              {% if text starts with 'http://' or text starts with 'https://' %}
+                <a href="{{ text|e }}" target="_blank" rel="noopener" class="link">{{ text|e }}</a>
+              {% else %}
+                {{ text|e }}
+              {% endif %}
+            {% endif %}
           </div>
         </div>
       {% endif %}
     {% endfor %}
   </div>
 
-  <div class="ui divider"></div>
-  <div class="ui buttons">
+  <div class="divider"></div>
+  <div class="flex gap-2">
     {% if back_url %}
-      <a class="ui button" href="{{ back_url }}">← {{ __('Back')|e }}</a>
+      <a class="btn" href="{{ back_url }}">← {{ __('Back')|e }}</a>
     {% endif %}
     {% if edit_url is defined and edit_url %}
-      <a class="ui primary button" href="{{ edit_url }}">{{ __('Edit')|e }}</a>
+      <a class="btn btn-primary" href="{{ edit_url }}">{{ __('Edit')|e }}</a>
     {% endif %}
   </div>
 </section>

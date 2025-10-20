@@ -5,10 +5,11 @@
  - actions: { edit_url: '/contacts/edit', delete_url: '/contacts/delete', id_field: 'id' } (optional)
  - path, page, per, total, q, sort, dir (optional for pagination/sorting UI; minimal rendering only)
 #}
-<section>
-    <h2>{{ title|default('')|e }}</h2>
+<section class="space-y-3">
+    <h2 class="text-2xl font-semibold">{{ title|default('')|e }}</h2>
 
-    <table class="ui table list">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
         <thead>
         <tr>
             {% for col in columns %}
@@ -33,20 +34,20 @@
                             <td>
                                 {% if col.name in ['picture','image','avatar','photo'] and value %}
                                     <a href="{{ actions.view_url }}?id={{ idv|e }}">
-                                        <img src="{{ value|e }}" alt="" style="width:36px; height:36px; object-fit:cover; border-radius:50%; border:1px solid #ddd;">
+                                        <img src="{{ value|e }}" alt="" class="w-9 h-9 rounded-full object-cover border border-base-300">
                                     </a>
                                 {% else %}
-                                    <a href="{{ actions.view_url }}?id={{ idv|e }}">{{ value|e }}</a>
+                                    <a href="{{ actions.view_url }}?id={{ idv|e }}" class="link link-primary">{{ value|e }}</a>
                                 {% endif %}
                             </td>
                         {% else %}
                             <td>
                                 {% if col.name in ['picture','image','avatar','photo'] and value %}
-                                    <img src="{{ value|e }}" alt="" style="width:36px; height:36px; object-fit:cover; border-radius:50%; border:1px solid #ddd;">
+                                    <img src="{{ value|e }}" alt="" class="w-9 h-9 rounded-full object-cover border border-base-300">
                                 {% else %}
                                     {# Render links for URLs #}
                                     {% if value matches '/^https?:\\/\\//i' %}
-                                        <a href="{{ value|e }}" target="_blank" rel="noopener">{{ value|e }}</a>
+                                        <a href="{{ value|e }}" target="_blank" rel="noopener" class="link">{{ value|e }}</a>
                                     {% else %}
                                         {{ value|e }}
                                     {% endif %}
@@ -57,15 +58,15 @@
                     {% if actions is defined and (actions.edit_url or actions.delete_url) %}
                         {% set idf = actions.id_field|default('id') %}
                         {% set idv = attribute(it, idf)|default('') %}
-                        <td class="actions">
+                        <td class="whitespace-nowrap space-x-2">
                             {% if actions.edit_url %}
-                                <a class="ui blue icon button" href="{{ actions.edit_url }}?id={{ idv|e }}"><i class="edit icon"></i> {{ __('Edit')|e }}</a>
+                                <a class="btn btn-xs" href="{{ actions.edit_url }}?id={{ idv|e }}">{{ __('Edit')|e }}</a>
                             {% endif %}
                             {% if actions.delete_url %}
-                                <form method="post" action="{{ actions.delete_url }}" style="display:inline" onsubmit="return confirm('{{ __('Are you sure?')|e }}');">
+                                <form method="post" action="{{ actions.delete_url }}" class="inline" onsubmit="return confirm('{{ __('Are you sure?')|e }}');">
                                     {{ csrf_field()|raw }}
                                     <input type="hidden" name="id" value="{{ idv|e }}">
-                                    <button class="ui red icon button" type="submit"><i class="delete icon"></i> {{ __('Delete')|e }}</button>
+                                    <button class="btn btn-xs btn-error" type="submit">{{ __('Delete')|e }}</button>
                                 </form>
                             {% endif %}
                         </td>
@@ -74,5 +75,6 @@
             {% endfor %}
         {% endif %}
         </tbody>
-    </table>
+      </table>
+    </div>
 </section>

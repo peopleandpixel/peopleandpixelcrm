@@ -110,7 +110,7 @@ class Container
             return new \App\Controller\HomeController();
         };
         $this->factories['contactsController'] = function(self $c) {
-            return new \App\Controller\ContactsController(
+            return new \App\Controller\ContactsTemplateController(
                 $c->get('contactsStore'),
                 $c->get('timesStore'),
                 $c->get('tasksStore')
@@ -140,12 +140,12 @@ class Container
             );
         };
         $this->factories['employeesController'] = function(self $c) {
-            return new \App\Controller\EmployeesController(
+            return new \App\Controller\EmployeesTemplateController(
                 $c->get('employeesStore')
             );
         };
         $this->factories['candidatesController'] = function(self $c) {
-            return new \App\Controller\CandidatesController(
+            return new \App\Controller\CandidatesTemplateController(
                 $c->get('candidatesStore'),
                 $c->get('request'),
                 $c->get('url')

@@ -2,7 +2,7 @@
 {% block content %}
 <section>
     <div class="section-header">
-        <h2>{{ __('Contacts')|e }}</h2>
+        <h2>{{ __(schema|capitalize)|e }}</h2>
         <div class="ui secondary menu">
             {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('name'), dir: dir|default('asc'), classes: 'ui form inline' } %}
             <div class="right menu">
