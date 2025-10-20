@@ -1,25 +1,43 @@
-{% extends 'layout.twig' %}
-{% block content %}
-<section>
-    <h2>{{ __('Login')|e }}</h2>
-    {% if error is defined and error %}
-        <div class="alert alert-error">{{ error|e }}</div>
-    {% endif %}
-    <form method="post" action="{{ url('/login') }}" class="ui form">
+<!doctype html>
+<html lang="{{ currentLang|default('en')|e }}" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ __('Login')|e }} – {{ __('People & Pixel - Basic CRM')|e }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="{{ url('/style.css') }}">
+  <style>
+    /* prevent page shift during load */
+    html,body{height:100%;}
+  </style>
+</head>
+<body class="min-h-screen bg-base-100 flex items-center justify-center p-4">
+  <div class="card bg-base-200 shadow w-full max-w-md">
+    <div class="card-body">
+      <h1 class="card-title">{{ __('Login')|e }}</h1>
+      {% if error is defined and error %}
+        <div class="alert alert-error"><span>{{ error|e }}</span></div>
+      {% endif %}
+      <form method="post" action="{{ url('/login') }}" class="space-y-3">
         {{ csrf_field()|raw }}
         <input type="hidden" name="return" value="{{ (return|default('/'))|e }}">
-        <div class="field">
-            <label for="username">{{ __('Username')|e }}</label>
-            <input class="ui massive input" type="text" id="username" name="username" required>
+        <div class="form-control">
+          <label for="username" class="label"><span class="label-text">{{ __('Username')|e }}</span></label>
+          <input class="input input-bordered" type="text" id="username" name="username" required autofocus>
         </div>
-        <div class="field">
-            <label for="password">{{ __('Password')|e }}</label>
-            <input type="password" id="password" name="password" required>
+        <div class="form-control">
+          <label for="password" class="label"><span class="label-text">{{ __('Password')|e }}</span></label>
+          <input class="input input-bordered" type="password" id="password" name="password" required>
         </div>
-        <div class="form-actions">
-            <button class="ui green button" type="submit">{{ __('Sign in')|e }}</button>
-            <a class="ui red button" href="{{ (return|default('/'))|e }}">{{ __('Cancel')|e }}</a>
+        <div class="card-actions justify-end mt-2">
+          <a class="btn btn-ghost" href="{{ (return|default('/'))|e }}">{{ __('Cancel')|e }}</a>
+          <button class="btn btn-primary" type="submit">{{ __('Sign in')|e }}</button>
         </div>
-    </form>
-</section>
-{% endblock %}
+      </form>
+    </div>
+  </div>
+</body>
+</html>

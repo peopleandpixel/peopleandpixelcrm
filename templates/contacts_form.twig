@@ -1,329 +1,329 @@
 {% extends 'layout.twig' %}
 {% block content %}
 <section class="space-y-4">
-    <h2 class="text-2xl font-bold">{{ title|default(__('Add Contact'))|e }}</h2>
-    <form method="post" enctype="multipart/form-data" class="space-y-4"{% if form_action %} action="{{ form_action }}"{% endif %}>
-        {{ csrf_field()|raw }}
-        {% if error is defined and error %}
-            <div class="alert alert-error"><span>{{ error|e }}</span></div>
-        {% endif %}
-        {% set data = {
-            id: (id|default(contact.id|default(0)))|int,
-            name: name|default(contact.name|default('')),
-            company: company|default(contact.company|default('')),
-            birthdate: birthdate|default(contact.birthdate|default('')),
-            picture: picture|default(contact.picture|default('')),
-            notes: notes|default(contact.notes|default('')),
-            phones: phones|default(contact.phones|default([])),
-            emails: emails|default(contact.emails|default([])),
-            websites: websites|default(contact.websites|default([])),
-            socials: socials|default(contact.socials|default([]))
-        } %}
-        {% if data.id %}
-            <input type="hidden" name="id" value="{{ data.id }}">
-        {% endif %}
+  <h2 class="text-2xl font-bold">{{ title|default(__('Add Contact'))|e }}</h2>
+  <form method="post" enctype="multipart/form-data" class="space-y-6"{% if form_action %} action="{{ form_action }}"{% endif %}>
+    {{ csrf_field()|raw }}
+    {% if error is defined and error %}
+      <div class="alert alert-error"><span>{{ error|e }}</span></div>
+    {% endif %}
+    {% set data = {
+      id: (id|default(contact.id|default(0)))|int,
+      name: name|default(contact.name|default('')),
+      company: company|default(contact.company|default('')),
+      birthdate: birthdate|default(contact.birthdate|default('')),
+      picture: picture|default(contact.picture|default('')),
+      notes: notes|default(contact.notes|default('')),
+      phones: phones|default(contact.phones|default([])),
+      emails: emails|default(contact.emails|default([])),
+      websites: websites|default(contact.websites|default([])),
+      socials: socials|default(contact.socials|default([]))
+    } %}
+    {% if data.id %}
+      <input type="hidden" name="id" value="{{ data.id }}">
+    {% endif %}
 
-        <div class="two fields">
-            <div class="field">
-                <label for="name">{{ __('Name')|e }} *</label>
-                <input id="name" name="name" type="text" required value="{{ data.name|e }}">
-            </div>
-            <div class="field">
-                <label for="company">{{ __('Company')|e }}</label>
-                <input id="company" name="company" type="text" value="{{ data.company|e }}">
-            </div>
-        </div>
-        <div class="two fields">
-            <div class="field">
-                <label for="birthdate">{{ __('Birth date')|e }}</label>
-                <input id="birthdate" name="birthdate" type="date" value="{{ data.birthdate|e }}">
-            </div>
-            <div class="field">
-                <label for="picture">{{ __('Picture')|e }}</label>
-                <div class="two fields">
-                    <div class="twelve wide field">
-                        <input id="picture" name="picture" type="text" placeholder="https://..." value="{{ data.picture|e }}">
-                        <small>{{ __('You can paste an image URL or upload a file below.')|e }}</small>
-                        {% if data.picture %}
-                            <div style="margin-top:.5rem;">
-                                <img src="{{ data.picture|e }}" alt="{{ __('Current picture')|e }}" style="max-width:120px; max-height:120px; border-radius:6px; border:1px solid #ccc;">
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="four wide field">
-                        <input name="picture_file" type="file" accept="image/*" data-upload="image" data-url-target="#picture">
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="name" class="label"><span class="label-text">{{ __('Name')|e }} *</span></label>
+        <input id="name" name="name" type="text" required value="{{ data.name|e }}" class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="company" class="label"><span class="label-text">{{ __('Company')|e }}</span></label>
+        <input id="company" name="company" type="text" value="{{ data.company|e }}" class="input input-bordered">
+      </div>
+    </div>
 
-        <div class="field">
-            <label for="notes">{{ __('Notes')|e }}</label>
-            <textarea id="notes" name="notes" rows="3">{{ data.notes|e }}</textarea>
-        </div>
-
-        <h3 class="text-xl font-semibold border-b pb-2">{{ __('Phones')|e }}</h3>
-        {% if errors.phones_text is defined %}
-            {% set e = errors.phones_text|first %}
-            {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}
-            <div class="ui pointing red basic label">{{ msg|e }}</div>
-        {% endif %}
-        <div class="repeater" data-repeater="phones">
-            <div class="repeater-items">
-                {% set phones = data.phones %}
-                {% if phones is empty %}
-                    {% set phones = [{ value: '', kind: 'mobile', tag: 'business' }] %}
-                {% endif %}
-                {% for it in phones %}
-                    <div class="fields repeater-row">
-                        <div class="four wide field">
-                            <label>{{ __('Type')|e }}</label>
-                            <select name="phones[{{ loop.index0 }}][kind]">
-                                {% set k = (it.kind|default('mobile')) %}
-                                <option value="mobile" {{ k=='mobile' ? 'selected' : '' }}>{{ 'mobile'|e }}</option>
-                                <option value="landline" {{ k=='landline' ? 'selected' : '' }}>{{ 'landline'|e }}</option>
-                            </select>
-                        </div>
-                        <div class="four wide field">
-                            <label>{{ __('Tag')|e }}</label>
-                            <select name="phones[{{ loop.index0 }}][tag]">
-                                {% set t = (it.tag|default('business')) %}
-                                <option value="business" {{ t=='business' ? 'selected' : '' }}>{{ 'business'|e }}</option>
-                                <option value="private" {{ t=='private' ? 'selected' : '' }}>{{ 'private'|e }}</option>
-                            </select>
-                        </div>
-                        <div class="seven wide field">
-                            <label>{{ __('Phone')|e }}</label>
-                            <input type="text" name="phones[{{ loop.index0 }}][value]" value="{{ it.value|default('')|e }}" placeholder="+49 ...">
-                        </div>
-                        <div class="one wide field" style="display:flex; align-items:flex-end;">
-                            <button class="ui red icon button repeater-remove" title="{{ __('Remove')|e }}" type="button"><i class="trash icon"></i></button>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <button class="ui small green icon button repeater-add" type="button"><i class="plus icon"></i> {{ __('Add')|e }}</button>
-        </div>
-
-        <h3 class="text-xl font-semibold border-b pb-2">{{ __('Emails')|e }}</h3>
-        {% if errors.emails_text is defined %}
-            {% set e = errors.emails_text|first %}
-            {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}
-            <div class="ui pointing red basic label">{{ msg|e }}</div>
-        {% endif %}
-        <div class="repeater" data-repeater="emails">
-            <div class="repeater-items">
-                {% set emails = data.emails %}
-                {% if emails is empty %}
-                    {% set emails = [{ value: '', tag: 'business' }] %}
-                {% endif %}
-                {% for it in emails %}
-                    <div class="fields repeater-row">
-                        <div class="five wide field">
-                            <label>{{ __('Tag')|e }}</label>
-                            <select name="emails[{{ loop.index0 }}][tag]">
-                                {% set t = (it.tag|default('business')) %}
-                                <option value="business" {{ t=='business' ? 'selected' : '' }}>{{ 'business'|e }}</option>
-                                <option value="private" {{ t=='private' ? 'selected' : '' }}>{{ 'private'|e }}</option>
-                            </select>
-                        </div>
-                        <div class="ten wide field">
-                            <label>{{ __('Email')|e }}</label>
-                            <input type="email" name="emails[{{ loop.index0 }}][value]" value="{{ it.value|default('')|e }}" placeholder="user@example.com">
-                        </div>
-                        <div class="one wide field" style="display:flex; align-items:flex-end;">
-                            <button class="ui red icon button repeater-remove" title="{{ __('Remove')|e }}" type="button"><i class="trash icon"></i></button>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <button class="ui small green icon button repeater-add" type="button"><i class="plus icon"></i> {{ __('Add')|e }}</button>
-        </div>
-
-        <h3 class="ui dividing header">{{ __('Websites')|e }}</h3>
-        {% if errors.websites_text is defined %}
-            {% set e = errors.websites_text|first %}
-            {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}
-            <div class="ui pointing red basic label">{{ msg|e }}</div>
-        {% endif %}
-        <div class="repeater" data-repeater="websites">
-            <div class="repeater-items">
-                {% set websites = data.websites %}
-                {% if websites is empty %}
-                    {% set websites = [{ value: '', tag: 'business' }] %}
-                {% endif %}
-                {% for it in websites %}
-                    <div class="fields repeater-row">
-                        <div class="five wide field">
-                            <label>{{ __('Tag')|e }}</label>
-                            <select name="websites[{{ loop.index0 }}][tag]">
-                                {% set t = (it.tag|default('business')) %}
-                                <option value="business" {{ t=='business' ? 'selected' : '' }}>{{ 'business'|e }}</option>
-                                <option value="private" {{ t=='private' ? 'selected' : '' }}>{{ 'private'|e }}</option>
-                            </select>
-                        </div>
-                        <div class="ten wide field">
-                            <label>{{ __('Website')|e }}</label>
-                            <input type="url" name="websites[{{ loop.index0 }}][value]" value="{{ it.value|default('')|e }}" placeholder="https://example.com">
-                        </div>
-                        <div class="one wide field" style="display:flex; align-items:flex-end;">
-                            <button class="ui red icon button repeater-remove" title="{{ __('Remove')|e }}" type="button"><i class="trash icon"></i></button>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <button class="ui small green icon button repeater-add" type="button"><i class="plus icon"></i> {{ __('Add')|e }}</button>
-        </div>
-
-        <h3 class="ui dividing header">{{ __('Social profiles')|e }}</h3>
-        {% if errors.socials_text is defined %}
-            {% set e = errors.socials_text|first %}
-            {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}
-            <div class="ui pointing red basic label">{{ msg|e }}</div>
-        {% endif %}
-        <div class="repeater" data-repeater="socials">
-            <div class="repeater-items">
-                {% set socials = data.socials %}
-                {% if socials is empty %}
-                    {% set socials = [{ value: '', tag: 'business' }] %}
-                {% endif %}
-                {% for it in socials %}
-                    <div class="fields repeater-row">
-                        <div class="five wide field">
-                            <label>{{ __('Tag')|e }}</label>
-                            <select name="socials[{{ loop.index0 }}][tag]">
-                                {% set t = (it.tag|default('business')) %}
-                                <option value="business" {{ t=='business' ? 'selected' : '' }}>{{ 'business'|e }}</option>
-                                <option value="private" {{ t=='private' ? 'selected' : '' }}>{{ 'private'|e }}</option>
-                            </select>
-                        </div>
-                        <div class="ten wide field">
-                            <label>{{ __('URL')|e }}</label>
-                            <input type="url" name="socials[{{ loop.index0 }}][value]" value="{{ it.value|default('')|e }}" placeholder="https://social.example/username">
-                        </div>
-                        <div class="one wide field" style="display:flex; align-items:flex-end;">
-                            <button class="ui red icon button repeater-remove" title="{{ __('Remove')|e }}" type="button"><i class="trash icon"></i></button>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <button class="ui small green icon button repeater-add" type="button"><i class="plus icon"></i> {{ __('Add')|e }}</button>
-        </div>
-
-        <div class="form-actions" style="margin-top:1rem;">
-            {% if cancel_url is defined and cancel_url %}
-                <a class="ui red labeled icon button" href="{{ cancel_url }}"><i class="cancel icon"></i> {{ __('Cancel')|e }}</a>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="birthdate" class="label"><span class="label-text">{{ __('Birth date')|e }}</span></label>
+        <input id="birthdate" name="birthdate" type="date" value="{{ data.birthdate|e }}" class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="picture" class="label"><span class="label-text">{{ __('Picture')|e }}</span></label>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="form-control md:col-span-2">
+            <input id="picture" name="picture" type="text" placeholder="https://..." value="{{ data.picture|e }}" class="input input-bordered">
+            <label class="label"><span class="label-text-alt opacity-80">{{ __('You can paste an image URL or upload a file below.')|e }}</span></label>
+            {% if data.picture %}
+              <div class="mt-2">
+                <img src="{{ data.picture|e }}" alt="{{ __('Current picture')|e }}" class="max-w-[120px] max-h-[120px] rounded border border-base-300">
+              </div>
             {% endif %}
-            <button class="ui green labeled icon button" type="submit"><i class="save icon"></i> {{ __('Save')|e }}</button>
+          </div>
+          <div class="form-control">
+            <input name="picture_file" type="file" accept="image/*" data-upload="image" data-url-target="#picture" class="file-input file-input-bordered">
+          </div>
         </div>
-    </form>
+      </div>
+    </div>
+
+    <div class="form-control">
+      <label for="notes" class="label"><span class="label-text">{{ __('Notes')|e }}</span></label>
+      <textarea id="notes" name="notes" rows="3" class="textarea textarea-bordered">{{ data.notes|e }}</textarea>
+    </div>
+
+    <h3 class="text-xl font-semibold border-b pb-2">{{ __('Phones')|e }}</h3>
+    {% if errors.phones_text is defined %}
+      {% set e = errors.phones_text|first %}
+      {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}
+      <div class="alert alert-error"><span>{{ msg|e }}</span></div>
+    {% endif %}
+    <div class="repeater" data-repeater="phones">
+      <div class="repeater-items space-y-3">
+        {% set phones = data.phones %}
+        {% if phones is empty %}
+          {% set phones = [{ value: '', kind: 'mobile', tag: 'business' }] %}
+        {% endif %}
+        {% for it in phones %}
+          <div class="repeater-row grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="form-control">
+              <label class="label"><span class="label-text">{{ __('Type')|e }}</span></label>
+              <select class="select select-bordered" name="phones[{{ loop.index0 }}][kind]">
+                {% set k = (it.kind|default('mobile')) %}
+                <option value="mobile" {{ k=='mobile' ? 'selected' : '' }}>{{ 'mobile'|e }}</option>
+                <option value="landline" {{ k=='landline' ? 'selected' : '' }}>{{ 'landline'|e }}</option>
+              </select>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">{{ __('Tag')|e }}</span></label>
+              <select class="select select-bordered" name="phones[{{ loop.index0 }}][tag]">
+                {% set t = (it.tag|default('business')) %}
+                <option value="business" {{ t=='business' ? 'selected' : '' }}>{{ 'business'|e }}</option>
+                <option value="private" {{ t=='private' ? 'selected' : '' }}>{{ 'private'|e }}</option>
+              </select>
+            </div>
+            <div class="form-control md:col-span-2">
+              <label class="label"><span class="label-text">{{ __('Phone')|e }}</span></label>
+              <input class="input input-bordered" type="text" name="phones[{{ loop.index0 }}][value]" value="{{ it.value|default('')|e }}" placeholder="+49 ...">
+            </div>
+            <div class="flex items-end">
+              <button class="btn btn-error btn-sm repeater-remove" title="{{ __('Remove')|e }}" type="button">{{ __('Remove')|e }}</button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <button class="btn btn-primary btn-sm mt-1 repeater-add" type="button">+ {{ __('Add')|e }}</button>
+    </div>
+
+    <h3 class="text-xl font-semibold border-b pb-2">{{ __('Emails')|e }}</h3>
+    {% if errors.emails_text is defined %}
+      {% set e = errors.emails_text|first %}
+      {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}
+      <div class="alert alert-error"><span>{{ msg|e }}</span></div>
+    {% endif %}
+    <div class="repeater" data-repeater="emails">
+      <div class="repeater-items space-y-3">
+        {% set emails = data.emails %}
+        {% if emails is empty %}
+          {% set emails = [{ value: '', tag: 'business' }] %}
+        {% endif %}
+        {% for it in emails %}
+          <div class="repeater-row grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="form-control">
+              <label class="label"><span class="label-text">{{ __('Tag')|e }}</span></label>
+              <select class="select select-bordered" name="emails[{{ loop.index0 }}][tag]">
+                {% set t = (it.tag|default('business')) %}
+                <option value="business" {{ t=='business' ? 'selected' : '' }}>{{ 'business'|e }}</option>
+                <option value="private" {{ t=='private' ? 'selected' : '' }}>{{ 'private'|e }}</option>
+              </select>
+            </div>
+            <div class="form-control md:col-span-2">
+              <label class="label"><span class="label-text">{{ __('Email')|e }}</span></label>
+              <input class="input input-bordered" type="email" name="emails[{{ loop.index0 }}][value]" value="{{ it.value|default('')|e }}" placeholder="user@example.com">
+            </div>
+            <div class="flex items-end">
+              <button class="btn btn-error btn-sm repeater-remove" title="{{ __('Remove')|e }}" type="button">{{ __('Remove')|e }}</button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <button class="btn btn-primary btn-sm mt-1 repeater-add" type="button">+ {{ __('Add')|e }}</button>
+    </div>
+
+    <h3 class="text-xl font-semibold border-b pb-2">{{ __('Websites')|e }}</h3>
+    {% if errors.websites_text is defined %}
+      {% set e = errors.websites_text|first %}
+      {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}
+      <div class="alert alert-error"><span>{{ msg|e }}</span></div>
+    {% endif %}
+    <div class="repeater" data-repeater="websites">
+      <div class="repeater-items space-y-3">
+        {% set websites = data.websites %}
+        {% if websites is empty %}
+          {% set websites = [{ value: '', tag: 'business' }] %}
+        {% endif %}
+        {% for it in websites %}
+          <div class="repeater-row grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="form-control">
+              <label class="label"><span class="label-text">{{ __('Tag')|e }}</span></label>
+              <select class="select select-bordered" name="websites[{{ loop.index0 }}][tag]">
+                {% set t = (it.tag|default('business')) %}
+                <option value="business" {{ t=='business' ? 'selected' : '' }}>{{ 'business'|e }}</option>
+                <option value="private" {{ t=='private' ? 'selected' : '' }}>{{ 'private'|e }}</option>
+              </select>
+            </div>
+            <div class="form-control md:col-span-2">
+              <label class="label"><span class="label-text">{{ __('Website')|e }}</span></label>
+              <input class="input input-bordered" type="url" name="websites[{{ loop.index0 }}][value]" value="{{ it.value|default('')|e }}" placeholder="https://example.com">
+            </div>
+            <div class="flex items-end">
+              <button class="btn btn-error btn-sm repeater-remove" title="{{ __('Remove')|e }}" type="button">{{ __('Remove')|e }}</button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <button class="btn btn-primary btn-sm mt-1 repeater-add" type="button">+ {{ __('Add')|e }}</button>
+    </div>
+
+    <h3 class="text-xl font-semibold border-b pb-2">{{ __('Social profiles')|e }}</h3>
+    {% if errors.socials_text is defined %}
+      {% set e = errors.socials_text|first %}
+      {% set msg = (e.key is defined) ? __(e.key, e.params|default({})) : ((e.code is defined) ? __('validation.' ~ e.code) : (e.message|default(e))) %}
+      <div class="alert alert-error"><span>{{ msg|e }}</span></div>
+    {% endif %}
+    <div class="repeater" data-repeater="socials">
+      <div class="repeater-items space-y-3">
+        {% set socials = data.socials %}
+        {% if socials is empty %}
+          {% set socials = [{ value: '', tag: 'business' }] %}
+        {% endif %}
+        {% for it in socials %}
+          <div class="repeater-row grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="form-control">
+              <label class="label"><span class="label-text">{{ __('Tag')|e }}</span></label>
+              <select class="select select-bordered" name="socials[{{ loop.index0 }}][tag]">
+                {% set t = (it.tag|default('business')) %}
+                <option value="business" {{ t=='business' ? 'selected' : '' }}>{{ 'business'|e }}</option>
+                <option value="private" {{ t=='private' ? 'selected' : '' }}>{{ 'private'|e }}</option>
+              </select>
+            </div>
+            <div class="form-control md:col-span-2">
+              <label class="label"><span class="label-text">{{ __('URL')|e }}</span></label>
+              <input class="input input-bordered" type="url" name="socials[{{ loop.index0 }}][value]" value="{{ it.value|default('')|e }}" placeholder="https://social.example/username">
+            </div>
+            <div class="flex items-end">
+              <button class="btn btn-error btn-sm repeater-remove" title="{{ __('Remove')|e }}" type="button">{{ __('Remove')|e }}</button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <button class="btn btn-primary btn-sm mt-1 repeater-add" type="button">+ {{ __('Add')|e }}</button>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      {% if cancel_url is defined and cancel_url %}
+        <a class="btn btn-ghost" href="{{ cancel_url }}">{{ __('Cancel')|e }}</a>
+      {% endif %}
+      <button class="btn btn-primary" type="submit">{{ __('Save')|e }}</button>
+    </div>
+  </form>
 </section>
 
 <script>
 (function(){
-    function reindex(container){
-        var rows = container.querySelectorAll('.repeater-row');
-        rows.forEach(function(row, idx){
-            row.querySelectorAll('input, select').forEach(function(el){
-                var name = el.getAttribute('name');
-                if (!name) return;
-                // replace [<num>] with [idx]
-                var updated = name.replace(/\[(?:\d+)\]/, '['+idx+']');
-                el.setAttribute('name', updated);
-            });
-        });
-    }
-    document.querySelectorAll('.repeater').forEach(function(rep){
-        var items = rep.querySelector('.repeater-items');
-        rep.addEventListener('click', function(ev){
-            if (ev.target.closest('.repeater-add')){
-                ev.preventDefault();
-                var type = rep.getAttribute('data-repeater');
-                var idx = items.querySelectorAll('.repeater-row').length;
-                var html = '';
-                if (type === 'phones'){
-                    html = '<div class="fields repeater-row">'
-                         + '<div class="four wide field"><label>Type</label><select name="phones['+idx+'][kind]"><option value="mobile">mobile</option><option value="landline">landline</option></select></div>'
-                         + '<div class="four wide field"><label>Tag</label><select name="phones['+idx+'][tag]"><option value="business">business</option><option value="private">private</option></select></div>'
-                         + '<div class="seven wide field"><label>Phone</label><input type="text" name="phones['+idx+'][value]" placeholder="+49 ..."></div>'
-                         + '<div class="one wide field" style="display:flex; align-items:flex-end;"><button class="ui red icon button repeater-remove" type="button" title="Remove"><i class="trash icon"></i></button></div>'
-                         + '</div>';
-                } else if (type === 'emails'){
-                    html = '<div class="fields repeater-row">'
-                         + '<div class="five wide field"><label>Tag</label><select name="emails['+idx+'][tag]"><option value="business">business</option><option value="private">private</option></select></div>'
-                         + '<div class="ten wide field"><label>Email</label><input type="email" name="emails['+idx+'][value]" placeholder="user@example.com"></div>'
-                         + '<div class="one wide field" style="display:flex; align-items:flex-end;"><button class="ui red icon button repeater-remove" type="button" title="Remove"><i class="trash icon"></i></button></div>'
-                         + '</div>';
-                } else if (type === 'websites'){
-                    html = '<div class="fields repeater-row">'
-                         + '<div class="five wide field"><label>Tag</label><select name="websites['+idx+'][tag]"><option value="business">business</option><option value="private">private</option></select></div>'
-                         + '<div class="ten wide field"><label>Website</label><input type="url" name="websites['+idx+'][value]" placeholder="https://example.com"></div>'
-                         + '<div class="one wide field" style="display:flex; align-items:flex-end;"><button class="ui red icon button repeater-remove" type="button" title="Remove"><i class="trash icon"></i></button></div>'
-                         + '</div>';
-                } else if (type === 'socials'){
-                    html = '<div class="fields repeater-row">'
-                         + '<div class="five wide field"><label>Tag</label><select name="socials['+idx+'][tag]"><option value="business">business</option><option value="private">private</option></select></div>'
-                         + '<div class="ten wide field"><label>URL</label><input type="url" name="socials['+idx+'][value]" placeholder="https://social.example/username"></div>'
-                         + '<div class="one wide field" style="display:flex; align-items:flex-end;"><button class="ui red icon button repeater-remove" type="button" title="Remove"><i class="trash icon"></i></button></div>'
-                         + '</div>';
-                }
-                var temp = document.createElement('div');
-                temp.innerHTML = html;
-                var node = temp.firstChild;
-                items.appendChild(node);
-                reindex(items);
-            }
-            if (ev.target.closest('.repeater-remove')){
-                ev.preventDefault();
-                var row = ev.target.closest('.repeater-row');
-                if (row){ row.remove(); reindex(items); }
-            }
-        });
+  function reindex(container){
+    var rows = container.querySelectorAll('.repeater-row');
+    rows.forEach(function(row, idx){
+      row.querySelectorAll('input, select').forEach(function(el){
+        var name = el.getAttribute('name');
+        if (!name) return;
+        var updated = name.replace(/\[(?:\d+)\]/, '['+idx+']');
+        el.setAttribute('name', updated);
+      });
     });
+  }
+  document.querySelectorAll('.repeater').forEach(function(rep){
+    var items = rep.querySelector('.repeater-items');
+    rep.addEventListener('click', function(ev){
+      if (ev.target.closest('.repeater-add')){
+        ev.preventDefault();
+        var type = rep.getAttribute('data-repeater');
+        var idx = items.querySelectorAll('.repeater-row').length;
+        var html = '';
+        if (type === 'phones'){
+          html = '<div class="repeater-row grid grid-cols-1 md:grid-cols-4 gap-3">'
+               + '<div class="form-control"><label class="label"><span class="label-text">Type</span></label><select class="select select-bordered" name="phones['+idx+'][kind]"><option value="mobile">mobile</option><option value="landline">landline</option></select></div>'
+               + '<div class="form-control"><label class="label"><span class="label-text">Tag</span></label><select class="select select-bordered" name="phones['+idx+'][tag]"><option value="business">business</option><option value="private">private</option></select></div>'
+               + '<div class="form-control md:col-span-2"><label class="label"><span class="label-text">Phone</span></label><input class="input input-bordered" type="text" name="phones['+idx+'][value]" placeholder="+49 ..."></div>'
+               + '<div class="flex items-end"><button class="btn btn-error btn-sm repeater-remove" type="button" title="Remove">Remove</button></div>'
+               + '</div>';
+        } else if (type === 'emails'){
+          html = '<div class="repeater-row grid grid-cols-1 md:grid-cols-3 gap-3">'
+               + '<div class="form-control"><label class="label"><span class="label-text">Tag</span></label><select class="select select-bordered" name="emails['+idx+'][tag]"><option value="business">business</option><option value="private">private</option></select></div>'
+               + '<div class="form-control md:col-span-2"><label class="label"><span class="label-text">Email</span></label><input class="input input-bordered" type="email" name="emails['+idx+'][value]" placeholder="user@example.com"></div>'
+               + '<div class="flex items-end"><button class="btn btn-error btn-sm repeater-remove" type="button" title="Remove">Remove</button></div>'
+               + '</div>';
+        } else if (type === 'websites'){
+          html = '<div class="repeater-row grid grid-cols-1 md:grid-cols-3 gap-3">'
+               + '<div class="form-control"><label class="label"><span class="label-text">Tag</span></label><select class="select select-bordered" name="websites['+idx+'][tag]"><option value="business">business</option><option value="private">private</option></select></div>'
+               + '<div class="form-control md:col-span-2"><label class="label"><span class="label-text">Website</span></label><input class="input input-bordered" type="url" name="websites['+idx+'][value]" placeholder="https://example.com"></div>'
+               + '<div class="flex items-end"><button class="btn btn-error btn-sm repeater-remove" type="button" title="Remove">Remove</button></div>'
+               + '</div>';
+        } else if (type === 'socials'){
+          html = '<div class="repeater-row grid grid-cols-1 md:grid-cols-3 gap-3">'
+               + '<div class="form-control"><label class="label"><span class="label-text">Tag</span></label><select class="select select-bordered" name="socials['+idx+'][tag]"><option value="business">business</option><option value="private">private</option></select></div>'
+               + '<div class="form-control md:col-span-2"><label class="label"><span class="label-text">URL</span></label><input class="input input-bordered" type="url" name="socials['+idx+'][value]" placeholder="https://social.example/username"></div>'
+               + '<div class="flex items-end"><button class="btn btn-error btn-sm repeater-remove" type="button" title="Remove">Remove</button></div>'
+               + '</div>';
+        }
+        var temp = document.createElement('div');
+        temp.innerHTML = html;
+        var node = temp.firstChild;
+        items.appendChild(node);
+        reindex(items);
+      }
+      if (ev.target.closest('.repeater-remove')){
+        ev.preventDefault();
+        var row = ev.target.closest('.repeater-row');
+        if (row){ row.remove(); reindex(items); }
+      }
+    });
+  });
 })();
 </script>
-    <script>
-    (function(){
-      function findPreview(urlInput){
-        var wrap = urlInput.closest('.field') || document;
-        var img = wrap.querySelector('img');
-        return img;
+<script>
+(function(){
+  function findPreview(urlInput){
+    var wrap = urlInput.closest('.form-control') || document;
+    var img = wrap.querySelector('img');
+    return img;
+  }
+  async function uploadFile(input){
+    const file = input.files && input.files[0];
+    if(!file) return;
+    const form = input.closest('form');
+    const fd = new FormData();
+    fd.append('file', file);
+    const csrf = form ? form.querySelector('input[type="hidden"]') : null;
+    const headers = {};
+    if (csrf && csrf.value) headers['X-CSRF-Token'] = csrf.value;
+    input.disabled = true;
+    input.style.opacity = '0.6';
+    try {
+      const res = await fetch("{{ url('/upload') }}", { method: 'POST', body: fd, headers: headers });
+      const data = await res.json();
+      if(!res.ok || !data.ok){ throw new Error(data && data.error ? data.error : 'upload_failed'); }
+      const targetSel = input.getAttribute('data-url-target');
+      if (targetSel){
+        const urlInput = form ? form.querySelector(targetSel) : document.querySelector(targetSel);
+        if (urlInput){ urlInput.value = data.url; }
+        const img = urlInput ? findPreview(urlInput) : null;
+        if (img){ img.src = data.url; }
       }
-      async function uploadFile(input){
-        const file = input.files && input.files[0];
-        if(!file) return;
-        const form = input.closest('form');
-        const fd = new FormData();
-        fd.append('file', file);
-        const csrf = form ? form.querySelector('input[type="hidden"]') : null;
-        const headers = {};
-        if (csrf && csrf.value) headers['X-CSRF-Token'] = csrf.value;
-        input.disabled = true;
-        input.style.opacity = '0.6';
-        try {
-          const res = await fetch("{{ url('/upload') }}", { method: 'POST', body: fd, headers: headers });
-          const data = await res.json();
-          if(!res.ok || !data.ok){ throw new Error(data && data.error ? data.error : 'upload_failed'); }
-          const targetSel = input.getAttribute('data-url-target');
-          if (targetSel){
-            const urlInput = form ? form.querySelector(targetSel) : document.querySelector(targetSel);
-            if (urlInput){ urlInput.value = data.url; }
-            const img = urlInput ? findPreview(urlInput) : null;
-            if (img){ img.src = data.url; }
-          }
-        } catch (e) {
-          alert('{{ __('Upload failed')|e }}: ' + (e && e.message ? e.message : e));
-        } finally {
-          input.disabled = false;
-          input.style.opacity = '';
-        }
-      }
-      document.addEventListener('change', function(ev){
-        const el = ev.target;
-        if (el && el.matches('input[type="file"][data-upload]')){
-          uploadFile(el);
-        }
-      });
-    })();
-    </script>
+    } catch (e) {
+      alert('{{ __('Upload failed')|e }}: ' + (e && e.message ? e.message : e));
+    } finally {
+      input.disabled = false;
+      input.style.opacity = '';
+    }
+  }
+  document.addEventListener('change', function(ev){
+    const el = ev.target;
+    if (el && el.matches('input[type="file"][data-upload]')){
+      uploadFile(el);
+    }
+  });
+})();
+</script>
 {% endblock %}

@@ -1,52 +1,60 @@
 {% extends 'layout.twig' %}
 {% block content %}
-<section>
-    <div class="section-header">
-        <h2>{{ __('Working Times')|e }}</h2>
-        <div class="actions-right">
-            {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('date'), dir: dir|default('desc'), classes: 'inline' } %}
-            <a class="ui button" href="{{ url('/times/new') }}">{{ __('+ Add Time Entry')|e }}</a>
-        </div>
+<section class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-2xl font-bold">{{ __('Working Times')|e }}</h2>
+    <div class="flex items-center gap-2">
+      {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('date'), dir: dir|default('desc') } %}
+      <a class="btn" href="{{ url('/times/new') }}">{{ __('+ Add Time Entry')|e }}</a>
     </div>
+  </div>
 
-    {% set totalsByContact = totalsByContact|default({}) %}
-    {% set totalsByMonth = totalsByMonth|default({}) %}
-    {% if totalsByContact %}
-        <div class="grid two-cols">
-            <div>
-                <h3>{{ __('Totals by Contact')|e }}</h3>
-                <table class="table table-compact">
-                    <thead><tr><th>{{ __('Contact')|e }}</th><th>{{ __('Hours')|e }}</th></tr></thead>
-                    <tbody>
-                    {% for name, h in totalsByContact %}
-                        <tr><td>{{ name|e }}</td><td>{{ h is not null ? h|number_format(2, '.', ',') : '' }}</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div>
-                <h3>{{ __('Totals by Month')|e }}</h3>
-                <table class="table table-compact">
-                    <thead><tr><th>{{ __('Month')|e }}</th><th>{{ __('Hours')|e }}</th></tr></thead>
-                    <tbody>
-                    {% for ym, h in totalsByMonth %}
-                        <tr><td>{{ ym|e }}</td><td>{{ h is not null ? h|number_format(2, '.', ',') : '' }}</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+  {% set totalsByContact = totalsByContact|default({}) %}
+  {% set totalsByMonth = totalsByMonth|default({}) %}
+  {% if totalsByContact %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="card bg-base-200">
+        <div class="card-body">
+          <h3 class="card-title">{{ __('Totals by Contact')|e }}</h3>
+          <div class="overflow-x-auto">
+            <table class="table table-compact">
+              <thead><tr><th>{{ __('Contact')|e }}</th><th>{{ __('Hours')|e }}</th></tr></thead>
+              <tbody>
+              {% for name, h in totalsByContact %}
+                <tr><td>{{ name|e }}</td><td>{{ h is not null ? h|number_format(2, '.', ',') : '' }}</td></tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
-    {% endif %}
-
-    {% include 'partials/dynamic_list.twig' with {
-        title: '',
-        items: times|default([]),
-        columns: columns,
-        actions: { edit_url: url('/times/edit'), delete_url: url('/times/delete'), id_field: 'id' }
-    } %}
-    <div class="list-footer">
-        {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
-        {{ paginate(total|default(times|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('date'), dir: dir|default('desc')}))|raw }}
+      </div>
+      <div class="card bg-base-200">
+        <div class="card-body">
+          <h3 class="card-title">{{ __('Totals by Month')|e }}</h3>
+          <div class="overflow-x-auto">
+            <table class="table table-compact">
+              <thead><tr><th>{{ __('Month')|e }}</th><th>{{ __('Hours')|e }}</th></tr></thead>
+              <tbody>
+              {% for ym, h in totalsByMonth %}
+                <tr><td>{{ ym|e }}</td><td>{{ h is not null ? h|number_format(2, '.', ',') : '' }}</td></tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
+  {% endif %}
+
+  {% include 'partials/dynamic_list.twig' with {
+    title: '',
+    items: times|default([]),
+    columns: columns,
+    actions: { edit_url: url('/times/edit'), delete_url: url('/times/delete'), id_field: 'id' }
+  } %}
+  <div class="mt-4">
+    {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
+    {{ paginate(total|default(times|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('date'), dir: dir|default('desc')}))|raw }}
+  </div>
 </section>
 {% endblock %}

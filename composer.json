@@ -19,5 +19,9 @@
   },
   "scripts": {
     "start": "php -S localhost:8080 -t public"
+  },
+  "config": {
+    "disable-tls": true,
+    "secure-http": false
   }
 }

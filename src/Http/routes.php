@@ -109,6 +109,18 @@ return static function (Container $container, Router $router): void {
     $router->get('/tasks/view', [$container->get('tasksController'), 'view']);
     $router->post('/tasks/new', [$container->get('tasksController'), 'create']);
 
+    // Projects
+    $router->get('/projects', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) {
+            send_list_cache_headers([$cfg->jsonPath('projects.json'), $cfg->jsonPath('contacts.json')], 60);
+        }
+        ($container->get('projectsController'))->list();
+    });
+    $router->get('/projects/new', [$container->get('projectsController'), 'newForm']);
+    $router->get('/projects/view', [$container->get('projectsController'), 'view']);
+    $router->post('/projects/new', [$container->get('projectsController'), 'create']);
+
     // Employees
     $router->get('/employees', function() use ($container) {
         $cfg = $container->get('config');
@@ -162,6 +174,11 @@ return static function (Container $container, Router $router): void {
     $router->get('/tasks/edit', [$container->get('tasksController'), 'editForm']);
     $router->post('/tasks/edit', [$container->get('tasksController'), 'update']);
     $router->post('/tasks/delete', [$container->get('tasksController'), 'delete']);
+    $router->post('/tasks/move', [$container->get('tasksController'), 'move']);
+
+    $router->get('/projects/edit', [$container->get('projectsController'), 'editForm']);
+    $router->post('/projects/edit', [$container->get('projectsController'), 'update']);
+    $router->post('/projects/delete', [$container->get('projectsController'), 'delete']);
 
     $router->get('/employees/edit', [$container->get('employeesController'), 'editForm']);
     $router->post('/employees/edit', [$container->get('employeesController'), 'update']);

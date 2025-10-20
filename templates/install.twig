@@ -1,44 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="utf-8">
-    <title>{{ __('Installation')|e }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ url('/assets/app.css') }}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ __('Installation')|e }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
 </head>
-<body>
-<main class="container">
-    <h1>{{ __('Installation')|e }}</h1>
-    <p>{{ __('Welcome! Please provide the initial configuration to set up the application.')|e }}</p>
+<body class="min-h-screen bg-base-100">
+  <main class="container mx-auto p-4 max-w-3xl">
+    <div class="card bg-base-200 shadow">
+      <div class="card-body space-y-4">
+        <h1 class="card-title text-3xl">{{ __('Installation')|e }}</h1>
+        <p class="opacity-80">{{ __('Welcome! Please provide the initial configuration to set up the application.')|e }}</p>
 
-    <form method="post">
-        {{ csrf_field()|raw }}
-        <fieldset>
-            <legend>{{ __('Admin user')|e }}</legend>
-            <div class="form-row">
-                <label for="admin_email">{{ __('Email')|e }}</label>
-                <input type="email" id="admin_email" name="admin_email" value="{{ admin_email|default('')|e }}" required>
+        <form method="post" class="space-y-4">
+          {{ csrf_field()|raw }}
+
+          <fieldset class="space-y-3">
+            <legend class="text-xl font-semibold">{{ __('Admin user')|e }}</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="form-control md:col-span-2">
+                <label for="admin_email" class="label"><span class="label-text">{{ __('Email')|e }}</span></label>
+                <input type="email" id="admin_email" name="admin_email" value="{{ admin_email|default('')|e }}" required class="input input-bordered">
+              </div>
+              <div class="form-control md:col-span-2">
+                <label for="admin_password" class="label"><span class="label-text">{{ __('Password')|e }}</span></label>
+                <input type="password" id="admin_password" name="admin_password" required class="input input-bordered">
+              </div>
             </div>
-            <div class="form-row">
-                <label for="admin_password">{{ __('Password')|e }}</label>
-                <input type="password" id="admin_password" name="admin_password" required>
-            </div>
-        </fieldset>
-        <fieldset>
-            <legend>{{ __('Localization')|e }}</legend>
-            <div class="form-row">
-                <label for="locale">{{ __('Language')|e }}</label>
-                <select id="locale" name="locale">
-                    {% for code, label in locales|default({'en':'English','de':'Deutsch'}) %}
-                        <option value="{{ code|e }}" {{ (currentLang|default('en')) == code ? 'selected' : '' }}>{{ label|e }}</option>
-                    {% endfor %}
+          </fieldset>
+
+          <fieldset class="space-y-3">
+            <legend class="text-xl font-semibold">{{ __('Localization')|e }}</legend>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="form-control md:col-span-2">
+                <label for="locale" class="label"><span class="label-text">{{ __('Language')|e }}</span></label>
+                <select id="locale" name="locale" class="select select-bordered">
+                  {% for code, label in locales|default({'en':'English','de':'Deutsch'}) %}
+                    <option value="{{ code|e }}" {{ (currentLang|default('en')) == code ? 'selected' : '' }}>{{ label|e }}</option>
+                  {% endfor %}
                 </select>
+              </div>
             </div>
-        </fieldset>
-        <div class="form-actions">
-            <button class="btn" type="submit">{{ __('Install')|e }}</button>
-        </div>
-    </form>
-</main>
+          </fieldset>
+
+          <div class="card-actions justify-end">
+            <button class="btn btn-primary" type="submit">{{ __('Install')|e }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
 </body>
 </html>

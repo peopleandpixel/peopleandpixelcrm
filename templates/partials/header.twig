@@ -2,10 +2,13 @@
   <div class="flex-1">
     <a href="{{ url('/') }}" class="btn btn-ghost text-xl">People & Pixel</a>
   </div>
-  <div class="flex-none">
+  <div class="flex-none flex items-center gap-1">
     <button id="theme-toggle" class="btn btn-ghost btn-circle" title="{{ __('Toggle theme')|e }}" aria-label="{{ __('Toggle theme')|e }}" aria-pressed="false">
       <span data-icon role="img" aria-hidden="true">☀️</span>
     </button>
+    <a href="{{ url('/logout') }}" class="btn btn-ghost btn-circle" title="{{ __('Logout')|e }}" aria-label="{{ __('Logout')|e }}">
+      <span aria-hidden="true">⏻</span>
+    </a>
     <span id="sr-live" class="sr-only" aria-live="polite"></span>
   </div>
 </header>

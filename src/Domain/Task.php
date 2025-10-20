@@ -36,10 +36,12 @@ class Task
         $employee_id = Sanitizer::int($in['employee_id'] ?? 0);
         $project_id = Sanitizer::int($in['project_id'] ?? 0);
         $title = Sanitizer::string($in['title'] ?? '');
-        $due_date = Sanitizer::string($in['due_date'] ?? '');
+        $rawDue = Sanitizer::string($in['due_date'] ?? '');
+        $due_date = $rawDue === '' ? '' : (\App\Util\Dates::toIsoDate($rawDue) ?? $rawDue);
         $status = Sanitizer::string($in['status'] ?? 'open');
         $notes = Sanitizer::string($in['notes'] ?? '');
-        $done_date = Sanitizer::string($in['done_date'] ?? '');
+        $rawDone = Sanitizer::string($in['done_date'] ?? '');
+        $done_date = $rawDone === '' ? '' : (\App\Util\Dates::toIsoDate($rawDone) ?? $rawDone);
         return new self($contact_id, $employee_id, $title, $due_date, $status, $notes, $done_date, $project_id);
     }
 

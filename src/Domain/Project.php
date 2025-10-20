@@ -31,8 +31,10 @@ class Project
         $contact_id = Sanitizer::int($in['contact_id'] ?? 0);
         $name = Sanitizer::string($in['name'] ?? '');
         $description = Sanitizer::string($in['description'] ?? '');
-        $start_date = Sanitizer::string($in['start_date'] ?? '');
-        $end_date = Sanitizer::string($in['end_date'] ?? '');
+        $rawStart = Sanitizer::string($in['start_date'] ?? '');
+        $start_date = $rawStart === '' ? '' : (\App\Util\Dates::toIsoDate($rawStart) ?? $rawStart);
+        $rawEnd = Sanitizer::string($in['end_date'] ?? '');
+        $end_date = $rawEnd === '' ? '' : (\App\Util\Dates::toIsoDate($rawEnd) ?? $rawEnd);
         $status = Sanitizer::string($in['status'] ?? 'planned');
         return new self($contact_id, $name, $description, $start_date, $end_date, $status);
     }

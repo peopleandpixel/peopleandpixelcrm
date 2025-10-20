@@ -47,7 +47,8 @@ class Contact
 
         $self = new self($name, $company, $notes);
 
-        $self->birthdate = Sanitizer::string($in['birthdate'] ?? '');
+        $rawBirth = Sanitizer::string($in['birthdate'] ?? '');
+        $self->birthdate = $rawBirth === '' ? '' : (\App\Util\Dates::toIsoDate($rawBirth) ?? $rawBirth);
         $self->picture = Sanitizer::string($in['picture'] ?? '');
 
         // Prefer new array-based inputs; keep *_text for backward compatibility

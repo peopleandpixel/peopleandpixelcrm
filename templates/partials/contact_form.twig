@@ -1,35 +1,41 @@
-<section>
-    <h2>{{ title|default('')|e }}</h2>
-    <form method="post" class="ui form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
-        {{ csrf_field()|raw }}
-        {% if id is defined and id %}
-            <input type="hidden" name="id" value="{{ id|int }}">
-        {% endif %}
-        <div class="form-row">
-            <label for="name">{{ __('Name')|e }} *</label>
-            <input type="text" id="name" name="name" value="{{ name|default('')|e }}" required>
-        </div>
-        <div class="form-row">
-            <label for="company">{{ __('Company')|e }}</label>
-            <input type="text" id="company" name="company" value="{{ company|default('')|e }}">
-        </div>
-        <div class="form-row">
-            <label for="email">{{ __('Email')|e }}</label>
-            <input type="email" id="email" name="email" value="{{ email|default('')|e }}">
-        </div>
-        <div class="form-row">
-            <label for="phone">{{ __('Phone')|e }}</label>
-            <input type="text" id="phone" name="phone" value="{{ phone|default('')|e }}">
-        </div>
-        <div class="form-row">
-            <label for="notes">{{ __('Notes')|e }}</label>
-            <textarea id="notes" name="notes" rows="4">{{ notes|default('')|e }}</textarea>
-        </div>
-        <div class="form-actions">
-            <a class="ui red labeled icon button" href="{{ url('/contacts') }}"><i class="cancel icon"></i> {{ __('Cancel')|e }}</a>
-            <span class="ui right aligned">
-                <button class="ui green labeled icon button" type="submit"><i class="save icon"></i> {{ submit_label|default(__('Save')|e) }}</button>
-            </span>
-        </div>
-    </form>
+<section class="space-y-4">
+  {% if title is defined and title %}<h2 class="text-2xl font-bold">{{ title|e }}</h2>{% endif %}
+  <form method="post" class="space-y-4"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
+    {{ csrf_field()|raw }}
+    {% if id is defined and id %}
+      <input type="hidden" name="id" value="{{ id|int }}">
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="name" class="label"><span class="label-text">{{ __('Name')|e }} *</span></label>
+        <input type="text" id="name" name="name" value="{{ name|default('')|e }}" required class="input input-bordered" />
+      </div>
+      <div class="form-control">
+        <label for="company" class="label"><span class="label-text">{{ __('Company')|e }}</span></label>
+        <input type="text" id="company" name="company" value="{{ company|default('')|e }}" class="input input-bordered" />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="email" class="label"><span class="label-text">{{ __('Email')|e }}</span></label>
+        <input type="email" id="email" name="email" value="{{ email|default('')|e }}" class="input input-bordered" />
+      </div>
+      <div class="form-control">
+        <label for="phone" class="label"><span class="label-text">{{ __('Phone')|e }}</span></label>
+        <input type="text" id="phone" name="phone" value="{{ phone|default('')|e }}" class="input input-bordered" />
+      </div>
+    </div>
+
+    <div class="form-control">
+      <label for="notes" class="label"><span class="label-text">{{ __('Notes')|e }}</span></label>
+      <textarea id="notes" name="notes" rows="4" class="textarea textarea-bordered">{{ notes|default('')|e }}</textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <a class="btn btn-ghost" href="{{ url('/contacts') }}">{{ __('Cancel')|e }}</a>
+      <button class="btn btn-primary" type="submit">{{ submit_label|default(__('Save')|e) }}</button>
+    </div>
+  </form>
 </section>

@@ -1,45 +1,53 @@
-<section>
-    <h2>{{ title|default('')|e }}</h2>
-    <form method="post" class="form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
-        {{ csrf_field()|raw }}
-        {% if time is defined and time.id is defined and time.id %}
-            <input type="hidden" name="id" value="{{ (time.id)|int }}">
-        {% endif %}
-        <div class="form-row">
-            <label for="contact_id">{{ __('Contact')|e }}</label>
-            <select id="contact_id" name="contact_id">
-                <option value="0">{{ __('Unassigned')|e }}</option>
-                {% for c in contacts|default([]) %}
-                    {% set selId = contactId is defined ? (contactId|int) : (time.contact_id|default(0)) %}
-                    <option value="{{ (c.id|default(0))|int }}" {{ selId == (c.id|default(0)) ? 'selected' : '' }}>
-                        {{ (c.name|default(''))|e }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-row">
-            <label for="date">{{ __('Date')|e }}</label>
-            <input type="date" id="date" name="date" value="{{ (date|default(time.date|default("now"|date('Y-m-d'))))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="start_time">{{ __('Start time')|e }}</label>
-            <input type="time" id="start_time" name="start_time" value="{{ (start_time|default(time.start_time|default('')))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="end_time">{{ __('End time')|e }}</label>
-            <input type="time" id="end_time" name="end_time" value="{{ (end_time|default(time.end_time|default('')))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="hours">{{ __('Hours')|e }} <small>({{ __('auto from start/end if provided')|e }})</small></label>
-            <input type="number" id="hours" name="hours" step="0.25" min="0.25" value="{{ (hours|default(time.hours|default('1')))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="description">{{ __('Notes')|e }}</label>
-            <textarea id="description" name="description" rows="3">{{ (description|default(time.description|default('')))|e }}</textarea>
-        </div>
-        <div class="form-actions">
-            <a class="btn btn-secondary" href="{{ url('/times') }}">{{ __('Cancel')|e }}</a>
-            <button class="btn" type="submit">{{ submit_label|default(__('Save Time Entry')|e) }}</button>
-        </div>
-    </form>
+<section class="space-y-4">
+  <h2 class="text-2xl font-bold">{{ title|default('')|e }}</h2>
+  <form method="post" class="space-y-4"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
+    {{ csrf_field()|raw }}
+    {% if time is defined and time.id is defined and time.id %}
+      <input type="hidden" name="id" value="{{ (time.id)|int }}">
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="contact_id" class="label"><span class="label-text">{{ __('Contact')|e }}</span></label>
+        <select id="contact_id" name="contact_id" class="select select-bordered">
+          <option value="0">{{ __('Unassigned')|e }}</option>
+          {% for c in contacts|default([]) %}
+            {% set selId = contactId is defined ? (contactId|int) : (time.contact_id|default(0)) %}
+            <option value="{{ (c.id|default(0))|int }}" {{ selId == (c.id|default(0)) ? 'selected' : '' }}>
+              {{ (c.name|default(''))|e }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-control">
+        <label for="date" class="label"><span class="label-text">{{ __('Date')|e }}</span></label>
+        <input type="date" id="date" name="date" value="{{ (date|default(time.date|default("now"|date('Y-m-d'))))|e }}" class="input input-bordered">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="form-control">
+        <label for="start_time" class="label"><span class="label-text">{{ __('Start time')|e }}</span></label>
+        <input type="time" id="start_time" name="start_time" value="{{ (start_time|default(time.start_time|default('')))|e }}" class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="end_time" class="label"><span class="label-text">{{ __('End time')|e }}</span></label>
+        <input type="time" id="end_time" name="end_time" value="{{ (end_time|default(time.end_time|default('')))|e }}" class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="hours" class="label"><span class="label-text">{{ __('Hours')|e }} <span class="opacity-70 text-xs">({{ __('auto from start/end if provided')|e }})</span></span></label>
+        <input type="number" id="hours" name="hours" step="0.25" min="0.25" value="{{ (hours|default(time.hours|default('1')))|e }}" class="input input-bordered">
+      </div>
+    </div>
+
+    <div class="form-control">
+      <label for="description" class="label"><span class="label-text">{{ __('Notes')|e }}</span></label>
+      <textarea id="description" name="description" rows="3" class="textarea textarea-bordered">{{ (description|default(time.description|default('')))|e }}</textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <a class="btn btn-ghost" href="{{ url('/times') }}">{{ __('Cancel')|e }}</a>
+      <button class="btn btn-primary" type="submit">{{ submit_label|default(__('Save Time Entry')|e) }}</button>
+    </div>
+  </form>
 </section>

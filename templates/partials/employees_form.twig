@@ -1,41 +1,52 @@
-<section>
-    <h2>{{ title|default('')|e }}</h2>
-    <form method="post" class="form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
-        {{ csrf_field()|raw }}
-        {% if employee is defined and employee.id %}
-            <input type="hidden" name="id" value="{{ (employee.id)|int }}">
-        {% endif %}
-        <div class="form-row">
-            <label for="name">{{ __('Name')|e }} *</label>
-            <input type="text" id="name" name="name" value="{{ name|default(employee.name|default(''))|e }}" required>
-        </div>
-        <div class="form-row">
-            <label for="role">{{ __('Role')|e }}</label>
-            <input type="text" id="role" name="role" value="{{ role|default(employee.role|default(''))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="email">{{ __('Email')|e }}</label>
-            <input type="email" id="email" name="email" value="{{ email|default(employee.email|default(''))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="phone">{{ __('Phone')|e }}</label>
-            <input type="text" id="phone" name="phone" value="{{ phone|default(employee.phone|default(''))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="salary">{{ __('Salary')|e }}</label>
-            <input type="number" step="0.01" id="salary" name="salary" value="{{ salary|default(employee.salary|default(''))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="hired_at">{{ __('Hired at')|e }}</label>
-            <input type="date" id="hired_at" name="hired_at" value="{{ hired_at|default(employee.hired_at|default(''))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="notes">{{ __('Notes')|e }}</label>
-            <textarea id="notes" name="notes" rows="3">{{ notes|default(employee.notes|default(''))|e }}</textarea>
-        </div>
-        <div class="form-actions">
-            <a class="btn btn-secondary" href="{{ url('/employees') }}">{{ __('Cancel')|e }}</a>
-            <button class="btn" type="submit">{{ submit_label|default(__('Save Employee')|e) }}</button>
-        </div>
-    </form>
+<section class="space-y-4">
+  <h2 class="text-2xl font-bold">{{ title|default('')|e }}</h2>
+  <form method="post" class="space-y-4"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
+    {{ csrf_field()|raw }}
+    {% if employee is defined and employee.id %}
+      <input type="hidden" name="id" value="{{ (employee.id)|int }}">
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="name" class="label"><span class="label-text">{{ __('Name')|e }} *</span></label>
+        <input type="text" id="name" name="name" value="{{ name|default(employee.name|default(''))|e }}" required class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="role" class="label"><span class="label-text">{{ __('Role')|e }}</span></label>
+        <input type="text" id="role" name="role" value="{{ role|default(employee.role|default(''))|e }}" class="input input-bordered">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="email" class="label"><span class="label-text">{{ __('Email')|e }}</span></label>
+        <input type="email" id="email" name="email" value="{{ email|default(employee.email|default(''))|e }}" class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="phone" class="label"><span class="label-text">{{ __('Phone')|e }}</span></label>
+        <input type="text" id="phone" name="phone" value="{{ phone|default(employee.phone|default(''))|e }}" class="input input-bordered">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="salary" class="label"><span class="label-text">{{ __('Salary')|e }}</span></label>
+        <input type="number" step="0.01" id="salary" name="salary" value="{{ salary|default(employee.salary|default(''))|e }}" class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="hired_at" class="label"><span class="label-text">{{ __('Hired at')|e }}</span></label>
+        <input type="date" id="hired_at" name="hired_at" value="{{ hired_at|default(employee.hired_at|default(''))|e }}" class="input input-bordered">
+      </div>
+    </div>
+
+    <div class="form-control">
+      <label for="notes" class="label"><span class="label-text">{{ __('Notes')|e }}</span></label>
+      <textarea id="notes" name="notes" rows="3" class="textarea textarea-bordered">{{ notes|default(employee.notes|default(''))|e }}</textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <a class="btn btn-ghost" href="{{ url('/employees') }}">{{ __('Cancel')|e }}</a>
+      <button class="btn btn-primary" type="submit">{{ submit_label|default(__('Save Employee')|e) }}</button>
+    </div>
+  </form>
 </section>

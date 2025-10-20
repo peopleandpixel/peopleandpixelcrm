@@ -1,51 +1,60 @@
-<section>
-    <h2>{{ title|default('')|e }}</h2>
-    <form method="post" class="form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
-        {{ csrf_field()|raw }}
-        {% if task is defined and task.id is defined and task.id %}
-            <input type="hidden" name="id" value="{{ (task.id)|int }}">
-        {% endif %}
-        <div class="form-row">
-            <label for="contact_id">{{ __('Contact')|e }}</label>
-            <select id="contact_id" name="contact_id">
-                <option value="0">{{ __('Unassigned')|e }}</option>
-                {% for c in contacts|default([]) %}
-                    {% set selId = contactId is defined ? (contactId|int) : (task.contact_id|default(0)) %}
-                    <option value="{{ (c.id|default(0))|int }}" {{ selId == (c.id|default(0)) ? 'selected' : '' }}>
-                        {{ (c.name|default(''))|e }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-row">
-            <label for="title">{{ __('Title')|e }} *</label>
-            <input type="text" id="title" name="title" value="{{ title|default(task.title|default(''))|e }}" required>
-        </div>
-        <div class="form-row">
-            <label for="due_date">{{ __('Due date')|e }}</label>
-            <input type="date" id="due_date" name="due_date" value="{{ due_date|default(task.due_date|default(''))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="status">{{ __('Status')|e }}</label>
-            {% set curStatus = status|default(task.status|default('open')) %}
-            <select id="status" name="status">
-                <option value="open" {{ curStatus == 'open' ? 'selected' : '' }}>{{ __('Open')|e }}</option>
-                <option value="done" {{ curStatus == 'done' ? 'selected' : '' }}>{{ __('Done')|e }}</option>
-            </select>
-        </div>
-        {% if task is defined and task.done_date is defined and task.done_date %}
-            <div class="form-row">
-                <label>{{ __('Done date')|e }}</label>
-                <input type="date" value="{{ task.done_date|e }}" disabled>
-            </div>
-        {% endif %}
-        <div class="form-row">
-            <label for="notes">{{ __('Notes')|e }}</label>
-            <textarea id="notes" name="notes" rows="3">{{ notes|default(task.notes|default(''))|e }}</textarea>
-        </div>
-        <div class="form-actions">
-            <a class="btn btn-secondary" href="{{ url('/tasks') }}">{{ __('Cancel')|e }}</a>
-            <button class="btn" type="submit">{{ submit_label|default(__('Save Task')|e) }}</button>
-        </div>
-    </form>
+<section class="space-y-4">
+  <h2 class="text-2xl font-bold">{{ title|default('')|e }}</h2>
+  <form method="post" class="space-y-4"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
+    {{ csrf_field()|raw }}
+    {% if task is defined and task.id is defined and task.id %}
+      <input type="hidden" name="id" value="{{ (task.id)|int }}">
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="contact_id" class="label"><span class="label-text">{{ __('Contact')|e }}</span></label>
+        <select id="contact_id" name="contact_id" class="select select-bordered">
+          <option value="0">{{ __('Unassigned')|e }}</option>
+          {% for c in contacts|default([]) %}
+            {% set selId = contactId is defined ? (contactId|int) : (task.contact_id|default(0)) %}
+            <option value="{{ (c.id|default(0))|int }}" {{ selId == (c.id|default(0)) ? 'selected' : '' }}>
+              {{ (c.name|default(''))|e }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-control">
+        <label for="title" class="label"><span class="label-text">{{ __('Title')|e }} *</span></label>
+        <input type="text" id="title" name="title" value="{{ title|default(task.title|default(''))|e }}" required class="input input-bordered">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="due_date" class="label"><span class="label-text">{{ __('Due date')|e }}</span></label>
+        <input type="date" id="due_date" name="due_date" value="{{ due_date|default(task.due_date|default(''))|e }}" class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="status" class="label"><span class="label-text">{{ __('Status')|e }}</span></label>
+        {% set curStatus = status|default(task.status|default('open')) %}
+        <select id="status" name="status" class="select select-bordered">
+          <option value="open" {{ curStatus == 'open' ? 'selected' : '' }}>{{ __('Open')|e }}</option>
+          <option value="done" {{ curStatus == 'done' ? 'selected' : '' }}>{{ __('Done')|e }}</option>
+        </select>
+      </div>
+    </div>
+
+    {% if task is defined and task.done_date is defined and task.done_date %}
+      <div class="form-control">
+        <label class="label"><span class="label-text">{{ __('Done date')|e }}</span></label>
+        <input type="date" value="{{ task.done_date|e }}" disabled class="input input-bordered">
+      </div>
+    {% endif %}
+
+    <div class="form-control">
+      <label for="notes" class="label"><span class="label-text">{{ __('Notes')|e }}</span></label>
+      <textarea id="notes" name="notes" rows="3" class="textarea textarea-bordered">{{ notes|default(task.notes|default(''))|e }}</textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <a class="btn btn-ghost" href="{{ url('/tasks') }}">{{ __('Cancel')|e }}</a>
+      <button class="btn btn-primary" type="submit">{{ submit_label|default(__('Save Task')|e) }}</button>
+    </div>
+  </form>
 </section>

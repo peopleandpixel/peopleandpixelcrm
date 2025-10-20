@@ -1,31 +1,189 @@
 {% extends 'layout.twig' %}
 {% block content %}
-<section>
-    <div class="section-header">
-        <h2>{{ __('Tasks')|e }}</h2>
-        <div class="ui secondary menu">
-            {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('due_date'), dir: dir|default('asc'), classes: 'inline' } %}
-            <div class="right menu">
-            <a class="ui green icon button" href="{{ url('/tasks/new') }}"><i class="plus icon"></i> {{ __('Add Task')|e }}</a>
-            </div>
+<section class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-2xl font-bold">{{ __('Tasks')|e }}</h2>
+    <div class="flex items-center gap-2">
+      {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('due_date'), dir: dir|default('asc') } %}
+      <a class="btn btn-primary" href="{{ url('/tasks/new') }}">+ {{ __('Add Task')|e }}</a>
+    </div>
+  </div>
+  {% if counts is defined and counts %}
+    <p class="opacity-80">
+      <strong>{{ __('Open')|e }}:</strong> {{ (counts.open|default(0))|int }}
+      &nbsp;|&nbsp;
+      <strong>{{ __('Done')|e }}:</strong> {{ (counts.done|default(0))|int }}
+    </p>
+  {% endif %}
+
+  <div id="kanban-csrf" class="hidden">{{ csrf_field()|raw }}</div>
+
+  {# Trello-like board grouped by status #}
+  {% set statuses = [
+    {key: 'open', label: __('Open')},
+    {key: 'in_progress', label: __('In progress')},
+    {key: 'review', label: __('In review')},
+    {key: 'blocked', label: __('Blocked')},
+    {key: 'done', label: __('Done')},
+  ] %}
+
+  {% set grouped = {} %}
+  {% for s in statuses %}
+    {% set _ = grouped|merge({ (s.key): [] }) %}
+  {% endfor %}
+  {% set grouped = grouped %}
+  {% for t in tasks %}
+    {% set k = t.status|default('open') %}
+    {% set col = grouped[k]|default([]) %}
+    {% set col = col|merge([t]) %}
+    {% set grouped = grouped|merge({ (k): col }) %}
+  {% endfor %}
+
+  <div id="kanban-board" class="flex gap-4 overflow-x-auto pb-2">
+    {% for s in statuses %}
+      {% set cards = grouped[s.key]|default([]) %}
+      <div class="min-w-[260px] w-72 bg-base-200 rounded-lg p-3 flex-shrink-0" data-status="{{ s.key }}">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-semibold">{{ s.label|e }}</h3>
+          <span class="badge column-count">{{ cards|length }}</span>
         </div>
-    </div>
-    {% if counts is defined and counts %}
-        <p>
-            <strong>{{ __('Open')|e }}:</strong> {{ (counts.open|default(0))|int }}
-            &nbsp;|&nbsp;
-            <strong>{{ __('Done')|e }}:</strong> {{ (counts.done|default(0))|int }}
-        </p>
-    {% endif %}
-    {% include 'partials/dynamic_list.twig' with {
-        title: '',
-        items: tasks|default([]),
-        columns: columns,
-        actions: { edit_url: url('/tasks/edit'), delete_url: url('/tasks/delete'), id_field: 'id' }
-    } %}
-    <div class="list-footer">
-        {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
-        {{ paginate(total|default(tasks|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('due_date'), dir: dir|default('asc')}))|raw }}
-    </div>
+        <div class="space-y-3 column-cards min-h-[20px]" data-dropzone="true">
+          {% for it in cards %}
+            <div class="card bg-base-100 shadow-sm border border-base-300" draggable="true" data-id="{{ it.id|int }}">
+              <div class="card-body p-3 gap-2">
+                <div class="flex items-start justify-between">
+                  <a href="{{ url('/tasks/view', {id: it.id}) }}" class="font-medium hover:underline line-clamp-2">{{ it.title|default('#'~it.id)|e }}</a>
+                  <a href="{{ url('/tasks/edit', {id: it.id}) }}" class="btn btn-ghost btn-xs">{{ __('Edit')|e }}</a>
+                </div>
+                <div class="flex flex-wrap gap-2 text-sm opacity-80">
+                  {% if it.project_name %}<span class="badge badge-ghost">{{ it.project_name|e }}</span>{% endif %}
+                  {% if it.contact_name %}<span class="badge badge-outline">{{ it.contact_name|e }}</span>{% endif %}
+                  {% if it.employee_name %}<span class="badge badge-info badge-outline">{{ it.employee_name|e }}</span>{% endif %}
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <div class="flex items-center gap-2">
+                    {% if it.due_date %}
+                      <span class="badge {% if s.key == 'done' %}badge-success{% elseif it.due_date < ("now"|date('Y-m-d')) %}badge-error{% else %}badge-warning{% endif %} badge-outline">{{ __('Due')|e }} {{ it.due_date|e }}</span>
+                    {% endif %}
+                    {% if it.done_date %}
+                      <span class="badge badge-success badge-outline">{{ __('Done')|e }} {{ it.done_date|e }}</span>
+                    {% endif %}
+                  </div>
+                  <form method="post" action="{{ url('/tasks/delete') }}" onsubmit="return confirm('{{ __('Are you sure?')|e }}');">
+                    {{ csrf_field()|raw }}
+                    <input type="hidden" name="id" value="{{ it.id|int }}">
+                    <button class="btn btn-ghost btn-xs" type="submit">{{ __('Delete')|e }}</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="text-sm opacity-70">{{ __('No tasks')|e }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    (function(){
+      const board = document.getElementById('kanban-board');
+      if (!board) return;
+      let dragEl = null;
+      let originCol = null;
+      let originNext = null;
+      const getToken = () => {
+        const c1 = document.querySelector('#kanban-csrf input[type="hidden"]');
+        if (c1 && c1.value) return c1.value;
+        const c2 = document.querySelector('input[name="_csrf"]');
+        return c2 ? c2.value : '';
+      };
+      const updateCounts = () => {
+        board.querySelectorAll('[data-status]').forEach(col => {
+          const countEl = col.querySelector('.column-count');
+          const cardsEl = col.querySelector('.column-cards');
+          const n = cardsEl ? cardsEl.querySelectorAll('.card').length : 0;
+          if (countEl) countEl.textContent = n;
+        });
+      };
+      const clearHighlights = () => {
+        board.querySelectorAll('.column-cards').forEach(z => z.classList.remove('ring', 'ring-primary'));
+      };
+      board.addEventListener('dragstart', (e) => {
+        const target = e.target;
+        const card = target && target.closest ? target.closest('.card') : null;
+        if (!card) return;
+        dragEl = card;
+        originCol = card.parentElement; // .column-cards
+        originNext = card.nextElementSibling;
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', card.getAttribute('data-id') || ''); } catch(_){}
+        setTimeout(() => card.classList.add('opacity-50'), 0);
+      });
+      board.addEventListener('dragend', () => {
+        if (dragEl) dragEl.classList.remove('opacity-50');
+        dragEl = null; originCol = null; originNext = null; clearHighlights();
+      });
+      board.addEventListener('dragover', (e) => {
+        const zone = e.target && e.target.closest ? e.target.closest('.column-cards') : null;
+        if (!zone) return;
+        e.preventDefault();
+        clearHighlights();
+        zone.classList.add('ring', 'ring-primary');
+      });
+      board.addEventListener('drop', async (e) => {
+        const zone = e.target && e.target.closest ? e.target.closest('.column-cards') : null;
+        if (!zone || !dragEl) return;
+        e.preventDefault();
+        clearHighlights();
+        const col = zone.closest('[data-status]');
+        const status = col ? col.getAttribute('data-status') : '';
+        const id = dragEl.getAttribute('data-id');
+        if (!status || !id) return;
+        // Optimistic move
+        zone.appendChild(dragEl);
+        updateCounts();
+        try {
+          const res = await fetch('{{ url('/tasks/move') }}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+              'X-CSRF-Token': getToken()
+            },
+            body: new URLSearchParams({ id: id, status: status })
+          });
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok || !json.ok) {
+            // rollback
+            if (originCol) {
+              if (originNext && originNext.parentElement === originCol) {
+                originCol.insertBefore(dragEl, originNext);
+              } else {
+                originCol.appendChild(dragEl);
+              }
+              updateCounts();
+            }
+            alert((json && json.error) ? ('Error: ' + json.error) : 'Failed to move task');
+          }
+        } catch(err) {
+          // rollback
+          if (originCol) {
+            if (originNext && originNext.parentElement === originCol) {
+              originCol.insertBefore(dragEl, originNext);
+            } else {
+              originCol.appendChild(dragEl);
+            }
+            updateCounts();
+          }
+          alert('Network error');
+        }
+      });
+    })();
+  </script>
+
+  <div class="mt-4">
+    {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
+    {{ paginate(total|default(tasks|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('due_date'), dir: dir|default('asc')}))|raw }}
+  </div>
 </section>
 {% endblock %}

@@ -1,8 +1,10 @@
 {% extends 'layout.twig' %}
 {% block content %}
-<section>
-  <h2>404 – {{ __('Not Found')|e }}</h2>
-  <p>{{ __('The page you are looking for could not be found.')|e }}</p>
-  <p><a href="{{ url('/') }}">&larr; {{ __('Back to home')|e }}</a></p>
+<section class="space-y-3">
+  <div class="alert">
+    <span>404 – {{ __('Not Found')|e }}</span>
+  </div>
+  <p class="opacity-80">{{ __('The page you are looking for could not be found.')|e }}</p>
+  <p><a class="btn" href="{{ url('/') }}">&larr; {{ __('Back to home')|e }}</a></p>
 </section>
 {% endblock %}

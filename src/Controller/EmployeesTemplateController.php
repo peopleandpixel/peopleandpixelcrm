@@ -78,7 +78,6 @@ readonly class EmployeesTemplateController
         if ($id <= 0) { redirect('/employees'); }
         $dto = EmployeeDTO::fromInput($_POST);
         $errors = $dto->validate();
-        print $errors;
         if (!empty($errors)) {
             $error = 'Please fix the highlighted errors.';
             $employee = $this->employeesStore->get($id) ?? [];

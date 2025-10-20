@@ -1,45 +1,57 @@
-<section>
-    <h2>{{ title|default('')|e }}</h2>
-    <form method="post" class="form"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
-        {{ csrf_field()|raw }}
-        {% if candidate is defined and candidate.id %}
-            <input type="hidden" name="id" value="{{ (candidate.id)|int }}">
-        {% endif %}
-        <div class="form-row">
-            <label for="name">{{ __('Name')|e }} *</label>
-            <input id="name" name="name" type="text" value="{{ name|default(candidate.name|default(''))|e }}" required>
-        </div>
-        <div class="form-row">
-            <label for="position">{{ __('Position')|e }}</label>
-            <input id="position" name="position" type="text" value="{{ position|default(candidate.position|default(''))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="status">{{ __('Status')|e }}</label>
-            {% set curStatus = status|default(candidate.status|default('new')) %}
-            <select id="status" name="status">
-                <option value="new" {{ curStatus == 'new' ? 'selected' : '' }}>{{ __('New')|e }}</option>
-                <option value="in_review" {{ curStatus == 'in_review' ? 'selected' : '' }}>{{ __('In review')|e }}</option>
-                <option value="interview" {{ curStatus == 'interview' ? 'selected' : '' }}>{{ __('Interview')|e }}</option>
-                <option value="offer" {{ curStatus == 'offer' ? 'selected' : '' }}>{{ __('Offer')|e }}</option>
-                <option value="hired" {{ curStatus == 'hired' ? 'selected' : '' }}>{{ __('Hired')|e }}</option>
-                <option value="rejected" {{ curStatus == 'rejected' ? 'selected' : '' }}>{{ __('Rejected')|e }}</option>
-            </select>
-        </div>
-        <div class="form-row">
-            <label for="email">{{ __('Email')|e }}</label>
-            <input id="email" name="email" type="email" value="{{ email|default(candidate.email|default(''))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="phone">{{ __('Phone')|e }}</label>
-            <input id="phone" name="phone" type="tel" value="{{ phone|default(candidate.phone|default(''))|e }}">
-        </div>
-        <div class="form-row">
-            <label for="notes">{{ __('Notes')|e }}</label>
-            <textarea id="notes" name="notes" rows="4">{{ notes|default(candidate.notes|default(''))|e }}</textarea>
-        </div>
-        <div class="form-actions">
-            <a class="btn btn-secondary" href="{{ url('/candidates') }}">{{ __('Cancel')|e }}</a>
-            <button class="btn" type="submit">{{ submit_label|default(__('Save Candidate')|e) }}</button>
-        </div>
-    </form>
+<section class="space-y-4">
+  <h2 class="text-2xl font-bold">{{ title|default('')|e }}</h2>
+  <form method="post" class="space-y-4"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}>
+    {{ csrf_field()|raw }}
+    {% if candidate is defined and candidate.id %}
+      <input type="hidden" name="id" value="{{ (candidate.id)|int }}">
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="name" class="label"><span class="label-text">{{ __('Name')|e }} *</span></label>
+        <input id="name" name="name" type="text" value="{{ name|default(candidate.name|default(''))|e }}" required class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="position" class="label"><span class="label-text">{{ __('Position')|e }}</span></label>
+        <input id="position" name="position" type="text" value="{{ position|default(candidate.position|default(''))|e }}" class="input input-bordered">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="status" class="label"><span class="label-text">{{ __('Status')|e }}</span></label>
+        {% set curStatus = status|default(candidate.status|default('new')) %}
+        <select id="status" name="status" class="select select-bordered">
+          <option value="new" {{ curStatus == 'new' ? 'selected' : '' }}>{{ __('New')|e }}</option>
+          <option value="in_review" {{ curStatus == 'in_review' ? 'selected' : '' }}>{{ __('In review')|e }}</option>
+          <option value="interview" {{ curStatus == 'interview' ? 'selected' : '' }}>{{ __('Interview')|e }}</option>
+          <option value="offer" {{ curStatus == 'offer' ? 'selected' : '' }}>{{ __('Offer')|e }}</option>
+          <option value="hired" {{ curStatus == 'hired' ? 'selected' : '' }}>{{ __('Hired')|e }}</option>
+          <option value="rejected" {{ curStatus == 'rejected' ? 'selected' : '' }}>{{ __('Rejected')|e }}</option>
+        </select>
+      </div>
+      <div></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="email" class="label"><span class="label-text">{{ __('Email')|e }}</span></label>
+        <input id="email" name="email" type="email" value="{{ email|default(candidate.email|default(''))|e }}" class="input input-bordered">
+      </div>
+      <div class="form-control">
+        <label for="phone" class="label"><span class="label-text">{{ __('Phone')|e }}</span></label>
+        <input id="phone" name="phone" type="tel" value="{{ phone|default(candidate.phone|default(''))|e }}" class="input input-bordered">
+      </div>
+    </div>
+
+    <div class="form-control">
+      <label for="notes" class="label"><span class="label-text">{{ __('Notes')|e }}</span></label>
+      <textarea id="notes" name="notes" rows="4" class="textarea textarea-bordered">{{ notes|default(candidate.notes|default(''))|e }}</textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <a class="btn btn-ghost" href="{{ url('/candidates') }}">{{ __('Cancel')|e }}</a>
+      <button class="btn btn-primary" type="submit">{{ submit_label|default(__('Save Candidate')|e) }}</button>
+    </div>
+  </form>
 </section>

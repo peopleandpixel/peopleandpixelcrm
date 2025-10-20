@@ -246,7 +246,13 @@ function send_list_cache_headers(array $files, int $ttl = 60): void {
     $ifModifiedSince = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
     $sinceTs = $ifModifiedSince ? strtotime($ifModifiedSince) : false;
 
-    if ($ifNoneMatch === $etag || ($sinceTs !== false && $sinceTs >= $lastMod)) {
+    // Use standard precedence: ETag (If-None-Match) takes priority; fall back to Last-Modified only if no ETag provided
+    if ($ifNoneMatch !== '') {
+        if (trim($ifNoneMatch) === $etag) {
+            http_response_code(304);
+            exit;
+        }
+    } elseif ($sinceTs !== false && $sinceTs >= $lastMod) {
         http_response_code(304);
         exit;
     }

@@ -164,10 +164,11 @@ class JsonStore implements StoreInterface
     {
         // Validate referential integrity for known relationships before writing
         $this->validateReferentialIntegrity($items);
-        $json = json_encode($items, JSON_PRETTY_PRINT);
+        // Encode with robust flags to avoid failures on invalid UTF-8
+        $json = json_encode($items, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         if ($json === false) {
-            // Fallback to an empty array rather than writing invalid JSON
-            $json = json_encode([], JSON_PRETTY_PRINT);
+            // If encoding fails, do NOT overwrite the existing file. Surface an error instead.
+            throw new \RuntimeException('Failed to encode JSON for save; refusing to overwrite existing data.');
         }
         $this->writeSafely($json);
     }
@@ -254,15 +255,29 @@ class JsonStore implements StoreInterface
 
         try {
             // Create/refresh backup before altering the file
-            $current = '';
             rewind($fh);
             $current = stream_get_contents($fh) ?: '';
-            // Write/overwrite .bak only if current is non-empty
             $bakPath = $file . '.bak';
             @file_put_contents($bakPath, $current);
 
-            // Write to temp file then rename over original
-            $this->atomicWrite($json);
+            // Windows-safe in-place write while holding the lock (avoid rename over open file)
+            rewind($fh);
+            if (!@ftruncate($fh, 0)) {
+                throw new \RuntimeException('Failed to truncate file for writing');
+            }
+            $bytes = @fwrite($fh, $json);
+            if ($bytes === false || $bytes < strlen($json)) {
+                // Attempt to restore previous content before failing
+                rewind($fh);
+                @ftruncate($fh, 0);
+                @fwrite($fh, $current);
+                @fflush($fh);
+                throw new \RuntimeException('Failed to write complete JSON to file');
+            }
+            @fflush($fh);
+            if (function_exists('fsync')) {
+                @fsync($fh);
+            }
         } finally {
             flock($fh, LOCK_UN);
             fclose($fh);

@@ -1,27 +1,25 @@
 {% extends 'layout.twig' %}
 {% block content %}
-<section>
-    <div class="section-header">
-        <h2>{{ __(schema|capitalize)|e }}</h2>
-        <div class="ui secondary menu">
-            {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('name'), dir: dir|default('asc'), classes: 'ui form inline' } %}
-            <div class="right menu">
-                <a class="ui green  icon button" href="{{ url('/' ~ schema ~ '/new') }}"><i class="plus icon"></i> {{ __('Add '  ~ type)|e }}</a>
-            </div>
-        </div>
+<section class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-2xl font-bold">{{ __(schema|capitalize)|e }}</h2>
+    <div class="flex items-center gap-2">
+      {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('name'), dir: dir|default('asc') } %}
+      <a class="btn btn-primary" href="{{ url('/' ~ schema ~ '/new') }}">+ {{ __('Add '  ~ type)|e }}</a>
     </div>
+  </div>
 
-    {% if columns is defined and columns %}
-        {% include 'partials/dynamic_list.twig' with {
-            title: '',
-            items: items|default([]),
-            columns: columns,
-            actions: { view_url: url('/' ~ schema ~ '/view'), edit_url: url('/' ~ schema ~ '/edit'), delete_url: url('/' ~ schema ~ '/delete'), id_field: 'id' }
-        } %}
-        <div class="list-footer">
-            {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
-            {{ paginate(total|default(items|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('name'), dir: dir|default('asc')}))|raw }}
-        </div>
-    {% endif %}
+  {% if columns is defined and columns %}
+    {% include 'partials/dynamic_list.twig' with {
+      title: '',
+      items: items|default([]),
+      columns: columns,
+      actions: { view_url: url('/' ~ schema ~ '/view'), edit_url: url('/' ~ schema ~ '/edit'), delete_url: url('/' ~ schema ~ '/delete'), id_field: 'id' }
+    } %}
+    <div class="mt-4">
+      {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
+      {{ paginate(total|default(items|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('name'), dir: dir|default('asc')}))|raw }}
+    </div>
+  {% endif %}
 </section>
 {% endblock %}

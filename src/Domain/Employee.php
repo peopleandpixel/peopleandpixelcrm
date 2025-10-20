@@ -35,7 +35,9 @@ class Employee
         $phone = Sanitizer::string($in['phone'] ?? '');
         $role = Sanitizer::string($in['role'] ?? '');
         $salary = Sanitizer::float($in['salary'] ?? 0);
-        $hired_at = Sanitizer::string($in['hired_at'] ?? '');
+        $rawHiredAt = Sanitizer::string($in['hired_at'] ?? '');
+        // Normalize to ISO date if provided; keep empty string if not
+        $hired_at = $rawHiredAt === '' ? '' : (\App\Util\Dates::toIsoDate($rawHiredAt) ?? $rawHiredAt);
         $notes = Sanitizer::string($in['notes'] ?? '');
         return new self($name, $email, $phone, $role, $salary, $hired_at, $notes);
     }
@@ -47,7 +49,8 @@ class Employee
         $v = Validator::make($data);
         $v->required('name', 'Name is required.')
           ->email('email', 'Invalid email.')
-          ->number('salary', 0, null, 'Salary must be 0 or greater.', 'salary');
+          ->number('salary', 0, null, 'Salary must be 0 or greater.', 'salary')
+          ->date('hired_at', 'Y-m-d', 'Invalid date (YYYY-MM-DD).');
         return $v->errors();
     }
 

@@ -1,0 +1,21 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% set isEdit = edit is defined and edit %}
+{% set data = {
+    id: (id|default(project.id|default(0)))|int,
+    contact_id: contact_id|default(project.contact_id|default('')),
+    name: name|default(project.name|default('')),
+    description: description|default(project.description|default('')),
+    start_date: start_date|default(project.start_date|default('')),
+    end_date: end_date|default(project.end_date|default('')),
+    status: status|default(project.status|default('planned'))
+} %}
+{% include 'partials/dynamic_form.twig' with {
+    title: isEdit ? __('Edit Project') : __('Add Project'),
+    submit_label: __('Save Project'),
+    form_action: isEdit ? url('/projects/edit') : url('/projects/new'),
+    fields: fields,
+    data: data,
+    cancel_url: cancel_url|default(url('/projects'))
+} %}
+{% endblock %}

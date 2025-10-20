@@ -20,6 +20,40 @@ class TasksController
         private readonly ?object $projectsStore = null,
     ) {}
 
+    /**
+     * AJAX: Move task to another status (Kanban drag-and-drop)
+     */
+    public function move(): void
+    {
+        header('Content-Type: application/json');
+        $id = (int)($_POST['id'] ?? 0);
+        $status = (string)($_POST['status'] ?? '');
+        $allowed = ['open','in_progress','review','blocked','done'];
+        if ($id <= 0 || !in_array($status, $allowed, true)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'bad_request']);
+            return;
+        }
+        $task = $this->tasksStore->get($id);
+        if (!$task) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'error' => 'not_found']);
+            return;
+        }
+        // Preserve other fields, only change status + done_date transitions
+        $existing = $task;
+        $doneDate = (string)($existing['done_date'] ?? '');
+        if ($status === 'done') {
+            if ($doneDate === '') {
+                $doneDate = (new \DateTimeImmutable('today'))->format('Y-m-d');
+            }
+        } else {
+            $doneDate = '';
+        }
+        $this->tasksStore->update($id, ['status' => $status, 'done_date' => $doneDate]);
+        echo json_encode(['ok' => true, 'task' => ['id' => $id, 'status' => $status, 'done_date' => $doneDate]]);
+    }
+
     public function view(): void
     {
         $id = (int)($_GET['id'] ?? 0);
