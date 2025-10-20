@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App;
 
 use App\Util\ErrorHandler;
@@ -128,7 +130,8 @@ class Container
                 $c->get('tasksStore'),
                 $c->get('contactsStore'),
                 $c->get('employeesStore'),
-                $c->get('projectsStore')
+                $c->get('projectsStore'),
+                $c->get('timesStore')
             );
         };
         $this->factories['projectsController'] = function(self $c) {
@@ -141,7 +144,8 @@ class Container
         };
         $this->factories['employeesController'] = function(self $c) {
             return new \App\Controller\EmployeesTemplateController(
-                $c->get('employeesStore')
+                $c->get('employeesStore'),
+                $c->get('usersStore')
             );
         };
         $this->factories['candidatesController'] = function(self $c) {
@@ -207,7 +211,45 @@ class Container
             return new JsonStore($path);
         };
         foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects'] as $entity) {
-            $this->factories[$entity . 'Store'] = fn(self $c) => $makeStore($c, $entity);
+            $this->factories[$entity . 'Store'] = function(self $c) use ($makeStore, $entity) {
+                $store = $makeStore($c, $entity);
+                if ($entity === 'users') {
+                    $this->ensureDefaultAdmin($store);
+                }
+                return $store;
+            };
+        }
+    }
+
+    private function ensureDefaultAdmin($store): void
+    {
+        try {
+            $users = $store->all();
+            $hasAdmin = false;
+            foreach ($users as $u) {
+                if (($u['login'] ?? '') === 'admin') { $hasAdmin = true; break; }
+            }
+            if ($hasAdmin) return;
+            // Build full-rights permissions matrix (own and others all 1)
+            $entities = ['contacts','times','tasks','employees','candidates','payments','storage'];
+            $permissions = [];
+            foreach ($entities as $e) {
+                $permissions[$e] = [
+                    'own' => ['view'=>1,'create'=>1,'edit'=>1,'delete'=>1],
+                    'others' => ['view'=>1,'create'=>1,'edit'=>1,'delete'=>1],
+                ];
+            }
+            $store->add([
+                'login' => 'admin',
+                'fullname' => 'Administrator',
+                'email' => '',
+                'role' => 'admin',
+                'permissions' => $permissions,
+                'must_change_password' => 1,
+                'password_hash' => password_hash('admin', PASSWORD_DEFAULT),
+            ]);
+        } catch (\Throwable $e) {
+            // ignore seeding errors
         }
     }
 }

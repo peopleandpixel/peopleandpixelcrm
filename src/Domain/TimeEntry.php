@@ -12,16 +12,18 @@ class TimeEntry
 {
     public int $contact_id;
     public int $employee_id; // optional, 0 means Unassigned
+    public int $task_id; // optional, 0 means not linked to a task
     public string $date; // Y-m-d
     public float $hours;
     public string $description; // notes/description
     public string $start_time; // HH:MM
     public string $end_time;   // HH:MM
 
-    public function __construct(int $contact_id, int $employee_id, string $date, float $hours, string $description = '', string $start_time = '', string $end_time = '')
+    public function __construct(int $contact_id, int $employee_id, int $task_id, string $date, float $hours, string $description = '', string $start_time = '', string $end_time = '')
     {
         $this->contact_id = $contact_id;
         $this->employee_id = $employee_id;
+        $this->task_id = $task_id;
         $this->date = $date;
         $this->hours = $hours;
         $this->description = $description;
@@ -40,13 +42,14 @@ class TimeEntry
         $description = Sanitizer::string($in['description'] ?? '');
         $start_time = Sanitizer::string($in['start_time'] ?? '');
         $end_time = Sanitizer::string($in['end_time'] ?? '');
+        $task_id = Sanitizer::int($in['task_id'] ?? 0);
 
         // If start and end are provided and valid, compute hours
         $computedHours = self::computeHours($start_time, $end_time);
         if ($computedHours !== null) {
             $hours = $computedHours;
         }
-        return new self($contact_id, $employee_id, $date, $hours, $description, $start_time, $end_time);
+        return new self($contact_id, $employee_id, $task_id, $date, $hours, $description, $start_time, $end_time);
     }
 
     /**
@@ -57,6 +60,7 @@ class TimeEntry
         $v = Validator::make([
             'contact_id' => $this->contact_id,
             'employee_id' => $this->employee_id,
+            'task_id' => $this->task_id,
             'date' => $this->date,
             'hours' => $this->hours,
             'description' => $this->description,
@@ -114,6 +118,7 @@ class TimeEntry
         return [
             'contact_id' => $this->contact_id,
             'employee_id' => $this->employee_id,
+            'task_id' => $this->task_id,
             'date' => $this->date,
             'hours' => $this->hours,
             'description' => $this->description,

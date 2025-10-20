@@ -277,7 +277,7 @@ class DbStore implements StoreInterface
     {
         return match ($this->table) {
             'contacts' => ['id', 'name', 'email', 'phone', 'company', 'notes', 'birthdate', 'picture', 'phones', 'emails', 'websites', 'socials', 'created_at'],
-            'times' => ['id', 'contact_id', 'employee_id', 'date', 'hours', 'description', 'start_time', 'end_time', 'created_at'],
+            'times' => ['id', 'contact_id', 'employee_id', 'task_id', 'date', 'hours', 'description', 'start_time', 'end_time', 'created_at'],
             'tasks' => ['id', 'project_id', 'contact_id', 'employee_id', 'title', 'due_date', 'done_date', 'status', 'notes', 'created_at'],
             'employees' => ['id', 'name', 'email', 'phone', 'role', 'salary', 'hired_at', 'notes', 'created_at'],
             'candidates' => ['id', 'name', 'email', 'phone', 'position', 'status', 'notes', 'created_at'],
@@ -331,6 +331,7 @@ class DbStore implements StoreInterface
         } elseif ($this->table === 'times') {
             if (isset($row['contact_id'])) $row['contact_id'] = (int)$row['contact_id'];
             if (isset($row['employee_id'])) $row['employee_id'] = (int)$row['employee_id'];
+            if (isset($row['task_id'])) $row['task_id'] = (int)$row['task_id'];
             if (isset($row['hours'])) $row['hours'] = (float)$row['hours'];
         } elseif ($this->table === 'tasks') {
             if (isset($row['project_id'])) $row['project_id'] = (int)$row['project_id'];

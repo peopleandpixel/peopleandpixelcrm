@@ -19,6 +19,46 @@ class TimesController
         private readonly object $employeesStore,
     ) {}
 
+    /**
+     * Returns the most recent running timer (no end_time) as JSON.
+     */
+    public function running(): void
+    {
+        header('Content-Type: application/json');
+        try {
+            $running = null; $rid = 0;
+            foreach ($this->timesStore->all() as $t) {
+                if ((string)($t['end_time'] ?? '') === '') {
+                    $id = (int)($t['id'] ?? 0);
+                    if ($id > $rid) { $rid = $id; $running = $t; }
+                }
+            }
+            if (!$running) {
+                echo json_encode(['ok' => true, 'running' => null, 'now' => (new \DateTimeImmutable('now'))->format(DATE_ATOM)]);
+                return;
+            }
+            $date = (string)($running['date'] ?? '');
+            $start = (string)($running['start_time'] ?? '');
+            // Best-effort ISO start time (local timezone)
+            $isoStart = null;
+            if ($date !== '' && $start !== '') {
+                $isoStart = $date . 'T' . $start . ':00';
+            }
+            $payload = [
+                'id' => (int)($running['id'] ?? 0),
+                'task_id' => (int)($running['task_id'] ?? 0),
+                'date' => $date,
+                'start_time' => $start,
+                'iso_start' => $isoStart,
+                'description' => (string)($running['description'] ?? ''),
+            ];
+            echo json_encode(['ok' => true, 'running' => $payload, 'now' => (new \DateTimeImmutable('now'))->format(DATE_ATOM)]);
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'error' => 'server_error']);
+        }
+    }
+
     public function view(): void
     {
         $id = (int)($_GET['id'] ?? 0);

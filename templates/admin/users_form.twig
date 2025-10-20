@@ -39,7 +39,15 @@
       <table class="table table-zebra">
         <thead>
           <tr>
-            <th>{{ __('Entity')|e }}</th>
+            <th rowspan="2">{{ __('Entity')|e }}</th>
+            <th colspan="4" class="text-center">{{ __('Own')|e }}</th>
+            <th colspan="4" class="text-center">{{ __('Others')|e }}</th>
+          </tr>
+          <tr>
+            <th>{{ __('View')|e }}</th>
+            <th>{{ __('Create')|e }}</th>
+            <th>{{ __('Edit')|e }}</th>
+            <th>{{ __('Delete')|e }}</th>
             <th>{{ __('View')|e }}</th>
             <th>{{ __('Create')|e }}</th>
             <th>{{ __('Edit')|e }}</th>
@@ -51,10 +59,16 @@
             {% set p = user.permissions[e]|default({}) %}
             <tr>
               <td>{{ e|capitalize|e }}</td>
-              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][view]" value="1" {{ (p.view|default(0)) ? 'checked' : '' }}></td>
-              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][create]" value="1" {{ (p.create|default(0)) ? 'checked' : '' }}></td>
-              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][edit]" value="1" {{ (p.edit|default(0)) ? 'checked' : '' }}></td>
-              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][delete]" value="1" {{ (p.delete|default(0)) ? 'checked' : '' }}></td>
+              {# Own #}
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][own][view]" value="1" {{ (p.own.view|default(0)) ? 'checked' : '' }}></td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][own][create]" value="1" {{ (p.own.create|default(0)) ? 'checked' : '' }}></td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][own][edit]" value="1" {{ (p.own.edit|default(0)) ? 'checked' : '' }}></td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][own][delete]" value="1" {{ (p.own.delete|default(0)) ? 'checked' : '' }}></td>
+              {# Others #}
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][others][view]" value="1" {{ (p.others.view|default(0)) ? 'checked' : '' }}></td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][others][create]" value="1" {{ (p.others.create|default(0)) ? 'checked' : '' }}></td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][others][edit]" value="1" {{ (p.others.edit|default(0)) ? 'checked' : '' }}></td>
+              <td><input class="checkbox" type="checkbox" name="perm[{{e}}][others][delete]" value="1" {{ (p.others.delete|default(0)) ? 'checked' : '' }}></td>
             </tr>
           {% endfor %}
         </tbody>

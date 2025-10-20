@@ -113,6 +113,73 @@
     else if (mq.addListener) mq.addListener(function(e){ applyTheme(e.matches ? 'dark' : 'light'); });
   }
 })();
+  
+  // RUNNING TIMER indicator
+  (function(){
+    const header = document.getElementById('app-header');
+    const badge = document.getElementById('running-timer');
+    const timeEl = badge ? badge.querySelector('[data-time]') : null;
+    let timer = null;
+    let fetchIv = null;
+    let startMs = null; // epoch ms
+    let lastDocTitle = document.title;
+
+    function fmt(n){ return n < 10 ? '0' + n : '' + n; }
+    function render(){
+      if (!badge || startMs == null) return;
+      const now = Date.now();
+      let diff = Math.max(0, Math.floor((now - startMs) / 1000));
+      const h = Math.floor(diff / 3600); diff -= h*3600;
+      const m = Math.floor(diff / 60); const s = diff - m*60;
+      const text = fmt(h) + ':' + fmt(m) + ':' + fmt(s);
+      if (timeEl) timeEl.textContent = text;
+      document.title = '⏱ ' + text + ' — ' + (lastDocTitle || '');
+    }
+    function setActive(on){
+      if (!header || !badge) return;
+      if (on){
+        badge.classList.remove('hidden');
+        // subtle animation on the navbar
+        header.classList.add('animate-pulse');
+      } else {
+        badge.classList.add('hidden');
+        header.classList.remove('animate-pulse');
+        if (timer){ clearInterval(timer); timer = null; }
+        document.title = lastDocTitle;
+      }
+    }
+    async function check(){
+      try {
+        const res = await fetch('{{ url('/times/running') }}', { headers: { 'Accept': 'application/json' } });
+        const json = await res.json().catch(() => null);
+        if (!json || !json.ok){ throw new Error('bad'); }
+        const r = json.running;
+        if (!r){
+          startMs = null;
+          setActive(false);
+          return;
+        }
+        // Prefer iso_start if provided
+        let iso = r.iso_start;
+        if (!iso && r.date && r.start_time){ iso = r.date + 'T' + r.start_time + ':00'; }
+        const start = Date.parse(iso);
+        if (isNaN(start)){
+          startMs = null; setActive(false); return;
+        }
+        if (startMs == null || Math.abs(startMs - start) > 1000){
+          startMs = start; lastDocTitle = lastDocTitle || document.title; setActive(true);
+          const sr = document.getElementById('sr-live'); if (sr) { sr.textContent = 'Timer started'; }
+        }
+        if (!timer){ timer = setInterval(render, 1000); }
+        render();
+      } catch(e){ /* ignore transient errors */ }
+    }
+    // Initial and periodic checks
+    check();
+    fetchIv = setInterval(check, 15000);
+    // If page becomes visible again, refresh immediately
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden) check(); });
+  })();
 </script>
 </body>
 </html>

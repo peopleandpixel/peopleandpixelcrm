@@ -7,8 +7,9 @@ namespace App\Util;
 class Permission
 {
     /**
-     * Check if current user can perform action on entity.
+     * Check if current user can perform action on entity (no ownership context).
      * Admin users are allowed to do everything.
+     * Backward compatible with old flat matrix.
      */
     public static function can(string $entity, string $action): bool
     {
@@ -19,7 +20,38 @@ class Permission
         if (!is_array($perms)) return false;
         $entityPerm = $perms[$entity] ?? [];
         if (!is_array($entityPerm)) return false;
+        // New structure: own.* and others.* sections
+        if (isset($entityPerm['own']) || isset($entityPerm['others'])) {
+            // If any of own/others allows non-contextual action, treat as allowed for listing/new without specific record
+            $own = (int)($entityPerm['own'][$action] ?? 0) === 1;
+            $others = (int)($entityPerm['others'][$action] ?? 0) === 1;
+            return $own || $others;
+        }
+        // Legacy flat matrix
         return !empty($entityPerm[$action]);
+    }
+
+    /**
+     * Check permission on a specific record based on ownership.
+     * The record may contain owner_user_id; if missing, treated as "others".
+     * @param array<string,mixed>|null $record
+     */
+    public static function canOnRecord(string $entity, string $action, ?array $record): bool
+    {
+        if (Auth::isAdmin()) return true;
+        $u = Auth::user();
+        if (!$u) return false;
+        $uid = (int)($u['id'] ?? 0);
+        $ownerId = (int)($record['owner_user_id'] ?? 0);
+        $isOwner = $ownerId > 0 && $ownerId === $uid;
+        $perms = $u['permissions'] ?? [];
+        $entityPerm = is_array($perms[$entity] ?? null) ? $perms[$entity] : [];
+        if (isset($entityPerm['own']) || isset($entityPerm['others'])) {
+            $section = $isOwner ? 'own' : 'others';
+            return (int)($entityPerm[$section][$action] ?? 0) === 1;
+        }
+        // Legacy: fall back to flat
+        return (int)($entityPerm[$action] ?? 0) === 1;
     }
 
     /**

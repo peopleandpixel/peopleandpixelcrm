@@ -126,12 +126,31 @@ class UsersController
         $entities = ['contacts','times','tasks','employees','candidates','payments','storage'];
         $perms = [];
         foreach ($entities as $e) {
-            $perms[$e] = [
-                'view' => isset($in['perm'][$e]['view']) ? 1 : 0,
-                'create' => isset($in['perm'][$e]['create']) ? 1 : 0,
-                'edit' => isset($in['perm'][$e]['edit']) ? 1 : 0,
-                'delete' => isset($in['perm'][$e]['delete']) ? 1 : 0,
-            ];
+            // Support new matrix with own/others as well as legacy flat
+            $p = $in['perm'][$e] ?? [];
+            if (isset($p['own']) || isset($p['others'])) {
+                $perms[$e] = [
+                    'own' => [
+                        'view' => isset($p['own']['view']) ? 1 : 0,
+                        'create' => isset($p['own']['create']) ? 1 : 0,
+                        'edit' => isset($p['own']['edit']) ? 1 : 0,
+                        'delete' => isset($p['own']['delete']) ? 1 : 0,
+                    ],
+                    'others' => [
+                        'view' => isset($p['others']['view']) ? 1 : 0,
+                        'create' => isset($p['others']['create']) ? 1 : 0,
+                        'edit' => isset($p['others']['edit']) ? 1 : 0,
+                        'delete' => isset($p['others']['delete']) ? 1 : 0,
+                    ],
+                ];
+            } else {
+                $perms[$e] = [
+                    'view' => isset($p['view']) ? 1 : 0,
+                    'create' => isset($p['create']) ? 1 : 0,
+                    'edit' => isset($p['edit']) ? 1 : 0,
+                    'delete' => isset($p['delete']) ? 1 : 0,
+                ];
+            }
         }
         return [
             'login' => trim((string)($in['login'] ?? '')),

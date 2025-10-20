@@ -51,6 +51,7 @@ class Auth
                         'email' => (string)($u['email'] ?? ''),
                         'role' => (string)($u['role'] ?? 'user'),
                         'permissions' => is_array($u['permissions'] ?? null) ? $u['permissions'] : [],
+                        'must_change_password' => (int)($u['must_change_password'] ?? 0) === 1,
                     ];
                     if (function_exists('session_regenerate_id')) {@session_regenerate_id(true);}                    
                     return true;

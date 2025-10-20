@@ -92,6 +92,13 @@ class JsonStore implements StoreInterface
     {
         $items = $this->all();
         $item['id'] = $item['id'] ?? $this->nextId($items);
+        // set owner if not provided and a user is logged in
+        if (!isset($item['owner_user_id'])) {
+            $u = \App\Util\Auth::user();
+            if (is_array($u)) {
+                $item['owner_user_id'] = (int)($u['id'] ?? 0);
+            }
+        }
         // optimistic versioning and timestamps
         $now = \App\Util\Dates::nowAtom();
         $item['created_at'] = $item['created_at'] ?? $now;
@@ -368,9 +375,11 @@ class JsonStore implements StoreInterface
             $contacts = $this->loadAllFrom($dir, 'contacts');
             $employees = $this->loadAllFrom($dir, 'employees');
             $projects = $this->loadAllFrom($dir, 'projects');
+            $tasks = $this->loadAllFrom($dir, 'tasks');
             $contactIds = array_column($contacts, 'id');
             $employeeIds = array_column($employees, 'id');
             $projectIds = array_column($projects, 'id');
+            $taskIds = array_column($tasks, 'id');
             foreach ($items as $it) {
                 if (isset($it['contact_id'])) {
                     $cid = (int)$it['contact_id'];
@@ -388,6 +397,12 @@ class JsonStore implements StoreInterface
                     $pid = (int)$it['project_id'];
                     if ($pid !== 0 && !in_array($pid, $projectIds, true)) {
                         throw new \RuntimeException("Integrity error: tasks.project_id references missing projects.id=$pid");
+                    }
+                }
+                if ($entity === 'times' && isset($it['task_id'])) {
+                    $tid = (int)$it['task_id'];
+                    if ($tid !== 0 && !in_array($tid, $taskIds, true)) {
+                        throw new \RuntimeException("Integrity error: times.task_id references missing tasks.id=$tid");
                     }
                 }
             }

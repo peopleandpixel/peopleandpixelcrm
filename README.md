@@ -10,6 +10,42 @@ Highlights
 - Validation layer and normalized domain models
 - Error handling with Monolog and friendly error pages
 
+Project goals
+- Provide a lightweight, self-hostable CRM for small teams with minimal operational overhead.
+- Keep the codebase understandable and maintainable without heavy frameworks.
+- Support JSON-based storage by default; allow opting into a relational database via PDO.
+
+Non-goals
+- Competing with full-featured enterprise CRMs.
+- Real-time collaboration or complex access control models beyond simple roles.
+- Multi-tenant, horizontally scalable SaaS out of the box.
+
+Priorities
+- Data safety and integrity over feature breadth.
+- Clear, predictable UX flows (POST/redirect-GET, explicit feedback).
+- Simplicity in deployment (PHP built-ins, optional DB) and troubleshooting.
+
+Supported PHP versions and environments
+- PHP: 8.4+ (tested locally on 8.4; CI will enforce 8.4+).
+- Environments: dev, test, prod (via APP_ENV). JSON storage works without DB; DB mode via PDO is optional.
+
+Performance targets
+- List pages should render under 200ms server time with up to 2,000 items in JSON mode on modest hardware.
+- JSON store operations are atomic with file locking; DB mode should use prepared statements and indexes for O(log n) lookups on typical keys.
+
+Quality bar and coding standards
+- Coding standard: PSR-12.
+- Types: use scalar and return types throughout; prefer dedicated value objects/DTOs for complex shapes.
+- Strict types: files under src/ and tests/ should declare(strict_types=1) as work progresses.
+- Security: escape output in Twig (|e), validate and sanitize inputs in the validation layer, CSRF on all mutating forms.
+- Tooling (recommended):
+  - Lint/style: PHP-CS-Fixer with PSR-12 ruleset.
+  - Static analysis: PHPStan at level 6–8 with a baseline for legacy code.
+- Suggested composer scripts (add when tools are installed):
+  - "lint": "php-cs-fixer fix --dry-run --diff",
+  - "fix": "php-cs-fixer fix",
+  - "stan": "phpstan analyse -c phpstan.neon",
+
 Requirements
 - PHP 8.4+
 - Extensions: pdo, intl

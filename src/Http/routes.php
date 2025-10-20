@@ -57,11 +57,19 @@ return static function (Container $container, Router $router): void {
         $password = isset($_POST['password']) ? (string)$_POST['password'] : '';
         $return = isset($_POST['return']) ? (string)$_POST['return'] : '/';
         if (Auth::login($config, $username, $password)) {
+            $u = Auth::user();
+            if ($u && !empty($u['must_change_password'])) {
+                redirect(url('/password/change', ['return' => $return]));
+            }
             redirect($return ?: '/');
         }
         $q = http_build_query(['error' => __('Invalid username or password'), 'return' => $return]);
         redirect('/login?' . $q);
     });
+
+    // Password change
+    $router->get('/password/change', [\App\Controller\PasswordController::class, 'form']);
+    $router->post('/password/change', function() use ($container) { (new \App\Controller\PasswordController())->submit($container->get('usersStore')); });
     $router->get('/logout', function() {
         Auth::logout();
         redirect('/');
@@ -95,6 +103,7 @@ return static function (Container $container, Router $router): void {
     });
     $router->get('/times/new', [$container->get('timesController'), 'newForm']);
     $router->get('/times/view', [$container->get('timesController'), 'view']);
+    $router->get('/times/running', [$container->get('timesController'), 'running']);
     $router->post('/times/new', [$container->get('timesController'), 'create']);
 
     // Tasks
@@ -175,6 +184,9 @@ return static function (Container $container, Router $router): void {
     $router->post('/tasks/edit', [$container->get('tasksController'), 'update']);
     $router->post('/tasks/delete', [$container->get('tasksController'), 'delete']);
     $router->post('/tasks/move', [$container->get('tasksController'), 'move']);
+    // Task time tracking
+    $router->post('/tasks/time/start', [$container->get('tasksController'), 'timeStart']);
+    $router->post('/tasks/time/stop', [$container->get('tasksController'), 'timeStop']);
 
     $router->get('/projects/edit', [$container->get('projectsController'), 'editForm']);
     $router->post('/projects/edit', [$container->get('projectsController'), 'update']);

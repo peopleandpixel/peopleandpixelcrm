@@ -1,6 +1,10 @@
-<header class="navbar bg-base-200">
-  <div class="flex-1">
+<header id="app-header" class="navbar bg-base-200">
+  <div class="flex-1 items-center gap-3">
     <a href="{{ url('/') }}" class="btn btn-ghost text-xl">People & Pixel</a>
+    <span id="running-timer" class="hidden badge badge-warning gap-1" aria-live="off">
+      <span class="inline-flex items-center" aria-hidden="true">⏱️</span>
+      <span data-time>00:00:00</span>
+    </span>
   </div>
   <div class="flex-none flex items-center gap-1">
     <button id="theme-toggle" class="btn btn-ghost btn-circle" title="{{ __('Toggle theme')|e }}" aria-label="{{ __('Toggle theme')|e }}" aria-pressed="false">

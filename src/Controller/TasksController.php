@@ -18,6 +18,7 @@ class TasksController
         private readonly object $contactsStore,
         private readonly object $employeesStore,
         private readonly ?object $projectsStore = null,
+        private readonly ?object $timesStore = null,
     ) {}
 
     /**
@@ -310,5 +311,63 @@ class TasksController
         }
         unset($f);
         return $fields;
+    }
+    public function timeStart(): void
+    {
+        header('Content-Type: application/json');
+        if (!$this->timesStore) { http_response_code(500); echo json_encode(['ok'=>false,'error'=>'times_store_unavailable']); return; }
+        $taskId = (int)($_POST['id'] ?? ($_POST['task_id'] ?? 0));
+        if ($taskId <= 0) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'bad_request']); return; }
+        $task = $this->tasksStore->get($taskId);
+        if (!$task) { http_response_code(404); echo json_encode(['ok'=>false,'error'=>'task_not_found']); return; }
+        $now = new \DateTimeImmutable('now');
+        $date = $now->format('Y-m-d');
+        $start = $now->format('H:i');
+        $contactId = (int)($task['contact_id'] ?? 0);
+        // employee_id not linked to Auth users yet; leave 0 (Unassigned) for now
+        $employeeId = 0;
+        $added = $this->timesStore->add([
+            'contact_id' => $contactId,
+            'employee_id' => $employeeId,
+            'task_id' => $taskId,
+            'date' => $date,
+            'hours' => 0.0,
+            'description' => __('Time for task') . ' #' . $taskId,
+            'start_time' => $start,
+            'end_time' => '',
+            'created_at' => \App\Util\Dates::nowAtom(),
+        ]);
+        echo json_encode(['ok'=>true,'time'=>$added]);
+    }
+
+    public function timeStop(): void
+    {
+        header('Content-Type: application/json');
+        if (!$this->timesStore) { http_response_code(500); echo json_encode(['ok'=>false,'error'=>'times_store_unavailable']); return; }
+        $taskId = (int)($_POST['id'] ?? ($_POST['task_id'] ?? 0));
+        if ($taskId <= 0) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'bad_request']); return; }
+        // Find last running entry for this task (end_time empty)
+        $running = null; $rid = 0;
+        foreach ($this->timesStore->all() as $t) {
+            if ((int)($t['task_id'] ?? 0) === $taskId && (string)($t['end_time'] ?? '') === '') {
+                if (!$running || (int)$t['id'] > (int)$running['id']) { $running = $t; $rid = (int)$t['id']; }
+            }
+        }
+        if (!$running) { http_response_code(404); echo json_encode(['ok'=>false,'error'=>'no_running_timer']); return; }
+        $now = new \DateTimeImmutable('now');
+        $end = $now->format('H:i');
+        // compute hours based on start_time
+        $start = (string)($running['start_time'] ?? '');
+        $hours = 0.0;
+        if ($start !== '') {
+            $s = \App\Util\Dates::parseExact($start, 'H:i');
+            $e = \App\Util\Dates::parseExact($end, 'H:i');
+            if ($s && $e) { $hours = max(0.01, round(($e->getTimestamp() - $s->getTimestamp())/3600, 2)); }
+        }
+        $updated = $this->timesStore->update($rid, [
+            'end_time' => $end,
+            'hours' => $hours,
+        ]);
+        echo json_encode(['ok'=>true,'time'=>$updated]);
     }
 }
