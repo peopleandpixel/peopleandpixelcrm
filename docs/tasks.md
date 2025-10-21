@@ -11,14 +11,14 @@ Note: Check off items as you complete them. The list is ordered to reduce risk a
    - [x] Add missing scalar/array types and return types in public APIs (e.g., src/Controller/*.php, src/Util/*.php)
    - [x] Replace mixed/array with dedicated DTOs/value objects where beneficial (Domain layer)
 
-3. [ ] Introduce static analysis and code quality tooling
-   - [ ] Add PHPStan (or Psalm) with a baseline, level 6–8, and CI job
-   - [ ] Add PHP-CS-Fixer (PSR-12 ruleset) and a composer script
-   - [ ] Add Rector for gradual refactorings (optional, with baseline)
+3. [x] Introduce static analysis and code quality tooling
+   - [x] Add PHPStan (or Psalm) with a baseline, level 6–8, and CI job
+   - [x] Add PHP-CS-Fixer (PSR-12 ruleset) and a composer script
+   - [x] Add Rector for gradual refactorings (optional, with baseline)
 
 4. [ ] Dependency management and DI
    - [ ] Review Container (src/Container.php) and ensure single-responsibility (construction vs configuration)
-   - [ ] Replace ad-hoc new in Router handler resolution with container-based controller instantiation
+   - [x] Replace ad-hoc new in Router handler resolution with container-based controller instantiation
    - [ ] Centralize configuration in src/Config.php and .env, typed accessors with defaults and validation
 
 5. [ ] HTTP foundation alignment

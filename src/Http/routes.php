@@ -43,7 +43,7 @@ return static function (Container $container, Router $router): void {
     });
 
     // Home
-    $router->get('/', [$container->get('homeController') ?? HomeController::class, 'index']);
+    $router->get('/', [$container->get('homeController'), 'index']);
 
     // Auth
     $router->get('/login', function() {
@@ -68,15 +68,15 @@ return static function (Container $container, Router $router): void {
     });
 
     // Password change
-    $router->get('/password/change', [\App\Controller\PasswordController::class, 'form']);
-    $router->post('/password/change', function() use ($container) { (new \App\Controller\PasswordController())->submit($container->get('usersStore')); });
+    $router->get('/password/change', [$container->get('passwordController'), 'form']);
+    $router->post('/password/change', function() use ($container) { ($container->get('passwordController'))->submit($container->get('usersStore')); });
     $router->get('/logout', function() {
         Auth::logout();
         redirect('/');
     });
 
     // Generic upload endpoint (for AJAX file uploads)
-    $router->post('/upload', [$container->get('uploadController') ?? UploadController::class, 'handle']);
+    $router->post('/upload', [$container->get('uploadController'), 'handle']);
 
     // Contacts
     $router->get('/contacts', function() use ($container) {

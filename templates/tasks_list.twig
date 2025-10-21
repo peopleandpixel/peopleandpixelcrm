@@ -68,10 +68,23 @@
                     {% if it.done_date %}
                       <span class="badge badge-success badge-outline">{{ __('Done')|e }} {{ it.done_date|e }}</span>
                     {% endif %}
+                    <span class="badge badge-warning gap-1 hidden" data-running-info data-task-id="{{ it.id|int }}">
+                      <span aria-hidden="true">⏱️</span>
+                      <span data-elapsed>00:00:00</span>
+                      <span class="opacity-70">• {{ __('Total')|e }} <span data-total>0.00</span>h</span>
+                    </span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <button type="button" class="btn btn-xs btn-success" data-action="time-start" data-id="{{ it.id|int }}">{{ __('Start Timer')|e }}</button>
-                    <button type="button" class="btn btn-xs" data-action="time-stop" data-id="{{ it.id|int }}">{{ __('Stop Timer')|e }}</button>
+                    <form method="post" action="{{ url('/tasks/time/start') }}" class="inline">
+                      {{ csrf_field()|raw }}
+                      <input type="hidden" name="id" value="{{ it.id|int }}">
+                      <button type="submit" class="btn btn-xs btn-success inline-flex whitespace-nowrap" data-action="time-start" data-id="{{ it.id|int }}"><span aria-hidden="true">⏱️</span> {{ __('Start Timer')|e }}</button>
+                    </form>
+                    <form method="post" action="{{ url('/tasks/time/stop') }}" class="inline">
+                      {{ csrf_field()|raw }}
+                      <input type="hidden" name="id" value="{{ it.id|int }}">
+                      <button type="submit" class="btn btn-xs inline-flex whitespace-nowrap" data-action="time-stop" data-id="{{ it.id|int }}"><span aria-hidden="true">⏹</span> {{ __('Stop Timer')|e }}</button>
+                    </form>
                     <form method="post" action="{{ url('/tasks/delete') }}" onsubmit="return confirm('{{ __('Are you sure?')|e }}');">
                       {{ csrf_field()|raw }}
                       <input type="hidden" name="id" value="{{ it.id|int }}">
@@ -192,12 +205,16 @@
         if (!action || !id) return;
         const endpoint = action === 'time-start' ? '{{ url('/tasks/time/start') }}' : (action === 'time-stop' ? '{{ url('/tasks/time/stop') }}' : null);
         if (!endpoint) return;
+        const form = btn.closest ? btn.closest('form') : null;
+        if (form) { e.preventDefault(); }
         btn.disabled = true;
         try {
           const res = await fetch(endpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
               'X-CSRF-Token': getToken()
             },
             body: new URLSearchParams({ id: id })
@@ -209,6 +226,8 @@
             // Optional: brief visual feedback
             btn.classList.add('btn-active');
             setTimeout(() => btn.classList.remove('btn-active'), 500);
+            // Refresh running state shortly after action
+            setTimeout(checkRunning, 300);
           }
         } catch(err) {
           alert('Network error');
@@ -216,6 +235,77 @@
           btn.disabled = false;
         }
       });
+
+      // Running timer handling on board: hide start buttons if any timer is running,
+      // and show per-task badge with current elapsed and user total for that task
+      const startBtnsSelector = 'button[data-action="time-start"]';
+      let tickIv = null;
+      let startMs = null;
+      let runningTaskId = 0;
+      let totalSeconds = 0;
+
+      function fmt(n){ return n < 10 ? '0' + n : '' + n; }
+      function renderElapsed(){
+        if (startMs == null || !runningTaskId) return;
+        const now = Date.now();
+        let diff = Math.max(0, Math.floor((now - startMs) / 1000));
+        const h = Math.floor(diff / 3600); diff -= h*3600;
+        const m = Math.floor(diff / 60); const s = diff - m*60;
+        const text = fmt(h) + ':' + fmt(m) + ':' + fmt(s);
+        const badge = board.querySelector('[data-running-info][data-task-id="' + runningTaskId + '"]');
+        if (badge){
+          const el = badge.querySelector('[data-elapsed]');
+          if (el) el.textContent = text;
+        }
+      }
+      function applyNoRunning(){
+        // show all start buttons
+        board.querySelectorAll(startBtnsSelector).forEach(b => b.classList.remove('hidden'));
+        // hide all running info badges
+        board.querySelectorAll('[data-running-info]').forEach(el => el.classList.add('hidden'));
+        if (tickIv){ clearInterval(tickIv); tickIv = null; }
+        startMs = null; runningTaskId = 0; totalSeconds = 0;
+      }
+      function applyRunning(r){
+        // Validate running payload before hiding Start buttons
+        const tid = r && r.task_id ? r.task_id : 0;
+        let iso = r && (r.iso_start || (r.date && r.start_time ? (r.date + 'T' + r.start_time + ':00') : null));
+        const parsed = iso ? Date.parse(iso) : NaN;
+        if (!tid || isNaN(parsed)) { applyNoRunning(); return; }
+        // hide all start buttons when there is a valid running timer
+        board.querySelectorAll(startBtnsSelector).forEach(b => b.classList.add('hidden'));
+        // hide all badges, then show only for the running task
+        board.querySelectorAll('[data-running-info]').forEach(el => el.classList.add('hidden'));
+        runningTaskId = tid;
+        const badge = board.querySelector('[data-running-info][data-task-id="' + runningTaskId + '"]');
+        startMs = parsed;
+        totalSeconds = (r.user_total_seconds_for_task || 0);
+        if (badge){
+          const totalEl = badge.querySelector('[data-total]');
+          if (totalEl){ totalEl.textContent = (totalSeconds/3600).toFixed(2); }
+          badge.classList.remove('hidden');
+        }
+        if (tickIv){ clearInterval(tickIv); }
+        tickIv = setInterval(renderElapsed, 1000);
+        renderElapsed();
+      }
+      async function checkRunning(){
+        try {
+          const res = await fetch('{{ url('/times/running') }}', { headers: { 'Accept': 'application/json' } });
+          const json = await res.json().catch(() => null);
+          if (!json || !json.ok){ throw new Error('bad'); }
+          const r = json.running;
+          if (!r){ applyNoRunning(); return; }
+          applyRunning(r);
+        } catch(e){
+          // On any error, assume no running timer to keep Start buttons visible
+          applyNoRunning();
+        }
+      }
+      // initial check and polling
+      applyNoRunning();
+      checkRunning();
+      setInterval(checkRunning, 15000);
     })();
   </script>
 

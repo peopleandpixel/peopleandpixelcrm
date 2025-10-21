@@ -27,7 +27,8 @@ class TimesController
         header('Content-Type: application/json');
         try {
             $running = null; $rid = 0;
-            foreach ($this->timesStore->all() as $t) {
+            $all = $this->timesStore->all();
+            foreach ($all as $t) {
                 if ((string)($t['end_time'] ?? '') === '') {
                     $id = (int)($t['id'] ?? 0);
                     if ($id > $rid) { $rid = $id; $running = $t; }
@@ -39,18 +40,41 @@ class TimesController
             }
             $date = (string)($running['date'] ?? '');
             $start = (string)($running['start_time'] ?? '');
+            $taskId = (int)($running['task_id'] ?? 0);
             // Best-effort ISO start time (local timezone)
             $isoStart = null;
             if ($date !== '' && $start !== '') {
                 $isoStart = $date . 'T' . $start . ':00';
             }
+            // Compute per-user total time for this task
+            $user = \App\Util\Auth::user();
+            $userId = is_array($user) ? (int)($user['id'] ?? 0) : 0;
+            $totalSeconds = 0;
+            foreach ($all as $t) {
+                if ((int)($t['task_id'] ?? 0) !== $taskId) { continue; }
+                if ((int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
+                $hours = (float)($t['hours'] ?? 0);
+                $totalSeconds += (int)round($hours * 3600);
+                // If this is the running entry and belongs to the user, add current elapsed since start_time
+                if ((string)($t['end_time'] ?? '') === '' && (string)($t['start_time'] ?? '') !== '') {
+                    if ($date !== '' && $start !== '') {
+                        $startDt = \DateTimeImmutable::createFromFormat('Y-m-d H:i', $date . ' ' . $start) ?: null;
+                        if ($startDt) {
+                            $elapsed = max(0, (new \DateTimeImmutable('now'))->getTimestamp() - $startDt->getTimestamp());
+                            $totalSeconds += $elapsed;
+                        }
+                    }
+                }
+            }
             $payload = [
                 'id' => (int)($running['id'] ?? 0),
-                'task_id' => (int)($running['task_id'] ?? 0),
+                'task_id' => $taskId,
                 'date' => $date,
                 'start_time' => $start,
                 'iso_start' => $isoStart,
                 'description' => (string)($running['description'] ?? ''),
+                'user_total_seconds_for_task' => $totalSeconds,
+                'user_total_hours_for_task' => $totalSeconds > 0 ? round($totalSeconds / 3600, 2) : 0.0,
             ];
             echo json_encode(['ok' => true, 'running' => $payload, 'now' => (new \DateTimeImmutable('now'))->format(DATE_ATOM)]);
         } catch (\Throwable $e) {

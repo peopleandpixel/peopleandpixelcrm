@@ -174,6 +174,9 @@ class Container
         $this->factories['uploadController'] = function(self $c) {
             return new \App\Controller\UploadController();
         };
+        $this->factories['passwordController'] = function(self $c) {
+            return new \App\Controller\PasswordController();
+        };
     }
 
     public function set(string $id, callable $factory): void

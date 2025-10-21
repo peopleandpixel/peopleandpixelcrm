@@ -314,12 +314,14 @@ class TasksController
     }
     public function timeStart(): void
     {
-        header('Content-Type: application/json');
-        if (!$this->timesStore) { http_response_code(500); echo json_encode(['ok'=>false,'error'=>'times_store_unavailable']); return; }
+        $accept = (string)($_SERVER['HTTP_ACCEPT'] ?? '');
+        $isJson = str_contains($accept, 'application/json') || strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
+        if ($isJson) { header('Content-Type: application/json'); }
+        if (!$this->timesStore) { if ($isJson) { http_response_code(500); echo json_encode(['ok'=>false,'error'=>'times_store_unavailable']); } else { redirect('/tasks'); } return; }
         $taskId = (int)($_POST['id'] ?? ($_POST['task_id'] ?? 0));
-        if ($taskId <= 0) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'bad_request']); return; }
+        if ($taskId <= 0) { if ($isJson) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'bad_request']); } else { redirect('/tasks'); } return; }
         $task = $this->tasksStore->get($taskId);
-        if (!$task) { http_response_code(404); echo json_encode(['ok'=>false,'error'=>'task_not_found']); return; }
+        if (!$task) { if ($isJson) { http_response_code(404); echo json_encode(['ok'=>false,'error'=>'task_not_found']); } else { redirect('/tasks'); } return; }
         $now = new \DateTimeImmutable('now');
         $date = $now->format('Y-m-d');
         $start = $now->format('H:i');
@@ -337,15 +339,17 @@ class TasksController
             'end_time' => '',
             'created_at' => \App\Util\Dates::nowAtom(),
         ]);
-        echo json_encode(['ok'=>true,'time'=>$added]);
+        if ($isJson) { echo json_encode(['ok'=>true,'time'=>$added]); } else { redirect('/tasks'); }
     }
 
     public function timeStop(): void
     {
-        header('Content-Type: application/json');
-        if (!$this->timesStore) { http_response_code(500); echo json_encode(['ok'=>false,'error'=>'times_store_unavailable']); return; }
+        $accept = (string)($_SERVER['HTTP_ACCEPT'] ?? '');
+        $isJson = str_contains($accept, 'application/json') || strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
+        if ($isJson) { header('Content-Type: application/json'); }
+        if (!$this->timesStore) { if ($isJson) { http_response_code(500); echo json_encode(['ok'=>false,'error'=>'times_store_unavailable']); } else { redirect('/tasks'); } return; }
         $taskId = (int)($_POST['id'] ?? ($_POST['task_id'] ?? 0));
-        if ($taskId <= 0) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'bad_request']); return; }
+        if ($taskId <= 0) { if ($isJson) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'bad_request']); } else { redirect('/tasks'); } return; }
         // Find last running entry for this task (end_time empty)
         $running = null; $rid = 0;
         foreach ($this->timesStore->all() as $t) {
@@ -353,7 +357,7 @@ class TasksController
                 if (!$running || (int)$t['id'] > (int)$running['id']) { $running = $t; $rid = (int)$t['id']; }
             }
         }
-        if (!$running) { http_response_code(404); echo json_encode(['ok'=>false,'error'=>'no_running_timer']); return; }
+        if (!$running) { if ($isJson) { http_response_code(404); echo json_encode(['ok'=>false,'error'=>'no_running_timer']); } else { redirect('/tasks'); } return; }
         $now = new \DateTimeImmutable('now');
         $end = $now->format('H:i');
         // compute hours based on start_time
@@ -368,6 +372,6 @@ class TasksController
             'end_time' => $end,
             'hours' => $hours,
         ]);
-        echo json_encode(['ok'=>true,'time'=>$updated]);
+        if ($isJson) { echo json_encode(['ok'=>true,'time'=>$updated]); } else { redirect('/tasks'); }
     }
 }
