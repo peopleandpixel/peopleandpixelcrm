@@ -79,7 +79,11 @@
                 {% elseif ftype == 'file' %}
                     <input class="file-input file-input-bordered w-full" id="{{ fname }}" name="{{ fname }}" type="file"{% if f.accept %} accept="{{ f.accept|e }}"{% endif %}{% if f.required %} required{% endif %}>
                 {% else %}
-                    <input class="input input-bordered w-full" id="{{ fname }}" name="{{ fname }}" type="{{ ftype }}" value="{{ fval|e }}"{% if f.placeholder %} placeholder="{{ f.placeholder|e }}"{% endif %}{% if f.required %} required{% endif %}>
+                    {% if ftype == 'time' %}
+                        <input class="input input-bordered w-full" id="{{ fname }}" name="{{ fname }}" type="time" step="1" value="{{ fval|e }}"{% if f.placeholder %} placeholder="{{ f.placeholder|e }}"{% endif %}{% if f.required %} required{% endif %}>
+                    {% else %}
+                        <input class="input input-bordered w-full" id="{{ fname }}" name="{{ fname }}" type="{{ ftype }}" value="{{ fval|e }}"{% if f.placeholder %} placeholder="{{ f.placeholder|e }}"{% endif %}{% if f.required %} required{% endif %}>
+                    {% endif %}
                 {% endif %}
                 {% if ferrMsg %}
                     <div class="text-error text-sm mt-1">{{ ferrMsg|e }}</div>

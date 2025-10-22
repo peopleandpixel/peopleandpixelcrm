@@ -28,11 +28,11 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="form-control">
         <label for="start_time" class="label"><span class="label-text">{{ __('Start time')|e }}</span></label>
-        <input type="time" id="start_time" name="start_time" value="{{ (start_time|default(time.start_time|default('')))|e }}" class="input input-bordered">
+        <input type="time" id="start_time" name="start_time" step="1" value="{{ (start_time|default(time.start_time|default('')))|e }}" class="input input-bordered">
       </div>
       <div class="form-control">
         <label for="end_time" class="label"><span class="label-text">{{ __('End time')|e }}</span></label>
-        <input type="time" id="end_time" name="end_time" value="{{ (end_time|default(time.end_time|default('')))|e }}" class="input input-bordered">
+        <input type="time" id="end_time" name="end_time" step="1" value="{{ (end_time|default(time.end_time|default('')))|e }}" class="input input-bordered">
       </div>
       <div class="form-control">
         <label for="hours" class="label"><span class="label-text">{{ __('Hours')|e }} <span class="opacity-70 text-xs">({{ __('auto from start/end if provided')|e }})</span></span></label>

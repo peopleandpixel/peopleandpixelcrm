@@ -35,8 +35,7 @@ class Container
         $this->factories['logger'] = function(self $c) : LoggerInterface {
             /** @var Config $cfg */
             $cfg = $c->get('config');
-            $projectRoot = $cfg->getProjectRoot();
-            $logDir = rtrim($projectRoot, '/') . '/var/log';
+            $logDir = $cfg->getLogDir();
             if (!is_dir($logDir)) {
                 @mkdir($logDir, 0777, true);
             }
@@ -65,10 +64,10 @@ class Container
         $this->factories['twig'] = function(self $c) {
             /** @var Config $cfg */
             $cfg = $c->get('config');
-            $templatesPath = rtrim($cfg->getProjectRoot(), '/') . '/templates';
+            $templatesPath = $cfg->getTemplatesDir();
             $loader = new \Twig\Loader\FilesystemLoader($templatesPath);
             $options = [];
-            $cacheDir = rtrim($cfg->getProjectRoot(), '/') . '/var/cache/twig';
+            $cacheDir = $cfg->getTwigCacheDir();
             $isDebug = $cfg->isDebug();
             if (!$isDebug) {
                 if (!is_dir($cacheDir)) {@mkdir($cacheDir, 0777, true);}            
@@ -171,11 +170,24 @@ class Container
                 $c->get('usersStore')
             );
         };
+        $this->factories['groupsController'] = function(self $c) {
+            return new \App\Controller\GroupsTemplateController(
+                $c->get('groupsStore')
+            );
+        };
         $this->factories['uploadController'] = function(self $c) {
             return new \App\Controller\UploadController();
         };
         $this->factories['passwordController'] = function(self $c) {
             return new \App\Controller\PasswordController();
+        };
+        // Calendar
+        $this->factories['calendarController'] = function(self $c) {
+            return new \App\Controller\CalendarController(
+                $c->get('contactsStore'),
+                $c->get('projectsStore'),
+                $c->get('tasksStore')
+            );
         };
     }
 
@@ -213,7 +225,7 @@ class Container
             $path = $cfg->jsonPath($name . '.json');
             return new JsonStore($path);
         };
-        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects'] as $entity) {
+        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects','groups'] as $entity) {
             $this->factories[$entity . 'Store'] = function(self $c) use ($makeStore, $entity) {
                 $store = $makeStore($c, $entity);
                 if ($entity === 'users') {

@@ -40,6 +40,13 @@ class Config
     public function getProjectRoot(): string { return $this->projectRoot; }
     public function getDataDir(): string { return $this->dataDir; }
 
+    // Paths derived from project root
+    public function getVarDir(): string { return $this->projectRoot . '/var'; }
+    public function getCacheDir(): string { return $this->getVarDir() . '/cache'; }
+    public function getTwigCacheDir(): string { return $this->getCacheDir() . '/twig'; }
+    public function getLogDir(): string { return $this->getVarDir() . '/log'; }
+    public function getTemplatesDir(): string { return $this->projectRoot . '/templates'; }
+
     public function getLang(): string { return $this->lang; }
     public function setLang(string $lang): void { $this->lang = $lang; }
 

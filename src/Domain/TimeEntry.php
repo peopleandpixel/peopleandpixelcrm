@@ -16,8 +16,8 @@ class TimeEntry
     public string $date; // Y-m-d
     public float $hours;
     public string $description; // notes/description
-    public string $start_time; // HH:MM
-    public string $end_time;   // HH:MM
+    public string $start_time; // HH:MM or HH:MM:SS
+    public string $end_time;   // HH:MM or HH:MM:SS
 
     public function __construct(int $contact_id, int $employee_id, int $task_id, string $date, float $hours, string $description = '', string $start_time = '', string $end_time = '')
     {
@@ -69,14 +69,14 @@ class TimeEntry
         ]);
         $v->date('date');
 
-        // Validate optional time fields if provided
+        // Validate optional time fields if provided (support HH:MM and HH:MM:SS)
         if ($this->start_time !== '') {
-            if (!Dates::isValid($this->start_time, 'H:i')) {
+            if (!(Dates::isValid($this->start_time, 'H:i') || Dates::isValid($this->start_time, 'H:i:s'))) {
                 $v->addError('start_time', 'start_time', 'Invalid start time.');
             }
         }
         if ($this->end_time !== '') {
-            if (!Dates::isValid($this->end_time, 'H:i')) {
+            if (!(Dates::isValid($this->end_time, 'H:i') || Dates::isValid($this->end_time, 'H:i:s'))) {
                 $v->addError('end_time', 'endTime', 'Invalid end time.');
             }
         }
@@ -100,13 +100,13 @@ class TimeEntry
     }
 
     /**
-     * Compute hours float between two HH:MM times, or null if invalid.
+     * Compute hours float between two times (HH:MM or HH:MM:SS), or null if invalid.
      */
     private static function computeHours(string $start, string $end): ?float
     {
         if ($start === '' || $end === '') return null;
-        $s = Dates::parseExact($start, 'H:i');
-        $e = Dates::parseExact($end, 'H:i');
+        $s = Dates::parseExact($start, 'H:i:s') ?? Dates::parseExact($start, 'H:i');
+        $e = Dates::parseExact($end, 'H:i:s') ?? Dates::parseExact($end, 'H:i');
         if (!$s || !$e) return null;
         $diff = $e->getTimestamp() - $s->getTimestamp();
         if ($diff <= 0) return null;

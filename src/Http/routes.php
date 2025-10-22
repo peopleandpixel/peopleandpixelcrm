@@ -169,6 +169,10 @@ return static function (Container $container, Router $router): void {
         if (!$cfg->useDb()) { send_list_cache_headers([$cfg->jsonPath('storage.json')], 60); }
         ($container->get('storageController'))->list();
     });
+
+    // Calendar
+    $router->get('/calendar', [$container->get('calendarController'), 'index']);
+    $router->get('/calendar/events', [$container->get('calendarController'), 'events']);
     $router->get('/storage/new', [$container->get('storageController'), 'newForm']);
     $router->get('/storage/view', [$container->get('storageController'), 'view']);
     $router->post('/storage/new', function() use ($container) { ($container->get('storageController'))->create($container->get('storageStore')); });

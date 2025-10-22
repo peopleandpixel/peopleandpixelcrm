@@ -24,6 +24,7 @@
                 <li><a href="{{ url('/contacts') }}" class="{{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current="page"' : '' }}>{{ __('Contacts')|e }}</a></li>
                 <li><a href="{{ url('/tasks') }}" class="{{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}>{{ __('Tasks')|e }}</a></li>
                 <li><a href="{{ url('/projects') }}" class="{{ active_class('/projects') ? 'active' : '' }}" {{ active_class('/projects') ? 'aria-current="page"' : '' }}>{{ __('Projects')|e }}</a></li>
+                <li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}>{{ __('Calendar')|e }}</a></li>
                 <li><a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}>{{ __('Employees')|e }}</a></li>
                 <li><a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}>{{ __('Working Times')|e }}</a></li>
                 <li><a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}>{{ __('Recruiting')|e }}</a></li>
@@ -161,7 +162,10 @@
         }
         // Prefer iso_start if provided
         let iso = r.iso_start;
-        if (!iso && r.date && r.start_time){ iso = r.date + 'T' + r.start_time + ':00'; }
+        if (!iso && r.date && r.start_time){
+          const st = r.start_time;
+          iso = r.date + 'T' + (st && st.length === 5 ? (st + ':00') : st);
+        }
         const start = Date.parse(iso);
         if (isNaN(start)){
           startMs = null; setActive(false); return;

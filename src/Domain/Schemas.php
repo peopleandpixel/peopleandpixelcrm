@@ -181,6 +181,19 @@ final class Schemas
                     ['name' => 'end_date', 'label' => __('End')],
                 ],
             ],
+            'groups' => [
+                'fields' => [
+                    ['name' => 'name', 'label' => __('Name'), 'type' => 'text', 'required' => true],
+                    ['name' => 'color', 'label' => __('Color'), 'type' => 'text', 'placeholder' => '#34d399'],
+                    ['name' => 'description', 'label' => __('Description'), 'type' => 'textarea', 'rows' => 3],
+                ],
+                'columns' => [
+                    ['name' => 'name', 'label' => __('Name')],
+                    ['name' => 'color', 'label' => __('Color')],
+                    ['name' => 'description', 'label' => __('Description')],
+                    ['name' => 'created_at', 'label' => __('Created')],
+                ],
+            ],
         ];
     }
 

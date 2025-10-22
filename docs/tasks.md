@@ -16,10 +16,10 @@ Note: Check off items as you complete them. The list is ordered to reduce risk a
    - [x] Add PHP-CS-Fixer (PSR-12 ruleset) and a composer script
    - [x] Add Rector for gradual refactorings (optional, with baseline)
 
-4. [ ] Dependency management and DI
-   - [ ] Review Container (src/Container.php) and ensure single-responsibility (construction vs configuration)
+4. [x] Dependency management and DI
+   - [x] Review Container (src/Container.php) and ensure single-responsibility (construction vs configuration)
    - [x] Replace ad-hoc new in Router handler resolution with container-based controller instantiation
-   - [ ] Centralize configuration in src/Config.php and .env, typed accessors with defaults and validation
+   - [x] Centralize configuration in src/Config.php and .env, typed accessors with defaults and validation
 
 5. [ ] HTTP foundation alignment
    - [ ] Expand App\Http\Request/Response to encapsulate headers, cookies, files, JSON, redirects

@@ -21,6 +21,7 @@ readonly class ContactsTemplateController
         private object  $contactsStore,
         private ?object $timesStore = null,
         private ?object $tasksStore = null,
+        private ?object $groupsStore = null,
     ) {}
 
     public function view(): void
@@ -83,7 +84,8 @@ readonly class ContactsTemplateController
         render('contacts_form', [
             'title' => __('Add Contact'),
             'form_action' => url('/contacts/new'),
-            'cancel_url' => url('/contacts')
+            'cancel_url' => url('/contacts'),
+            'groups' => $this->groupsStore ? $this->groupsStore->all() : []
         ]);
     }
 
@@ -96,7 +98,7 @@ readonly class ContactsTemplateController
         if (!empty($errors)) {
             $error = __('Please fix the highlighted errors.');
             $data = $dto->toArray();
-            render('contacts_form', ['title' => __('Add Contact'), 'form_action' => url('/contacts/new'), 'error' => $error, 'errors' => $errors, 'cancel_url' => url('/contacts')] + $data);
+            render('contacts_form', ['title' => __('Add Contact'), 'form_action' => url('/contacts/new'), 'error' => $error, 'errors' => $errors, 'cancel_url' => url('/contacts'), 'groups' => $this->groupsStore ? $this->groupsStore->all() : []] + $data);
             return;
         }
         $this->contactsStore->add($dto->toArray() + [
@@ -111,7 +113,7 @@ readonly class ContactsTemplateController
         $id = (int)($_GET['id'] ?? 0);
         $contact = $id ? $this->contactsStore->get($id) : null;
         if (!$contact) { redirect('/contacts'); }
-        render('contacts_form', ['title' => __('Edit Contact'), 'form_action' => url('/contacts/edit'), 'contact' => $contact, 'cancel_url' => url('/contacts')] + $contact);
+        render('contacts_form', ['title' => __('Edit Contact'), 'form_action' => url('/contacts/edit'), 'contact' => $contact, 'cancel_url' => url('/contacts'), 'groups' => $this->groupsStore ? $this->groupsStore->all() : []] + $contact);
     }
 
     public function update(): void
@@ -125,7 +127,7 @@ readonly class ContactsTemplateController
         if (!empty($errors)) {
             $error = __('Please fix the highlighted errors.');
             $contact = $this->contactsStore->get($id) ?? [];
-            render('contacts_form', ['title' => __('Edit Contact'), 'form_action' => url('/contacts/edit'), 'error' => $error, 'errors' => $errors, 'contact' => $contact, 'id' => $id, 'cancel_url' => url('/contacts')] + $dto->toArray());
+            render('contacts_form', ['title' => __('Edit Contact'), 'form_action' => url('/contacts/edit'), 'error' => $error, 'errors' => $errors, 'contact' => $contact, 'id' => $id, 'cancel_url' => url('/contacts'), 'groups' => $this->groupsStore ? $this->groupsStore->all() : []] + $dto->toArray());
             return;
         }
         $this->contactsStore->update($id, $dto->toArray());

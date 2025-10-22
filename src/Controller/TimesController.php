@@ -44,7 +44,8 @@ class TimesController
             // Best-effort ISO start time (local timezone)
             $isoStart = null;
             if ($date !== '' && $start !== '') {
-                $isoStart = $date . 'T' . $start . ':00';
+                // If start already includes seconds, use as-is; otherwise append :00
+                $isoStart = $date . 'T' . (strlen($start) === 5 ? ($start . ':00') : $start);
             }
             // Compute per-user total time for this task
             $user = \App\Util\Auth::user();
@@ -58,7 +59,8 @@ class TimesController
                 // If this is the running entry and belongs to the user, add current elapsed since start_time
                 if ((string)($t['end_time'] ?? '') === '' && (string)($t['start_time'] ?? '') !== '') {
                     if ($date !== '' && $start !== '') {
-                        $startDt = \DateTimeImmutable::createFromFormat('Y-m-d H:i', $date . ' ' . $start) ?: null;
+                        $startDt = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $date . ' ' . $start)
+                                   ?: \DateTimeImmutable::createFromFormat('Y-m-d H:i', $date . ' ' . $start);
                         if ($startDt) {
                             $elapsed = max(0, (new \DateTimeImmutable('now'))->getTimestamp() - $startDt->getTimestamp());
                             $totalSeconds += $elapsed;

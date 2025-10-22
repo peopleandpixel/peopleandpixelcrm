@@ -16,7 +16,8 @@ Examples
 - POST /contacts/delete → delete
 
 Other main route groups
-- /times, /tasks, /employees, /candidates, /payments (also /payments/export.csv), /storage, /storage/history
+- /times, /tasks, /projects, /employees, /candidates, /payments (also /payments/export.csv), /storage, /storage/history
+- /calendar, /calendar/events
 - /login, /logout
 
 URL helpers (Twig)
