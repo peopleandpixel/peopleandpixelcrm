@@ -16,6 +16,10 @@ return [
     'Storage' => 'Estoque',
     'Language' => 'Idioma',
 
+    // Additional navigation
+    'Projects' => 'Projetos',
+    'Calendar' => 'Calendário',
+
     // Errors
     '404 - Page Not Found' => '404 - Página não encontrada',
     'The requested URL' => 'A URL solicitada',
@@ -40,4 +44,10 @@ return [
         // Tasks extras
         'Done date' => 'Data de conclusão',
         'Edit Task' => 'Editar tarefa',
+
+    // Home page
+    'Welcome to People & Pixel' => 'Bem-vindo ao People & Pixel',
+    'This is a lightweight CRM to manage your company contacts, team, tasks, time tracking, payments, and inventory.' => 'Este é um CRM leve para gerenciar os contatos da sua empresa, equipe, tarefas, registro de tempo, pagamentos e inventário.',
+    'Open' => 'Abrir',
+    'New' => 'Novo',
 ];

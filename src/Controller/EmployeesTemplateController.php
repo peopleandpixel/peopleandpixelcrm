@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Domain\Employee as EmployeeDTO;
 use App\Domain\Schemas;
+use App\Http\Request;
 use App\Util\ListSort;
 use JetBrains\PhpStorm\NoReturn;
 use function redirect;
@@ -35,7 +36,7 @@ readonly class EmployeesTemplateController
 
     public function list(): void
     {
-        ListSort::getSortedList('Employee', 'employees', $this->employeesStore, ['name','email','role','hired_at']);
+        ListSort::getSortedList(Request::fromGlobals(), 'Employee', 'employees', $this->employeesStore);
     }
 
     public function newForm(): void

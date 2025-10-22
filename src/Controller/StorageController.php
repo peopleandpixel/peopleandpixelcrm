@@ -184,23 +184,57 @@ class StorageController
         redirect('/storage');
     }
 
-    public static function adjust(object $storageStore, object $adjustmentsStore): void
+    /**
+     * Adjusts stock quantity for an item and records an adjustment history entry.
+     * Validation rules:
+     * - delta must be non-zero integer
+     * - when negative inventory is not allowed, the resulting quantity must not go below zero
+     * Transactional behavior:
+     * - Both the quantity update and the history append happen within a transaction lock
+     * - On any failure, attempts to roll back the quantity update and surfaces a Flash error
+     */
+    public static function adjust(object $storageStore, object $adjustmentsStore, ?\App\Config $config = null): void
     {
         $id = (int)($_POST['id'] ?? 0);
         $delta = (int)($_POST['delta'] ?? 0);
-        $note = isset($_POST['note']) ? (string)$_POST['note'] : '';
-        if ($id <= 0 || $delta === 0) { redirect('/storage'); }
+        $note = isset($_POST['note']) ? trim((string)$_POST['note']) : '';
+        if ($id <= 0 || $delta === 0) { Flash::error(__('Invalid adjustment.')); redirect('/storage'); }
+
         $item = $storageStore->get($id);
-        if (!$item) { redirect('/storage'); }
-        $newQty = max(0, (int)($item['quantity'] ?? 0) + $delta);
-        $storageStore->update($id, ['quantity' => $newQty]);
-        $adjustmentsStore->add([
-            'item_id' => $id,
-            'delta' => $delta,
-            'note' => $note,
-            'created_at' => \App\Util\Dates::nowAtom(),
-        ]);
-        Flash::success(__('Stock adjusted.'));
+        if (!$item) { Flash::error(__('Item not found.')); redirect('/storage'); }
+
+        $currentQty = (int)($item['quantity'] ?? 0);
+        $resultQty = $currentQty + $delta;
+        $allowNeg = $config?->isInventoryNegativeAllowed() ?? false;
+        if (!$allowNeg && $resultQty < 0) {
+            Flash::error(__('Adjustment would result in negative stock, which is not allowed.'));
+            redirect('/storage');
+        }
+
+        $now = \App\Util\Dates::nowAtom();
+        $rollbackNeeded = false;
+        try {
+            // Guard multi-write sequence with a transaction on the storage store
+            $storageStore->withTransaction(function() use ($storageStore, $adjustmentsStore, $id, $resultQty, $delta, $note, $now, &$rollbackNeeded) {
+                $storageStore->update($id, ['quantity' => $resultQty]);
+                $rollbackNeeded = true; // after this point we need to roll back if add() fails
+                // Adjustment history model clarified: record resulting quantity for reliable audit trail
+                $adjustmentsStore->add([
+                    'item_id' => $id,
+                    'delta' => $delta,
+                    'note' => $note,
+                    'resulting_quantity' => $resultQty,
+                    'created_at' => $now,
+                ]);
+            });
+            Flash::success(__('Stock adjusted.'));
+        } catch (\Throwable $e) {
+            // Best-effort rollback if we already updated the item quantity
+            if ($rollbackNeeded) {
+                try { $storageStore->update($id, ['quantity' => $currentQty]); } catch (\Throwable) {}
+            }
+            Flash::error(__('Failed to adjust stock: ') . $e->getMessage());
+        }
         redirect('/storage');
     }
 
@@ -209,8 +243,18 @@ class StorageController
         $id = (int)($_GET['id'] ?? 0);
         $item = $id ? $storageStore->get($id) : null;
         if (!$item) { redirect('/storage'); }
-        $rows = array_filter($adjustmentsStore->all(), fn($r) => (int)($r['item_id'] ?? 0) === $id);
+        $rows = array_values(array_filter($adjustmentsStore->all(), fn($r) => (int)($r['item_id'] ?? 0) === $id));
         usort($rows, fn($a,$b) => strcmp($b['created_at'] ?? '', $a['created_at'] ?? ''));
-        render('storage_history', ['item' => $item, 'adjustments' => $rows]);
+        // Map to view model expected by template
+        $history = array_map(function(array $r) use ($item) {
+            return [
+                'created_at' => $r['created_at'] ?? null,
+                'item_name' => (string)($item['name'] ?? ''),
+                'delta' => (int)($r['delta'] ?? 0),
+                'note' => (string)($r['note'] ?? ''),
+                'resulting_quantity' => isset($r['resulting_quantity']) ? (int)$r['resulting_quantity'] : null,
+            ];
+        }, $rows);
+        render('storage_history', ['item' => $item, 'history' => $history]);
     }
 }

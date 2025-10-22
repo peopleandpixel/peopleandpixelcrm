@@ -6,6 +6,8 @@ namespace App\Controller;
 
 use App\Domain\Task as TaskDTO;
 use App\Domain\Schemas;
+use App\Util\Csrf;
+use App\Util\Flash;
 use JetBrains\PhpStorm\NoReturn;
 use function __;
 use function redirect;
@@ -14,11 +16,12 @@ use function render;
 class TasksController
 {
     public function __construct(
-        private readonly object $tasksStore,
+        private readonly \App\Domain\Repository\TasksRepositoryInterface $tasksStore,
         private readonly object $contactsStore,
         private readonly object $employeesStore,
         private readonly ?object $projectsStore = null,
         private readonly ?object $timesStore = null,
+        private readonly ?\App\Service\ListService $listService = null,
     ) {}
 
     /**
@@ -26,19 +29,23 @@ class TasksController
      */
     public function move(): void
     {
-        header('Content-Type: application/json');
-        $id = (int)($_POST['id'] ?? 0);
-        $status = (string)($_POST['status'] ?? '');
+        $req = \request();
+        // CSRF validation (supports header for AJAX)
+        $token = $_POST[Csrf::fieldName()] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+        if (!Csrf::validate(is_string($token) ? $token : null)) {
+            \App\Http\Response::json(['ok' => false, 'error' => 'csrf'], 400)->send();
+            return;
+        }
+        $id = (int)$req->post('id', 0);
+        $status = (string)$req->post('status', '');
         $allowed = ['open','in_progress','review','blocked','done'];
         if ($id <= 0 || !in_array($status, $allowed, true)) {
-            http_response_code(400);
-            echo json_encode(['ok' => false, 'error' => 'bad_request']);
+            \App\Http\Response::json(['ok' => false, 'error' => 'bad_request'], 400)->send();
             return;
         }
         $task = $this->tasksStore->get($id);
         if (!$task) {
-            http_response_code(404);
-            echo json_encode(['ok' => false, 'error' => 'not_found']);
+            \App\Http\Response::json(['ok' => false, 'error' => 'not_found'], 404)->send();
             return;
         }
         // Preserve other fields, only change status + done_date transitions
@@ -52,7 +59,7 @@ class TasksController
             $doneDate = '';
         }
         $this->tasksStore->update($id, ['status' => $status, 'done_date' => $doneDate]);
-        echo json_encode(['ok' => true, 'task' => ['id' => $id, 'status' => $status, 'done_date' => $doneDate]]);
+        \App\Http\Response::json(['ok' => true, 'task' => ['id' => $id, 'status' => $status, 'done_date' => $doneDate]])->send();
     }
 
     public function view(): void
@@ -104,31 +111,39 @@ class TasksController
         }
         unset($t);
 
-        // Filter
-        if ($q !== '') {
-            $needle = mb_strtolower($q);
-            $tasks = array_values(array_filter($tasks, function($it) use ($needle) {
-                foreach (['title','status','notes','contact_name','employee_name','due_date','done_date'] as $field) {
-                    $v = (string)($it[$field] ?? '');
-                    if ($v !== '' && str_contains(mb_strtolower($v), $needle)) { return true; }
-                }
-                return false;
-            }));
+        // Filter, sort, paginate via ListService (if available)
+        $filterFields = ['title','status','notes','contact_name','employee_name','due_date','done_date'];
+        $allowedSort = ['due_date','status','title','contact_name'];
+        if ($this->listService) {
+            $tasks = $this->listService->filter($tasks, $q, $filterFields);
+            $tasks = $this->listService->sort($tasks, $sort, $dir, $allowedSort);
+            $pg = $this->listService->paginate($tasks, $page, $per);
+            $total = $pg['total'];
+            $page = $pg['page'];
+            $per = $pg['per'];
+            $paged = $pg['items'];
+        } else {
+            if ($q !== '') {
+                $needle = mb_strtolower($q);
+                $tasks = array_values(array_filter($tasks, function($it) use ($needle, $filterFields) {
+                    foreach ($filterFields as $field) {
+                        $v = (string)($it[$field] ?? '');
+                        if ($v !== '' && str_contains(mb_strtolower($v), $needle)) { return true; }
+                    }
+                    return false;
+                }));
+            }
+            if (!in_array($sort, $allowedSort, true)) { $sort = 'due_date'; }
+            usort($tasks, function($a,$b) use ($sort, $dir) {
+                $va = (string)($a[$sort] ?? '');
+                $vb = (string)($b[$sort] ?? '');
+                $cmp = strcmp($va, $vb);
+                return $dir === 'asc' ? $cmp : -$cmp;
+            });
+            $total = count($tasks);
+            $offset = ($page - 1) * $per;
+            $paged = array_slice($tasks, $offset, $per);
         }
-
-        // Sort
-        $allowed = ['due_date','status','title','contact_name'];
-        if (!in_array($sort, $allowed, true)) { $sort = 'due_date'; }
-        usort($tasks, function($a,$b) use ($sort, $dir) {
-            $va = (string)($a[$sort] ?? '');
-            $vb = (string)($b[$sort] ?? '');
-            $cmp = strcmp($va, $vb);
-            return $dir === 'asc' ? $cmp : -$cmp;
-        });
-
-        $total = count($tasks);
-        $offset = ($page - 1) * $per;
-        $paged = array_slice($tasks, $offset, $per);
 
         $schema = Schemas::get('tasks');
         render('tasks_list', [
@@ -162,6 +177,8 @@ class TasksController
 
     public function create(): void
     {
+        $token = $_POST[Csrf::fieldName()] ?? null;
+        if (!Csrf::validate(is_string($token) ? $token : null)) { http_response_code(400); render('errors/400'); return; }
         $contacts = $this->contactsStore->all();
         $employees = $this->employeesStore->all();
         $projects = $this->projectsStore ? $this->projectsStore->all() : [];
@@ -202,6 +219,7 @@ class TasksController
         $this->tasksStore->add($data + [
             'created_at' => \App\Util\Dates::nowAtom(),
         ]);
+        Flash::success(__('Task created successfully.'));
         redirect('/tasks');
     }
 
@@ -220,6 +238,8 @@ class TasksController
 
     public function update(): void
     {
+        $token = $_POST[Csrf::fieldName()] ?? null;
+        if (!Csrf::validate(is_string($token) ? $token : null)) { http_response_code(400); render('errors/400'); return; }
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) { redirect('/tasks'); }
         $contacts = $this->contactsStore->all();
@@ -264,14 +284,17 @@ class TasksController
         }
         $data['done_date'] = $doneDate;
         $this->tasksStore->update($id, $data);
+        Flash::success(__('Task updated successfully.'));
         redirect('/tasks');
     }
 
     #[NoReturn]
     public function delete(): void
     {
+        $token = $_POST[Csrf::fieldName()] ?? null;
+        if (!Csrf::validate(is_string($token) ? $token : null)) { http_response_code(400); render('errors/400'); return; }
         $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) { $this->tasksStore->delete($id); }
+        if ($id > 0) { $this->tasksStore->delete($id); Flash::success(__('Task deleted successfully.')); }
         redirect('/tasks');
     }
 
@@ -314,14 +337,15 @@ class TasksController
     }
     public function timeStart(): void
     {
-        $accept = (string)($_SERVER['HTTP_ACCEPT'] ?? '');
-        $isJson = str_contains($accept, 'application/json') || strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
-        if ($isJson) { header('Content-Type: application/json'); }
-        if (!$this->timesStore) { if ($isJson) { http_response_code(500); echo json_encode(['ok'=>false,'error'=>'times_store_unavailable']); } else { redirect('/tasks'); } return; }
-        $taskId = (int)($_POST['id'] ?? ($_POST['task_id'] ?? 0));
-        if ($taskId <= 0) { if ($isJson) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'bad_request']); } else { redirect('/tasks'); } return; }
+        $req = \request();
+        $isJson = $req->wantsJson();
+        $token = $_POST[Csrf::fieldName()] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+        if (!Csrf::validate(is_string($token) ? $token : null)) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'csrf'], 400)->send(); } else { http_response_code(400); render('errors/400'); } return; }
+        if (!$this->timesStore) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'times_store_unavailable'], 500)->send(); } else { redirect('/tasks'); } return; }
+        $taskId = (int)($req->post('id') ?? $req->post('task_id') ?? 0);
+        if ($taskId <= 0) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'bad_request'], 400)->send(); } else { redirect('/tasks'); } return; }
         $task = $this->tasksStore->get($taskId);
-        if (!$task) { if ($isJson) { http_response_code(404); echo json_encode(['ok'=>false,'error'=>'task_not_found']); } else { redirect('/tasks'); } return; }
+        if (!$task) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'task_not_found'], 404)->send(); } else { redirect('/tasks'); } return; }
         $now = new \DateTimeImmutable('now');
         $date = $now->format('Y-m-d');
         $start = $now->format('H:i');
@@ -339,17 +363,18 @@ class TasksController
             'end_time' => '',
             'created_at' => \App\Util\Dates::nowAtom(),
         ]);
-        if ($isJson) { echo json_encode(['ok'=>true,'time'=>$added]); } else { redirect('/tasks'); }
+        if ($isJson) { \App\Http\Response::json(['ok'=>true,'time'=>$added])->send(); } else { redirect('/tasks'); }
     }
 
     public function timeStop(): void
     {
-        $accept = (string)($_SERVER['HTTP_ACCEPT'] ?? '');
-        $isJson = str_contains($accept, 'application/json') || strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
-        if ($isJson) { header('Content-Type: application/json'); }
-        if (!$this->timesStore) { if ($isJson) { http_response_code(500); echo json_encode(['ok'=>false,'error'=>'times_store_unavailable']); } else { redirect('/tasks'); } return; }
-        $taskId = (int)($_POST['id'] ?? ($_POST['task_id'] ?? 0));
-        if ($taskId <= 0) { if ($isJson) { http_response_code(400); echo json_encode(['ok'=>false,'error'=>'bad_request']); } else { redirect('/tasks'); } return; }
+        $req = \request();
+        $isJson = $req->wantsJson();
+        $token = $_POST[Csrf::fieldName()] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+        if (!Csrf::validate(is_string($token) ? $token : null)) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'csrf'], 400)->send(); } else { http_response_code(400); render('errors/400'); } return; }
+        if (!$this->timesStore) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'times_store_unavailable'], 500)->send(); } else { redirect('/tasks'); } return; }
+        $taskId = (int)($req->post('id') ?? $req->post('task_id') ?? 0);
+        if ($taskId <= 0) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'bad_request'], 400)->send(); } else { redirect('/tasks'); } return; }
         // Find last running entry for this task (end_time empty)
         $running = null; $rid = 0;
         foreach ($this->timesStore->all() as $t) {
@@ -357,7 +382,7 @@ class TasksController
                 if (!$running || (int)$t['id'] > (int)$running['id']) { $running = $t; $rid = (int)$t['id']; }
             }
         }
-        if (!$running) { if ($isJson) { http_response_code(404); echo json_encode(['ok'=>false,'error'=>'no_running_timer']); } else { redirect('/tasks'); } return; }
+        if (!$running) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'no_running_timer'], 404)->send(); } else { redirect('/tasks'); } return; }
         $now = new \DateTimeImmutable('now');
         $end = $now->format('H:i');
         // compute hours based on start_time
@@ -372,6 +397,6 @@ class TasksController
             'end_time' => $end,
             'hours' => $hours,
         ]);
-        if ($isJson) { echo json_encode(['ok'=>true,'time'=>$updated]); } else { redirect('/tasks'); }
+        if ($isJson) { \App\Http\Response::json(['ok'=>true,'time'=>$updated])->send(); } else { redirect('/tasks'); }
     }
 }

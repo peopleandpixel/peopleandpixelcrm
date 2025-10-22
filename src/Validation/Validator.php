@@ -114,6 +114,58 @@ class Validator
         ];
     }
 
+    /**
+     * Validate current data against an entity schema (from App\Domain\Schemas::get()).
+     * Supports: required, type (email,date,number,select), enum via options, length via min/max.
+     */
+    public function schema(array $schema): self
+    {
+        $fields = $schema['fields'] ?? [];
+        foreach ($fields as $def) {
+            $name = $def['name'] ?? null;
+            if (!$name) { continue; }
+            $value = $this->data[$name] ?? null;
+            $type = $def['type'] ?? 'text';
+            $required = (bool)($def['required'] ?? false);
+
+            if ($required) {
+                $this->required($name);
+            }
+
+            $str = is_string($value) ? $value : (string)($value ?? '');
+            if (($str === '' || $value === null) && !$required) {
+                // skip optional empty values
+                continue;
+            }
+
+            switch ($type) {
+                case 'email':
+                    $this->email($name);
+                    break;
+                case 'date':
+                    $this->date($name);
+                    break;
+                case 'number':
+                    $this->number($name);
+                    break;
+                case 'select':
+                    if (isset($def['options']) && is_array($def['options'])) {
+                        $allowed = array_keys($def['options']);
+                        $this->enum($name, $allowed);
+                    }
+                    break;
+                default:
+                    // no-op for text/textarea etc.
+                    break;
+            }
+
+            if (isset($def['min']) || isset($def['max'])) {
+                $this->length($name, $def['min'] ?? null, $def['max'] ?? null);
+            }
+        }
+        return $this;
+    }
+
     public function errors(): array
     {
         return $this->errors;

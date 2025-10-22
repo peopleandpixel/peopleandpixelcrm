@@ -78,7 +78,7 @@ final class Upload
         }
         $root = dirname(__DIR__, 2);
         $sub = trim((string)($opts['subdir'] ?? ''), '/');
-        $uploadDir = $root . '/public/uploads' . ($sub !== '' ? '/' . $sub : '');
+        $uploadDir = $root . '/var/uploads' . ($sub !== '' ? '/' . $sub : '');
         if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0777, true); }
         $rand = bin2hex(random_bytes(8));
         $namePart = pathinfo((string)($f['name'] ?? ''), PATHINFO_FILENAME);
@@ -88,7 +88,7 @@ final class Upload
         if (!@move_uploaded_file($tmp, $dest)) {
             return ['ok' => false, 'error' => 'move_failed'];
         }
-        $public = '/uploads' . ($sub !== '' ? '/' . $sub : '') . '/' . $fileName;
+        $public = '/files' . ($sub !== '' ? '/' . $sub : '') . '/' . $fileName;
         return [
             'ok' => true,
             'url' => $public,

@@ -76,6 +76,8 @@ class Container
                 $options['debug'] = true;
                 $options['auto_reload'] = true;
             }
+            // Enforce HTML auto-escaping by default
+            $options['autoescape'] = 'html';
             $twig = new \Twig\Environment($loader, $options);
             // Add simple globals
             $twig->addGlobal('currentLang', I18n::getLang());
@@ -124,13 +126,23 @@ class Container
                 $c->get('employeesStore')
             );
         };
+        $this->factories['tasksRepository'] = function(self $c) {
+            // Wrap the underlying store (JSON or DB) behind a repository boundary
+            /** @var \App\StoreInterface $store */
+            $store = $c->get('tasksStore');
+            return new \App\Infrastructure\Repository\TasksRepository($store);
+        };
+        $this->factories['listService'] = function(self $c) {
+            return new \App\Service\ListService();
+        };
         $this->factories['tasksController'] = function(self $c) {
             return new \App\Controller\TasksController(
-                $c->get('tasksStore'),
+                $c->get('tasksRepository'),
                 $c->get('contactsStore'),
                 $c->get('employeesStore'),
                 $c->get('projectsStore'),
-                $c->get('timesStore')
+                $c->get('timesStore'),
+                $c->get('listService')
             );
         };
         $this->factories['projectsController'] = function(self $c) {
@@ -177,6 +189,9 @@ class Container
         };
         $this->factories['uploadController'] = function(self $c) {
             return new \App\Controller\UploadController();
+        };
+        $this->factories['filesController'] = function(self $c) {
+            return new \App\Controller\FilesController();
         };
         $this->factories['passwordController'] = function(self $c) {
             return new \App\Controller\PasswordController();

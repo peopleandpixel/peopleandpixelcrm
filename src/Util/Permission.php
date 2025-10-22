@@ -90,6 +90,15 @@ class Permission
                 if ($path === '/storage/history') return [$e, 'view'];
             }
         }
+        // Admin users management – require admin privileges via 'users' pseudo-entity
+        if (str_starts_with($path, '/admin/users')) {
+            // Map GET to view, POST to edit/create/delete accordingly
+            if ($path === '/admin/users') return ['users', 'view'];
+            if ($path === '/admin/users/new') return ['users', $method === 'POST' ? 'create' : 'create'];
+            if ($path === '/admin/users/edit') return ['users', $method === 'POST' ? 'edit' : 'edit'];
+            if ($path === '/admin/users/delete' && $method === 'POST') return ['users', 'delete'];
+            return ['users', 'view'];
+        }
         return null;
     }
 }

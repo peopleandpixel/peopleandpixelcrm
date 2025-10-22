@@ -6,23 +6,25 @@
  - path, page, per, total, q, sort, dir (optional for pagination/sorting UI; minimal rendering only)
 #}
 <section class="space-y-3">
-    <h2 class="text-2xl font-semibold">{{ title|default('')|e }}</h2>
+    {% set listTitle = title|default('') %}
+    {% if listTitle %}<h2 class="text-2xl font-semibold">{{ listTitle|e }}</h2>{% endif %}
 
     <div class="overflow-x-auto">
-      <table class="table table-zebra w-full">
+      <table class="table table-zebra w-full" aria-label="{{ listTitle ? listTitle|e : __('List')|e }}">
+        {% if listTitle %}<caption class="sr-only">{{ listTitle|e }}</caption>{% endif %}
         <thead>
         <tr>
             {% for col in columns %}
-                <th>{{ col.label|default(col.name)|e }}</th>
+                <th scope="col">{{ col.label|default(col.name)|e }}</th>
             {% endfor %}
             {% if actions is defined and (actions.edit_url or actions.delete_url) %}
-                <th>{{ __('Actions')|e }}</th>
+                <th scope="col">{{ __('Actions')|e }}</th>
             {% endif %}
         </tr>
         </thead>
         <tbody>
         {% if items|length == 0 %}
-            <tr><td colspan="{{ columns|length + (actions is defined and (actions.edit_url or actions.delete_url) ? 1 : 0) }}">{{ __('No records found')|e }}</td></tr>
+            <tr><td class="text-center opacity-70" colspan="{{ columns|length + (actions is defined and (actions.edit_url or actions.delete_url) ? 1 : 0) }}">{{ __('No records found')|e }}</td></tr>
         {% else %}
             {% for it in items %}
                 <tr>
@@ -33,7 +35,7 @@
                             {% set idv = attribute(it, idf)|default('') %}
                             <td>
                                 {% if col.name in ['picture','image','avatar','photo'] and value %}
-                                    <a href="{{ actions.view_url }}?id={{ idv|e }}">
+                                    <a href="{{ actions.view_url }}?id={{ idv|e }}" aria-label="{{ __('View details')|e }}">
                                         <img src="{{ value|e }}" alt="" class="w-9 h-9 rounded-full object-cover border border-base-300">
                                     </a>
                                 {% else %}
@@ -60,13 +62,13 @@
                         {% set idv = attribute(it, idf)|default('') %}
                         <td class="whitespace-nowrap space-x-2">
                             {% if actions.edit_url %}
-                                <a class="btn btn-xs" href="{{ actions.edit_url }}?id={{ idv|e }}">{{ __('Edit')|e }}</a>
+                                <a class="btn btn-xs" href="{{ actions.edit_url }}?id={{ idv|e }}" aria-label="{{ __('Edit')|e }}">{{ __('Edit')|e }}</a>
                             {% endif %}
                             {% if actions.delete_url %}
                                 <form method="post" action="{{ actions.delete_url }}" class="inline" onsubmit="return confirm('{{ __('Are you sure?')|e }}');">
                                     {{ csrf_field()|raw }}
                                     <input type="hidden" name="id" value="{{ idv|e }}">
-                                    <button class="btn btn-xs btn-error" type="submit">{{ __('Delete')|e }}</button>
+                                    <button class="btn btn-xs btn-error" type="submit" aria-label="{{ __('Delete')|e }}">{{ __('Delete')|e }}</button>
                                 </form>
                             {% endif %}
                         </td>

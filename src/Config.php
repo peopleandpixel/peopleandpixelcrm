@@ -156,4 +156,15 @@ class Config
     {
         return $this->isTruthy($this->getEnv('USE_DB'));
     }
+
+    /**
+     * Inventory settings
+     */
+    public function isInventoryNegativeAllowed(): bool
+    {
+        // Prefer INVENTORY_ALLOW_NEGATIVE; fallback to STORAGE_ALLOW_NEGATIVE for backward compatibility
+        $v = $this->getEnv('INVENTORY_ALLOW_NEGATIVE');
+        if ($v === '') { $v = $this->getEnv('STORAGE_ALLOW_NEGATIVE'); }
+        return $this->isTruthy($v);
+    }
 }

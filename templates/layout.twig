@@ -19,30 +19,32 @@
     {% include 'partials/flashes.twig' %}
     <div class="flex gap-4">
         <aside class="w-56 shrink-0">
-            <ul class="menu bg-base-200 rounded-box">
-                <li><a href="{{ url('/') }}" class="{{ active_class('/') ? 'active' : '' }}" {{ active_class('/') ? 'aria-current="page"' : '' }}>{{ __('Home')|e }}</a></li>
-                <li><a href="{{ url('/contacts') }}" class="{{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current="page"' : '' }}>{{ __('Contacts')|e }}</a></li>
-                <li><a href="{{ url('/tasks') }}" class="{{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}>{{ __('Tasks')|e }}</a></li>
-                <li><a href="{{ url('/projects') }}" class="{{ active_class('/projects') ? 'active' : '' }}" {{ active_class('/projects') ? 'aria-current="page"' : '' }}>{{ __('Projects')|e }}</a></li>
-                <li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}>{{ __('Calendar')|e }}</a></li>
-                <li><a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}>{{ __('Employees')|e }}</a></li>
-                <li><a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}>{{ __('Working Times')|e }}</a></li>
-                <li><a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}>{{ __('Recruiting')|e }}</a></li>
-                <li><a href="{{ url('/payments') }}" class="{{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}>{{ __('Payments')|e }}</a></li>
-                <li><a href="{{ url('/storage') }}" class="{{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}>{{ __('Storage')|e }}</a></li>
-                {% if is_admin() %}
-                <li><a href="{{ url('/admin/users') }}" class="{{ active_class('/admin') ? 'active' : '' }}" {{ active_class('/admin') ? 'aria-current="page"' : '' }}>{{ __('Users')|e }}</a></li>
-                {% endif %}
-                <li class="mt-2 px-4 pb-3">
-                    <label class="label" for="lang-select"><span class="label-text">{{ __('Language')|e }}</span></label>
-                    <select id="lang-select" class="select select-bordered w-full max-w-xs" aria-label="{{ __('Language')|e }}">
-                        {% set cl = currentLang|default('en') %}
-                        <option value="en" {{ cl=='en' ? 'selected' : '' }}>EN</option>
-                        <option value="de" {{ cl=='de' ? 'selected' : '' }}>DE</option>
-                        <option value="pt" {{ cl=='pt' ? 'selected' : '' }}>PT</option>
-                    </select>
-                </li>
-            </ul>
+            <nav class="menu bg-base-200 rounded-box" role="navigation" aria-label="{{ __('Primary')|e }}">
+                <ul>
+                    <li><a href="{{ url('/') }}" class="{{ active_class('/') ? 'active' : '' }}" {{ active_class('/') ? 'aria-current="page"' : '' }}>{{ __('Home')|e }}</a></li>
+                    <li><a href="{{ url('/contacts') }}" class="{{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current="page"' : '' }}>{{ __('Contacts')|e }}</a></li>
+                    <li><a href="{{ url('/tasks') }}" class="{{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}>{{ __('Tasks')|e }}</a></li>
+                    <li><a href="{{ url('/projects') }}" class="{{ active_class('/projects') ? 'active' : '' }}" {{ active_class('/projects') ? 'aria-current="page"' : '' }}>{{ __('Projects')|e }}</a></li>
+                    <li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}>{{ __('Calendar')|e }}</a></li>
+                    <li><a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}>{{ __('Employees')|e }}</a></li>
+                    <li><a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}>{{ __('Working Times')|e }}</a></li>
+                    <li><a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}>{{ __('Recruiting')|e }}</a></li>
+                    <li><a href="{{ url('/payments') }}" class="{{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}>{{ __('Payments')|e }}</a></li>
+                    <li><a href="{{ url('/storage') }}" class="{{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}>{{ __('Storage')|e }}</a></li>
+                    {% if is_admin() %}
+                    <li><a href="{{ url('/admin/users') }}" class="{{ active_class('/admin') ? 'active' : '' }}" {{ active_class('/admin') ? 'aria-current="page"' : '' }}>{{ __('Users')|e }}</a></li>
+                    {% endif %}
+                    <li class="mt-2 px-4 pb-3">
+                        <label class="label" for="lang-select"><span class="label-text">{{ __('Language')|e }}</span></label>
+                        <select id="lang-select" class="select select-bordered w-full max-w-xs" aria-label="{{ __('Language')|e }}">
+                            {% set cl = currentLang|default('en') %}
+                            <option value="en" {{ cl=='en' ? 'selected' : '' }}>EN</option>
+                            <option value="de" {{ cl=='de' ? 'selected' : '' }}>DE</option>
+                            <option value="pt" {{ cl=='pt' ? 'selected' : '' }}>PT</option>
+                        </select>
+                    </li>
+                </ul>
+            </nav>
         </aside>
         <main class="flex-1">
             {% block content %}{% endblock %}

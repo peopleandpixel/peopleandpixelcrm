@@ -42,7 +42,7 @@ readonly class CandidatesTemplateController implements TemplateControllerInterfa
 
     public function list(): void
     {
-        ListSort::getSortedList('Candidate', 'candidates', $this->candidatesStore, ['name','position','status','email','created_at']);
+        ListSort::getSortedList($this->request, 'Candidate', 'candidates', $this->candidatesStore);
     }
 
     public function newForm(): void

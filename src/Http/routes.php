@@ -78,6 +78,9 @@ return static function (Container $container, Router $router): void {
     // Generic upload endpoint (for AJAX file uploads)
     $router->post('/upload', [$container->get('uploadController'), 'handle']);
 
+    // Secure file serving from var/uploads
+    $router->get('/files/{subdir}/{file}', [$container->get('filesController'), 'serve']);
+
     // Contacts
     $router->get('/contacts', function() use ($container) {
         $cfg = $container->get('config');
@@ -176,7 +179,7 @@ return static function (Container $container, Router $router): void {
     $router->get('/storage/new', [$container->get('storageController'), 'newForm']);
     $router->get('/storage/view', [$container->get('storageController'), 'view']);
     $router->post('/storage/new', function() use ($container) { ($container->get('storageController'))->create($container->get('storageStore')); });
-    $router->post('/storage/adjust', function() use ($container) { ($container->get('storageController'))->adjust($container->get('storageStore'), $container->get('storage_adjustmentsStore')); });
+    $router->post('/storage/adjust', function() use ($container) { ($container->get('storageController'))->adjust($container->get('storageStore'), $container->get('storage_adjustmentsStore'), $container->get('config')); });
     $router->get('/storage/history', function() use ($container) { $cfg = $container->get('config'); if (!$cfg->useDb()) { send_list_cache_headers([$cfg->jsonPath('storage.json'), $cfg->jsonPath('storage_adjustments.json')], 60); } ($container->get('storageController'))->history($container->get('storageStore'), $container->get('storage_adjustmentsStore')); });
 
     // Edit & Delete

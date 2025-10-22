@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Domain\Contact as ContactDTO;
 use App\Domain\Schemas;
 use App\Util\Dates;
+use App\Http\Request;
 use App\Util\Flash;
 use App\Util\ListSort;
 use App\Util\Uploader;
@@ -76,7 +77,7 @@ readonly class ContactsTemplateController
     }
     public function list(): void
     {
-        ListSort::getSortedList('Contact', 'contacts', $this->contactsStore, ['name','company','email','created_at'],);
+        ListSort::getSortedList(Request::fromGlobals(), 'Contact', 'contacts', $this->contactsStore);
     }
 
     public function newForm(): void

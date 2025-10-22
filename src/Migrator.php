@@ -26,45 +26,141 @@ class Migrator
         $this->ensureMigrationsTable();
     }
 
+    /**
+     * Apply all pending "up" migrations. Backward compatible with previous behavior.
+     */
     public function migrate(): void
     {
+        $this->migrateTo(null);
+    }
+
+    /**
+     * Migrate database to a target version.
+     *
+     * - Version is parsed from migration filenames: NNN_description.sql
+     * - Down migrations are executed from files named NNN_description.down.sql when rolling back
+     * - If $targetVersion is null, migrates to the latest available version (all ups)
+     */
+    public function migrateTo(?int $targetVersion): void
+    {
         if (!is_dir($this->migrationsDir)) {
-            // No migrations directory: nothing to do
-            return;
+            return; // nothing to do
         }
-
-        $files = glob($this->migrationsDir . '/*.sql');
-        if (!$files) {
-            return;
-        }
-        sort($files, SORT_NATURAL | SORT_FLAG_CASE);
-
+        $map = $this->discoverMigrations(); // version => ['up'=>file, 'down'=>?file, 'checksum'=>sha1(upSql)]
+        if ($map === []) { return; }
+        ksort($map, SORT_NUMERIC);
         $applied = $this->fetchApplied();
+        $current = $this->currentVersion($applied, $map);
+        $latest = (int)max(array_keys($map));
+        $target = $targetVersion === null ? $latest : max(0, $targetVersion);
 
-        foreach ($files as $file) {
-            $filename = basename($file);
-            $sql = file_get_contents($file) ?: '';
-            $checksum = sha1($sql);
-
-            if (isset($applied[$filename]) && $applied[$filename] === $checksum) {
-                continue; // already applied, matching checksum
-            }
-
-            $this->pdo->beginTransaction();
-            try {
-                // Split by semicolon; keep it naive but robust to simple cases
-                $statements = array_filter(array_map('trim', preg_split('/;\s*\n|;\s*$/m', $sql)));
-                foreach ($statements as $stmtSql) {
-                    if ($stmtSql === '') continue;
-                    $this->pdo->exec($stmtSql);
+        if ($target > $current) {
+            // Apply ups from current+1 .. target
+            for ($v = $current + 1; $v <= $target; $v++) {
+                if (!isset($map[$v])) { continue; }
+                $upFile = $map[$v]['up'];
+                $filename = basename($upFile);
+                $sql = file_get_contents($upFile) ?: '';
+                $checksum = sha1($sql);
+                if (isset($applied[$filename]) && $applied[$filename] === $checksum) {
+                    continue; // idempotent
                 }
+                $this->runSqlInTransaction($sql);
                 $this->recordApplied($filename, $checksum);
-                $this->pdo->commit();
-            } catch (PDOException $e) {
-                $this->pdo->rollBack();
-                throw $e;
+            }
+            return;
+        }
+
+        if ($target < $current) {
+            // Rollback downs from current .. target+1
+            for ($v = $current; $v > $target; $v--) {
+                if (!isset($map[$v])) { continue; }
+                $upFile = $map[$v]['up'];
+                $downFile = $map[$v]['down'] ?? null;
+                $filename = basename($upFile);
+                if (!isset($applied[$filename])) {
+                    // Not marked applied; skip
+                    continue;
+                }
+                if ($downFile && is_file($downFile)) {
+                    $sql = file_get_contents($downFile) ?: '';
+                    $this->runSqlInTransaction($sql);
+                }
+                $this->removeApplied($filename);
+                unset($applied[$filename]);
             }
         }
+    }
+
+    /**
+     * Convenience: rollback a number of last applied migrations.
+     */
+    public function rollbackLast(int $steps = 1): void
+    {
+        $map = $this->discoverMigrations();
+        $applied = $this->fetchApplied();
+        $current = $this->currentVersion($applied, $map);
+        $this->migrateTo(max(0, $current - max(0, $steps)));
+    }
+
+    private function runSqlInTransaction(string $sql): void
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $statements = array_filter(array_map('trim', preg_split('/;\s*\n|;\s*$/m', $sql)));
+            foreach ($statements as $stmtSql) {
+                if ($stmtSql === '') continue;
+                $this->pdo->exec($stmtSql);
+            }
+            $this->pdo->commit();
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Build map of available migrations and optional downs.
+     * @return array<int, array{up:string, down: (string|null), checksum:string}>
+     */
+    private function discoverMigrations(): array
+    {
+        $files = glob($this->migrationsDir . '/*.sql') ?: [];
+        $map = [];
+        foreach ($files as $file) {
+            $base = basename($file);
+            if (preg_match('/^(\d+)_.+\.sql$/', $base, $m)) {
+                if (str_ends_with($base, '.down.sql')) { continue; }
+                $v = (int)$m[1];
+                $down = $this->migrationsDir . '/' . preg_replace('/\.sql$/', '.down.sql', $base);
+                $sql = file_get_contents($file) ?: '';
+                $map[$v] = [
+                    'up' => $file,
+                    'down' => is_file($down) ? $down : null,
+                    'checksum' => sha1($sql),
+                ];
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Determine current version from applied filenames and known map.
+     * Version = highest version whose up filename is recorded as applied with matching checksum (if known).
+     * @param array<string,string> $applied
+     * @param array<int, array{up:string, down:(string|null), checksum:string}> $map
+     */
+    private function currentVersion(array $applied, array $map): int
+    {
+        $versions = [0];
+        foreach ($map as $v => $info) {
+            $fname = basename($info['up']);
+            if (isset($applied[$fname])) {
+                // If checksum in table mismatches current file (edited), we still treat as applied for safety
+                $versions[] = (int)$v;
+            }
+        }
+        return (int)max($versions);
     }
 
     private function ensureMigrationsTable(): void
@@ -95,5 +191,11 @@ class Migrator
     {
         $stmt = $this->pdo->prepare('INSERT OR REPLACE INTO migrations(filename, checksum, applied_at) VALUES (:f, :c, :t)');
         $stmt->execute(['f' => $filename, 'c' => $checksum, 't' => \App\Util\Dates::nowAtom()]);
+    }
+
+    private function removeApplied(string $filename): void
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM migrations WHERE filename = :f');
+        $stmt->execute(['f' => $filename]);
     }
 }

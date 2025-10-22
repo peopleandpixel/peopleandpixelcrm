@@ -18,17 +18,20 @@ class Request
     private array $body;
     /** @var array<string, string> */
     private array $cookies;
-    /** @var array<string, string> */
+    /** @var array<string, mixed> */
     private array $files;
     /** @var array<string, string> */
     private array $server;
     /** @var array<string, string> */
     private array $headers;
+    /** @var mixed|null Parsed JSON cache */
+    private mixed $parsedJson = null;
+    private bool $jsonParsed = false;
 
     /** @param array<string, mixed> $query
      *  @param array<string, mixed> $body
      *  @param array<string, string> $cookies
-     *  @param array<string, string> $files
+     *  @param array<string, mixed> $files
      *  @param array<string, string> $server
      *  @param array<string, string> $headers
      */
@@ -81,6 +84,8 @@ class Request
     public function cookies(): array { return $this->cookies; }
     /** @return array<string, string> */
     public function server(): array { return $this->server; }
+    /** @return array<string, mixed> */
+    public function files(): array { return $this->files; }
 
     public function header(string $name, ?string $default = null): ?string
     {
@@ -98,15 +103,74 @@ class Request
         return $this->body[$key] ?? $default;
     }
 
+    public function input(string $key, mixed $default = null): mixed
+    {
+        return $this->query[$key] ?? $this->body[$key] ?? $default;
+    }
+
+    public function cookie(string $key, ?string $default = null): ?string
+    {
+        $val = $this->cookies[$key] ?? null;
+        return $val === null ? $default : (string)$val;
+    }
+
+    /** @return array|string|mixed|null */
+    public function file(string $key, mixed $default = null): mixed
+    {
+        return $this->files[$key] ?? $default;
+    }
+
     public function isAjax(): bool
     {
         $xreq = $this->header('x-requested-with');
         return $xreq !== null && strtolower($xreq) === 'xmlhttprequest';
     }
 
+    public function wantsJson(): bool
+    {
+        $accept = strtolower($this->header('accept', '') ?? '');
+        return str_contains($accept, 'application/json') || $this->isAjax();
+    }
+
     public function isSecure(): bool
     {
         return (!empty($this->server['HTTPS']) && $this->server['HTTPS'] === 'on')
             || (($this->server['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    }
+
+    /**
+     * Parse and return JSON request body if Content-Type is application/json.
+     * @return array<string,mixed>|list<mixed>|object|null
+     */
+    public function json(): array|object|null
+    {
+        if (!$this->jsonParsed) {
+            $this->jsonParsed = true;
+            $ct = strtolower($this->header('content-type', '') ?? '');
+            if (str_starts_with($ct, 'application/json')) {
+                $raw = file_get_contents('php://input');
+                $decoded = json_decode($raw ?: '', true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $this->parsedJson = $decoded;
+                } else {
+                    $this->parsedJson = null;
+                }
+            } else {
+                $this->parsedJson = null;
+            }
+        }
+        return $this->parsedJson;
+    }
+
+    public function referer(): ?string
+    {
+        return $this->header('referer');
+    }
+
+    public function ip(): string
+    {
+        $h = $this->server['HTTP_X_FORWARDED_FOR'] ?? '';
+        if ($h !== '') { return trim(explode(',', $h)[0]); }
+        return (string)($this->server['REMOTE_ADDR'] ?? '');
     }
 }

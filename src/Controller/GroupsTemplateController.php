@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Domain\Group as GroupDTO;
 use App\Domain\Schemas;
 use App\Util\Flash;
+use App\Http\Request;
 use App\Util\ListSort;
 use JetBrains\PhpStorm\NoReturn;
 use function __;
@@ -19,7 +20,7 @@ readonly class GroupsTemplateController
 
     public function list(): void
     {
-        ListSort::getSortedList('Group', 'groups', $this->groupsStore, ['name','color','description','created_at']);
+        ListSort::getSortedList(Request::fromGlobals(), 'Group', 'groups', $this->groupsStore);
     }
 
     public function view(): void

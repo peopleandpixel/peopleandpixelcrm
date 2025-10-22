@@ -37,13 +37,13 @@
     <p class="opacity-80">{{ __('This is a lightweight CRM to manage your company contacts, team, tasks, time tracking, payments, and inventory.')|e }}</p>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for key, item in array %}
-            <div class="card bg-base-200 shadow">
+            <div class="card bg-base-200 shadow focus-within:ring focus-within:ring-primary/30">
                 <div class="card-body">
                     <h3 class="card-title">{{ item.title|e }}</h3>
-                    <p>{{ item.description|e }}</p>
+                    <p class="opacity-80">{{ item.description|e }}</p>
                     <div class="card-actions justify-end">
-                        <a class="btn btn-sm" href="{{ url('/' ~ key ) }}">{{ __('Open')|e }}</a>
-                        <a class="btn btn-sm btn-primary" href="{{ url('/' ~ key ~ '/new') }}">{{ __('New')|e }}</a>
+                        <a class="btn btn-sm" href="{{ url('/' ~ key ) }}" aria-label="{{ __('Open')|e }} {{ item.title|e }}">{{ __('Open')|e }}</a>
+                        <a class="btn btn-sm btn-primary" href="{{ url('/' ~ key ~ '/new') }}" aria-label="{{ __('Create new')|e }} {{ item.title|e }}">{{ __('New')|e }}</a>
                     </div>
                 </div>
             </div>

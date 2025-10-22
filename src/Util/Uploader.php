@@ -69,7 +69,7 @@ class Uploader
         if ($ext === '') { return null; }
         // Build upload path
         $root = dirname(__DIR__, 2);
-        $uploadDir = $root . '/public/uploads';
+        $uploadDir = $root . '/var/uploads/images';
         if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0777, true); }
         // Safe filename
         $rand = bin2hex(random_bytes(8));
@@ -78,8 +78,8 @@ class Uploader
         $fileName = date('Ymd_His') . '_' . $rand . '_' . $namePart . '.' . $ext;
         $dest = $uploadDir . '/' . $fileName;
         if (!move_uploaded_file($tmp, $dest)) { return null; }
-        // Return public path
-        return '/uploads/' . $fileName;
+        // Return served path
+        return '/files/images/' . $fileName;
     }
 
 }
