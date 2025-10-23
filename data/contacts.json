@@ -73,7 +73,15 @@
         "phone": "+4917663613420",
         "created_at": "2025-09-29T07:40:02+02:00",
         "id": 2,
-        "updated_at": "2025-09-29T07:40:02+02:00",
-        "version": 1
+        "updated_at": "2025-10-22T17:18:19+02:00",
+        "version": 2,
+        "tags": [
+            "jens",
+            "chef",
+            "meister"
+        ],
+        "custom_fields": [],
+        "tags_text": "jens, chef, meister",
+        "custom_fields_json": ""
     }
 ]

@@ -98,6 +98,8 @@ class Container
             $twig->addFunction(new TwigFunction('current_path', fn() => current_path()));
             // Auth helpers
             $twig->addFunction(new TwigFunction('is_admin', fn() => \App\Util\Auth::isAdmin()));
+            $twig->addFunction(new TwigFunction('current_user', fn() => \App\Util\Auth::user()));
+            $twig->addFunction(new TwigFunction('can', fn(string $entity, string $action) => \App\Util\Permission::can($entity, $action)));
             // View helpers wrappers
             $twig->addFunction(new TwigFunction('sort_link', fn(string $label, string $key, ?string $currentKey, string $currentDir, string $path, array $extraQuery = []) => \App\Util\View::sortLink($label, $key, $currentKey, $currentDir, $path, $extraQuery), ['is_safe' => ['html']]));
             $twig->addFunction(new TwigFunction('paginate', fn(int $total, int $page, int $perPage, string $path, array $extraQuery = []) => \App\Util\View::paginate($total, $page, $perPage, $path, $extraQuery), ['is_safe' => ['html']]));
@@ -204,6 +206,24 @@ class Container
                 $c->get('tasksStore')
             );
         };
+        $this->factories['viewsController'] = function(self $c) {
+            return new \App\Controller\ViewsController(
+                $c->get('viewsStore')
+            );
+        };
+        $this->factories['dashboardController'] = function(self $c) {
+            return new \App\Controller\DashboardController(
+                $c->get('tasksStore'),
+                $c->get('contactsStore'),
+                $c->get('storageStore')
+            );
+        };
+        $this->factories['dealsController'] = function(self $c) {
+            return new \App\Controller\DealsController(
+                $c->get('dealsStore'),
+                $c->get('contactsStore')
+            );
+        };
     }
 
     public function set(string $id, callable $factory): void
@@ -240,7 +260,7 @@ class Container
             $path = $cfg->jsonPath($name . '.json');
             return new JsonStore($path);
         };
-        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects','groups'] as $entity) {
+        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects','groups','views','deals'] as $entity) {
             $this->factories[$entity . 'Store'] = function(self $c) use ($makeStore, $entity) {
                 $store = $makeStore($c, $entity);
                 if ($entity === 'users') {

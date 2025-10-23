@@ -1,0 +1,71 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use App\Container;
+use App\Config;
+
+$projectRoot = dirname(__DIR__);
+// Load .env if present
+if (class_exists(\Dotenv\Dotenv::class)) {
+    $dotenv = \Dotenv\Dotenv::createImmutable($projectRoot);
+    $dotenv->safeLoad();
+}
+
+$container = new Container();
+/** @var Config $config */
+$config = $container->get('config');
+
+$now = new DateTimeImmutable('now');
+$nowAtom = $now->format(DATE_ATOM);
+
+$action = $argv[1] ?? 'run';
+if (!in_array($action, ['run','dry-run'], true)) {
+    fwrite(STDERR, "Usage: bin/schedule [run|dry-run]\n");
+    exit(1);
+}
+$dry = $action === 'dry-run';
+
+// Get stores
+$tasksStore = $container->get('tasksStore');
+$usersStore = null;
+try { $usersStore = $container->get('usersStore'); } catch (Throwable) {}
+
+$tasks = $tasksStore->all();
+$reminded = 0; $dueCount = 0;
+
+foreach ($tasks as $t) {
+    $status = (string)($t['status'] ?? 'open');
+    if ($status === 'done') { continue; }
+    $remAt = (string)($t['reminder_at'] ?? '');
+    if ($remAt === '') { continue; }
+    try {
+        $rem = new DateTimeImmutable($remAt);
+    } catch (Throwable) { continue; }
+    if ($rem > $now) { continue; }
+    $dueCount++;
+    $last = (string)($t['last_reminded_at'] ?? '');
+    // Avoid duplicate emits for the same reminder window: only emit if not reminded since this reminder was set
+    if ($last !== '') {
+        try { $lastDt = new DateTimeImmutable($last); } catch (Throwable) { $lastDt = null; }
+        if ($lastDt && $lastDt >= $rem) {
+            continue; // already reminded for this reminder_at
+        }
+    }
+
+    $id = (int)($t['id'] ?? 0);
+    $title = (string)($t['title'] ?? ('#' . $id));
+    $contactId = (int)($t['contact_id'] ?? 0);
+
+    // Emit: for now, print to STDOUT; hook for email could be added later
+    fwrite(STDOUT, sprintf("[REMINDER] Task #%d: %s (contact_id=%d) due at %s\n", $id, $title, $contactId, $remAt));
+
+    if (!$dry && $id > 0) {
+        $tasksStore->update($id, ['last_reminded_at' => $nowAtom]);
+        $reminded++;
+    }
+}
+
+fwrite(STDOUT, sprintf("Done. Due reminders: %d, emitted: %d%s\n", $dueCount, $reminded, $dry ? ' (dry-run)' : ''));
+exit(0);

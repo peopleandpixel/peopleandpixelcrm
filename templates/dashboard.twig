@@ -1,0 +1,100 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-3xl font-bold">{{ __('Dashboard')|e }}</h1>
+    <a class="btn" href="{{ url('/') }}">{{ __('Home')|e }}</a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="stats shadow bg-base-100">
+      <div class="stat">
+        <div class="stat-title">{{ __('Tasks: Open')|e }}</div>
+        <div class="stat-value">{{ (tasksByStatus.open|default(0))|int }}</div>
+        <div class="stat-actions"><a href="{{ url('/tasks', { q: '' }) }}" class="btn btn-xs">{{ __('View')|e }}</a></div>
+      </div>
+    </div>
+    <div class="stats shadow bg-base-100">
+      <div class="stat">
+        <div class="stat-title">{{ __('Tasks: In progress')|e }}</div>
+        <div class="stat-value">{{ (tasksByStatus.in_progress|default(0))|int }}</div>
+      </div>
+    </div>
+    <div class="stats shadow bg-base-100">
+      <div class="stat">
+        <div class="stat-title">{{ __('Tasks: Done')|e }}</div>
+        <div class="stat-value">{{ (tasksByStatus.done|default(0))|int }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">{{ __('Upcoming reminders (7 days)')|e }}</h2>
+        <ul class="space-y-2">
+          {% for t in upcoming %}
+            <li class="flex items-start justify-between gap-3">
+              <div>
+                <a class="link" href="{{ url('/tasks/view', {id: t.id}) }}">{{ t.title|default('#'~t.id)|e }}</a>
+                {% if t.contact_name %}
+                  <span class="opacity-70">— {{ t.contact_name|e }}</span>
+                {% endif %}
+              </div>
+              <span class="badge {{ t.__overdue ? 'badge-error' : 'badge-warning' }} badge-outline">{{ t.reminder_at|e }}</span>
+            </li>
+          {% else %}
+            <li class="opacity-70">{{ __('No reminders')|e }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h2 class="card-title">{{ __('Recent contacts')|e }}</h2>
+        <ul class="space-y-2">
+          {% for c in recentContacts %}
+            <li class="flex items-center justify-between">
+              <a class="link" href="{{ url('/contacts/view', {id: c.id}) }}">{{ c.name|default('#'~c.id)|e }}</a>
+              {% if c.created_at %}<span class="badge badge-ghost">{{ c.created_at|e }}</span>{% endif %}
+            </li>
+          {% else %}
+            <li class="opacity-70">{{ __('No contacts')|e }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow lg:col-span-2">
+      <div class="card-body">
+        <h2 class="card-title">{{ __('Low stock items')|e }}</h2>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>{{ __('Name')|e }}</th>
+                <th>{{ __('Category')|e }}</th>
+                <th>{{ __('Quantity')|e }}</th>
+                <th>{{ __('Threshold')|e }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in lowStock %}
+                <tr>
+                  <td>{{ (it.name|default('#'~it.id))|e }}</td>
+                  <td>{{ (it.category|default(''))|e }}</td>
+                  <td>{{ (it.quantity|default(it.stock|default(0)))|e }}</td>
+                  <td>{{ (it.low_stock_threshold|default(0))|e }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="4" class="text-center opacity-70">{{ __('No low stock items')|e }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

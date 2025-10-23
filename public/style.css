@@ -1,79 +1,118 @@
-/* Basic theming using CSS variables */
+/* Brand theme and polish for People & Pixel */
 :root {
-  --bg: #ffffff;
-  --text: #1b1c1d; /* Fomantic default text */
-  --muted: #666;
-  --card: #ffffff;
-  --border: #d4d4d5;
-  --primary: #21ba45; /* green */
-  --menu-bg: #f9fafb;
+  --bg: #0f172a;            /* slate-900 */
+  --bg-accent: #0b1220;     /* slightly darker for subtle contrast */
+  --text: #e5e7eb;          /* gray-200 */
+  --muted: #94a3b8;         /* slate-400 */
+  --card: rgba(2, 6, 23, 0.6);   /* translucent for glass effect */
+  --card-solid: #0b1220;
+  --glass: rgba(255, 255, 255, 0.06);
+  --border: rgba(148, 163, 184, 0.18);
+  --primary: #22c55e;       /* Tailwind emerald-500 */
+  --primary-600: #16a34a;   /* emerald-600 */
+  --menu-bg: rgba(2, 6, 23, 0.4);
+  --ring: rgba(34, 197, 94, 0.6);
+  --gradient-from: #0ea5e9; /* sky-500 */
+  --gradient-via: #8b5cf6;  /* violet-500 */
+  --gradient-to: #22c55e;   /* emerald-500 */
 }
 
-:root[data-theme="dark"] {
-  --bg: #121212;
-  --text: #e6e6e6;
-  --muted: #a0a0a0;
-  --card: #1b1b1b;
-  --border: #333;
-  --primary: #21ba45; /* keep brand color */
-  --menu-bg: #1a1a1a;
+:root[data-theme="light"] {
+  --bg: #f8fafc;            /* slate-50 */
+  --bg-accent: #ffffff;
+  --text: #0f172a;          /* slate-900 */
+  --muted: #475569;         /* slate-600 */
+  --card: rgba(255, 255, 255, 0.65);
+  --card-solid: #ffffff;
+  --glass: rgba(15, 23, 42, 0.06);
+  --border: rgba(15, 23, 42, 0.12);
+  --primary: #16a34a;       /* emerald-600 */
+  --primary-600: #15803d;   /* emerald-700 */
+  --menu-bg: rgba(255, 255, 255, 0.7);
+  --ring: rgba(34, 197, 94, 0.6);
 }
 
 html, body {
-  background: var(--bg);
+  min-height: 100%;
+  background:
+    radial-gradient(1000px 600px at 5% 0%, rgba(14,165,233,0.15), transparent 50%),
+    radial-gradient(900px 500px at 100% 20%, rgba(139,92,246,0.12), transparent 50%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
   color: var(--text);
 }
 
 /* Ensure the attribute can be set on either html or body */
-html[data-theme="dark"], body[data-theme="dark"] {
-  background: var(--bg);
+html[data-theme="dark"], body[data-theme="dark"],
+html[data-theme="light"], body[data-theme="light"] {
+  background:
+    radial-gradient(1000px 600px at 5% 0%, rgba(14,165,233,0.15), transparent 50%),
+    radial-gradient(900px 500px at 100% 20%, rgba(139,92,246,0.12), transparent 50%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
   color: var(--text);
 }
 
-/* Header/menu */
-header.ui.menu, .ui.menu {
-  background: var(--menu-bg) !important;
+/* App header */
+#app-header {
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  background: var(--menu-bg);
   border-bottom: 1px solid var(--border);
 }
-.ui.menu .item, .ui.menu .item > i.icon {
-  color: var(--text) !important;
+#app-header .brand {
+  background: linear-gradient(90deg, var(--gradient-from), var(--gradient-via), var(--gradient-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
-.ui.menu .item.active {
-  background: transparent !important;
-  border-right: 6px solid var(--primary) !important;
+#app-header .quick .btn {
+  transition: transform .15s ease, box-shadow .15s ease;
 }
-
-/* Cards, segments, tables */
-.ui.segment, .ui.card, .ui.table, .ui.form, .ui.message, .ui.dropdown .menu, .ui.menu .menu, .ui.input > input, textarea, select {
-  background: var(--card) !important;
-  color: var(--text) !important;
-  border-color: var(--border) !important;
-}
-.ui.table thead th, .ui.table tbody td {
-  background: var(--card) !important;
-  color: var(--text) !important;
+#app-header .quick .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -8px rgba(34,197,94,.45);
 }
 
-/* Buttons */
-.ui.button {
-  border-color: var(--border) !important;
+/* Sidebar glass nav */
+nav.menu.rounded-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px -12px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
 }
-.ui.green.button, .ui.green.labeled.icon.button {
-  background: var(--primary) !important;
-  color: #fff !important;
+nav.menu.rounded-box a.active { border-right: 3px solid var(--primary); }
+nav.menu.rounded-box a:hover { background: var(--glass); }
+
+/* Cards and tables */
+.table { border-color: var(--border); }
+.table thead th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--card-solid);
 }
+.table tbody tr { transition: background-color .12s ease; }
+.table tbody tr:hover { background: var(--glass); }
+
+/* Buttons and focus ring */
+.btn-primary, .link-primary { --tw-ring-color: var(--ring); }
+.btn:focus-visible, .link:focus-visible, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Timer badge */
+#running-timer.badge { box-shadow: inset 0 0 0 1px var(--border); }
+
+/* Footer divider */
+footer .divider { border-color: var(--border); opacity: .6; }
+
+/* Subtle animation utility */
+@keyframes floatIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.container > * { animation: floatIn .25s ease both; }
 
 /* Links */
-a { color: #4183c4; }
-:root[data-theme="dark"] a { color: #7ab0ff; }
+a { color: inherit; }
+a.link { color: var(--primary); }
+a.link:hover { color: var(--primary-600); }
 
-/* Misc helpers */
+/* SR helpers */
 .visually-hidden { position:absolute; left:-9999px; }
 .skip-link { position:absolute; left:-9999px; }
-
-/* Flash messages tinting */
-:root[data-theme="dark"] .ui.negative.message { background:#3a1f1f !important; color:#ffd2d2 !important; }
-:root[data-theme="dark"] .ui.positive.message { background:#1f3a26 !important; color:#d2ffd2 !important; }
-
-/* Dropdown text contrast */
-:root[data-theme="dark"] .ui.dropdown .menu > .item { color: var(--text) !important; }

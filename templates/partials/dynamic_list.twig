@@ -15,7 +15,12 @@
         <thead>
         <tr>
             {% for col in columns %}
-                <th scope="col">{{ col.label|default(col.name)|e }}</th>
+                {% set colName = col.name|default('') %}
+                {% set isSorted = (sort|default('') == colName) %}
+                {% set aria = isSorted ? (dir|default('asc') == 'asc' ? 'ascending' : 'descending') : 'none' %}
+                <th scope="col" aria-sort="{{ aria }}">
+                    {{ sort_link(col.label|default(colName), colName, sort|default(null), dir|default('asc'), path|default(current_path()), { q: q|default(''), tag: tag|default(''), per: per|default(10) })|raw }}
+                </th>
             {% endfor %}
             {% if actions is defined and (actions.edit_url or actions.delete_url) %}
                 <th scope="col">{{ __('Actions')|e }}</th>
@@ -47,11 +52,29 @@
                                 {% if col.name in ['picture','image','avatar','photo'] and value %}
                                     <img src="{{ value|e }}" alt="" class="w-9 h-9 rounded-full object-cover border border-base-300">
                                 {% else %}
-                                    {# Render links for URLs #}
-                                    {% if value matches '/^https?:\\/\\//i' %}
-                                        <a href="{{ value|e }}" target="_blank" rel="noopener" class="link">{{ value|e }}</a>
+                                    {% if value is iterable %}
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for t in value %}
+                                                {% if t is iterable %}
+                                                    {% for k,v in t %}
+                                                        <span class="badge badge-ghost">{{ k|e }}: {{ v|e }}</span>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    {% if col.name == 'tags' %}
+                                                        <a class="badge badge-ghost" href="{{ path|default(current_path())|e }}?tag={{ t|url_encode }}">{{ t|e }}</a>
+                                                    {% else %}
+                                                        <span class="badge badge-ghost">{{ t|e }}</span>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
                                     {% else %}
-                                        {{ value|e }}
+                                        {# Render links for URLs #}
+                                        {% if value matches '/^https?:\\/\\//i' %}
+                                            <a href="{{ value|e }}" target="_blank" rel="noopener" class="link">{{ value|e }}</a>
+                                        {% else %}
+                                            {{ value|e }}
+                                        {% endif %}
                                     {% endif %}
                                 {% endif %}
                             </td>

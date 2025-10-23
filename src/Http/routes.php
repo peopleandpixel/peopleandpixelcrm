@@ -42,8 +42,11 @@ return static function (Container $container, Router $router): void {
         InstallerController::submit($container->get('config'));
     });
 
-    // Home
-    $router->get('/', [$container->get('homeController'), 'index']);
+    // Home → start page shows Dashboard
+    $router->get('/', [$container->get('dashboardController'), 'index']);
+
+    // Dashboard (explicit path kept for direct linking)
+    $router->get('/dashboard', [$container->get('dashboardController'), 'index']);
 
     // Auth
     $router->get('/login', function() {
@@ -77,6 +80,10 @@ return static function (Container $container, Router $router): void {
 
     // Generic upload endpoint (for AJAX file uploads)
     $router->post('/upload', [$container->get('uploadController'), 'handle']);
+
+    // Saved views
+    $router->post('/views/save', [$container->get('viewsController'), 'save']);
+    $router->post('/views/delete', [$container->get('viewsController'), 'delete']);
 
     // Secure file serving from var/uploads
     $router->get('/files/{subdir}/{file}', [$container->get('filesController'), 'serve']);
@@ -120,6 +127,25 @@ return static function (Container $container, Router $router): void {
     $router->get('/tasks/new', [$container->get('tasksController'), 'newForm']);
     $router->get('/tasks/view', [$container->get('tasksController'), 'view']);
     $router->post('/tasks/new', [$container->get('tasksController'), 'create']);
+
+    // Deals
+    $router->get('/deals', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) {
+            send_list_cache_headers([$cfg->jsonPath('deals.json'), $cfg->jsonPath('contacts.json')], 60);
+        }
+        ($container->get('dealsController'))->list();
+    });
+    $router->get('/deals/board', [$container->get('dealsController'), 'board']);
+    $router->get('/deals/new', [$container->get('dealsController'), 'newForm']);
+    $router->post('/deals/new', [$container->get('dealsController'), 'create']);
+    $router->get('/deals/view', function() use ($container) {
+        // simple entity view rendering using schema
+        ($container->get('dealsController'))->view();
+    });
+    $router->get('/deals/edit', [$container->get('dealsController'), 'editForm']);
+    $router->post('/deals/edit', [$container->get('dealsController'), 'update']);
+    $router->post('/deals/delete', [$container->get('dealsController'), 'delete']);
 
     // Projects
     $router->get('/projects', function() use ($container) {

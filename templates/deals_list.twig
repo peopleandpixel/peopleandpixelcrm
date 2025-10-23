@@ -1,0 +1,56 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-2xl font-bold">{{ __('Deals')|e }}</h2>
+    <div class="flex items-center gap-2">
+      {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('expected_close'), dir: dir|default('asc') } %}
+      <a class="btn" href="{{ url('/deals/board') }}">{{ __('Board')|e }}</a>
+      <a class="btn btn-primary" href="{{ url('/deals/new') }}">+ {{ __('Add Deal')|e }}</a>
+    </div>
+  </div>
+
+  {% if rollups is defined %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="stat bg-base-100 shadow">
+        <div class="stat-title">{{ __('Total value')|e }}</div>
+        <div class="stat-value">{{ format_number(rollups.total|default(0), constant('NumberFormatter::CURRENCY'), 2) }}</div>
+      </div>
+      <div class="stat bg-base-100 shadow">
+        <div class="stat-title">{{ __('Weighted forecast')|e }}</div>
+        <div class="stat-value">{{ format_number(rollups.weighted|default(0), constant('NumberFormatter::CURRENCY'), 2) }}</div>
+      </div>
+      <div class="stat bg-base-100 shadow">
+        <div class="stat-title">{{ __('By stage')|e }}</div>
+        <div class="stat-desc">
+          {% if rollups.byStage is defined %}
+            <div class="flex flex-wrap gap-2">
+              {% for k,v in rollups.byStage %}
+                <span class="badge badge-ghost">{{ k|e }}: {{ v }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if columns is defined and columns %}
+    {% include 'partials/dynamic_list.twig' with {
+      title: '',
+      items: items|default([]),
+      columns: columns,
+      path: path|default(current_path()),
+      sort: sort|default('expected_close'),
+      dir: dir|default('asc'),
+      q: q|default(''),
+      per: per|default(10),
+      actions: { view_url: url('/deals/view'), edit_url: url('/deals/edit'), delete_url: url('/deals/delete'), id_field: 'id' }
+    } %}
+    <div class="mt-4">
+      {% set extra = {q: q|default(''), per: (per|default(10))|int} %}
+      {{ paginate(total|default(items|length)|int, page|default(1)|int, per|default(10)|int, path|default(current_path()), extra|merge({sort: sort|default('expected_close'), dir: dir|default('asc')}))|raw }}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -40,6 +40,24 @@
       </div>
     </div>
 
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="reminder_at" class="label"><span class="label-text">{{ __('Reminder at')|e }}</span></label>
+        <input type="text" id="reminder_at" name="reminder_at" value="{{ reminder_at|default(task.reminder_at|default(''))|e }}" class="input input-bordered" placeholder="YYYY-MM-DD HH:MM">
+        <label class="label"><span class="label-text-alt opacity-70">{{ __('Format: YYYY-MM-DD HH:MM')|e }}</span></label>
+      </div>
+      <div class="form-control">
+        <label for="recurrence" class="label"><span class="label-text">{{ __('Recurrence')|e }}</span></label>
+        {% set curRec = recurrence|default(task.recurrence|default('none')) %}
+        <select id="recurrence" name="recurrence" class="select select-bordered">
+          <option value="none" {{ curRec == 'none' ? 'selected' : '' }}>{{ __('None')|e }}</option>
+          <option value="daily" {{ curRec == 'daily' ? 'selected' : '' }}>{{ __('Daily')|e }}</option>
+          <option value="weekly" {{ curRec == 'weekly' ? 'selected' : '' }}>{{ __('Weekly')|e }}</option>
+          <option value="monthly" {{ curRec == 'monthly' ? 'selected' : '' }}>{{ __('Monthly')|e }}</option>
+        </select>
+      </div>
+    </div>
+
     {% if task is defined and task.done_date is defined and task.done_date %}
       <div class="form-control">
         <label class="label"><span class="label-text">{{ __('Done date')|e }}</span></label>
@@ -50,6 +68,17 @@
     <div class="form-control">
       <label for="notes" class="label"><span class="label-text">{{ __('Notes')|e }}</span></label>
       <textarea id="notes" name="notes" rows="3" class="textarea textarea-bordered">{{ notes|default(task.notes|default(''))|e }}</textarea>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="tags_text" class="label"><span class="label-text">{{ __('Tags')|e }}</span></label>
+        <input id="tags_text" name="tags_text" type="text" value="{{ tags_text|default(task.tags_text|default(task.tags is defined ? task.tags|join(',') : ''))|e }}" class="input input-bordered" placeholder="{{ __('comma,separated')|e }}">
+      </div>
+      <div class="form-control">
+        <label for="custom_fields_json" class="label"><span class="label-text">{{ __('Custom fields (JSON map)')|e }}</span></label>
+        <textarea id="custom_fields_json" name="custom_fields_json" rows="3" class="textarea textarea-bordered" placeholder='{"priority":"high"}'>{{ custom_fields_json|default(task.custom_fields_json|default(task.custom_fields is defined ? (task.custom_fields|json_encode) : ''))|e }}</textarea>
+      </div>
     </div>
 
     <div class="flex items-center justify-end gap-2 pt-2">
