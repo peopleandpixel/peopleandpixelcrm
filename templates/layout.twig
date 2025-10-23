@@ -21,18 +21,39 @@
         <aside class="w-56 shrink-0">
             <nav class="menu bg-base-200 rounded-box" role="navigation" aria-label="{{ __('Primary')|e }}">
                 <ul>
-                    <li><a href="{{ url('/') }}" class="{{ active_class('/') ? 'active' : '' }}" {{ active_class('/') ? 'aria-current="page"' : '' }}>{{ __('Home')|e }}</a></li>
-                    <li><a href="{{ url('/contacts') }}" class="{{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current="page"' : '' }}>{{ __('Contacts')|e }}</a></li>
-                    <li><a href="{{ url('/tasks') }}" class="{{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}>{{ __('Tasks')|e }}</a></li>
-                    <li><a href="{{ url('/projects') }}" class="{{ active_class('/projects') ? 'active' : '' }}" {{ active_class('/projects') ? 'aria-current="page"' : '' }}>{{ __('Projects')|e }}</a></li>
-                    <li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}>{{ __('Calendar')|e }}</a></li>
-                    <li><a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}>{{ __('Employees')|e }}</a></li>
-                    <li><a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}>{{ __('Working Times')|e }}</a></li>
-                    <li><a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}>{{ __('Recruiting')|e }}</a></li>
-                    <li><a href="{{ url('/payments') }}" class="{{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}>{{ __('Payments')|e }}</a></li>
-                    <li><a href="{{ url('/storage') }}" class="{{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}>{{ __('Storage')|e }}</a></li>
+                    <li><a href="{{ url('/') }}" class="{{ active_class('/') ? 'active' : '' }}" {{ active_class('/') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🏠</span> {{ __('Home')|e }}</a></li>
+                    {% if can('contacts','view') %}<li><a href="{{ url('/contacts') }}" class="{{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current="page"' : '' }}><span aria-hidden="true">👥</span> {{ __('Contacts')|e }}</a></li>{% endif %}
+                    {% if can('tasks','view') %}<li><a href="{{ url('/tasks') }}" class="{{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}><span aria-hidden="true">✅</span> {{ __('Tasks')|e }}</a></li>{% endif %}
+                    {% if can('deals','view') %}<li><a href="{{ url('/deals') }}" class="{{ active_class('/deals') ? 'active' : '' }}" {{ active_class('/deals') ? 'aria-current="page"' : '' }}><span aria-hidden="true">📈</span> {{ __('Deals')|e }}</a></li>{% endif %}
+                    {% if can('projects','view') %}<li><a href="{{ url('/projects') }}" class="{{ active_class('/projects') ? 'active' : '' }}" {{ active_class('/projects') ? 'aria-current="page"' : '' }}><span aria-hidden="true">📦</span> {{ __('Projects')|e }}</a></li>{% endif %}
+                    <li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}><span aria-hidden="true">📅</span> {{ __('Calendar')|e }}</a></li>
+                    {% if can('reports','view') %}<li><a href="{{ url('/reports') }}" class="{{ active_class('/reports') ? 'active' : '' }}" {{ active_class('/reports') ? 'aria-current="page"' : '' }}><span aria-hidden="true">📊</span> {{ __('Reports')|e }}</a></li>{% endif %}
+                    <li><a href="{{ url('/search') }}" class="{{ active_class('/search') ? 'active' : '' }}" {{ active_class('/search') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🔎</span> {{ __('Search')|e }}</a></li>
+
+                    <li class="menu-title"><span>{{ __('More')|e }}</span></li>
+                    {% if can('employees','view') %}<li><a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🧑‍💼</span> {{ __('Employees')|e }}</a></li>{% endif %}
+                    {% if can('times','view') %}<li><a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}><span aria-hidden="true">⏱️</span> {{ __('Working Times')|e }}</a></li>{% endif %}
+                    {% if can('candidates','view') %}<li><a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🧲</span> {{ __('Recruiting')|e }}</a></li>{% endif %}
+                    {% if can('payments','view') %}<li><a href="{{ url('/payments') }}" class="{{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}><span aria-hidden="true">💳</span> {{ __('Payments')|e }}</a></li>{% endif %}
+                    {% if can('storage','view') %}
+                      <li><a href="{{ url('/storage') }}" class="{{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🗂️</span> {{ __('Storage')|e }}</a></li>
+                      <li><a href="{{ url('/storage/history') }}" class="{{ active_class('/storage/history') ? 'active' : '' }}">↳ {{ __('Storage history')|e }}</a></li>
+                    {% endif %}
+                    <li class="menu-title"><span>{{ __('Data I/O')|e }}</span></li>
+                    <li><a href="{{ url('/import') }}" class="{{ active_class('/import') ? 'active' : '' }}">{{ __('Import')|e }}</a></li>
+                    <li class="px-4 py-1 text-xs text-base-content/60">{{ __('Export')|e }}</li>
+                    <li><a href="{{ url('/export/contacts.csv') }}">↳ {{ __('Contacts CSV')|e }}</a></li>
+                    <li><a href="{{ url('/export/tasks.csv') }}">↳ {{ __('Tasks CSV')|e }}</a></li>
+                    <li><a href="{{ url('/export/times.csv') }}">↳ {{ __('Times CSV')|e }}</a></li>
+                    <li><a href="{{ url('/export/employees.csv') }}">↳ {{ __('Employees CSV')|e }}</a></li>
+                    <li><a href="{{ url('/export/candidates.csv') }}">↳ {{ __('Candidates CSV')|e }}</a></li>
+                    <li><a href="{{ url('/export/payments.csv') }}">↳ {{ __('Payments CSV')|e }}</a></li>
+                    <li><a href="{{ url('/export/storage.csv') }}">↳ {{ __('Storage CSV')|e }}</a></li>
+
                     {% if is_admin() %}
+                    <li class="menu-title"><span>{{ __('Administration')|e }}</span></li>
                     <li><a href="{{ url('/admin/users') }}" class="{{ active_class('/admin') ? 'active' : '' }}" {{ active_class('/admin') ? 'aria-current="page"' : '' }}>{{ __('Users')|e }}</a></li>
+                    <li><a href="{{ url('/audit') }}" class="{{ active_class('/audit') ? 'active' : '' }}" {{ active_class('/audit') ? 'aria-current="page"' : '' }}>{{ __('Audit log')|e }}</a></li>
                     {% endif %}
                     <li class="mt-2 px-4 pb-3">
                         <label class="label" for="lang-select"><span class="label-text">{{ __('Language')|e }}</span></label>

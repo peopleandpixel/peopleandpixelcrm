@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>People & Pixel – Lightweight CRM & Project Hub</title>
+  <meta name="description" content="People & Pixel is a compact, self-hosted CRM with tasks, deals, projects, time tracking, files, and more.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container flex between center">
+      <a class="brand" href="./"><span class="logo">🧩</span> People & Pixel</a>
+      <nav class="nav">
+        <a href="./features.html">Features</a>
+        <a href="./screenshots.html">Screenshots</a>
+        <a href="./contact.html">Contact</a>
+        <a href="./impressum.html">Impressum</a>
+        <a class="btn primary" href="../public/">Open App</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container grid-2">
+        <div>
+          <h1>Lightweight, self‑hosted CRM for teams who value simplicity</h1>
+          <p class="lead">Contacts, tasks, deals, projects, time tracking, files and reports — in one tidy app you can run anywhere.</p>
+          <div class="cta-row">
+            <a class="btn primary lg" href="../public/">Try the App</a>
+            <a class="btn" href="./features.html">Explore features</a>
+          </div>
+          <ul class="pill-list">
+            <li>Self‑hosted</li>
+            <li>JSON or DB storage</li>
+            <li>Simple setup</li>
+            <li>No vendor lock‑in</li>
+          </ul>
+        </div>
+        <div class="hero-media">
+          <img src="./img/hero-dashboard.png" alt="People & Pixel dashboard" onerror="this.src='./img/placeholder-hero.svg'">
+        </div>
+      </div>
+    </section>
+
+    <section class="highlights">
+      <div class="container grid-3">
+        <div class="card">
+          <h3>Contacts & Activity</h3>
+          <p>Keep all your people in one place with tags, custom fields, and an activity timeline.</p>
+        </div>
+        <div class="card">
+          <h3>Tasks & Kanban</h3>
+          <p>Plan work with lists and a simple Kanban board. Recurrence and reminders built‑in.</p>
+        </div>
+        <div class="card">
+          <h3>Deals & Pipeline</h3>
+          <p>Track opportunities through stages with a clear board view and simple reporting.</p>
+        </div>
+        <div class="card">
+          <h3>Calendar + ICS</h3>
+          <p>Subscribe to birthdays, project dates, and task deadlines from your calendar app via ICS.</p>
+        </div>
+        <div class="card">
+          <h3>Global Search</h3>
+          <p>Find contacts, tasks, deals, and projects from one search box.</p>
+        </div>
+        <div class="card">
+          <h3>Reports</h3>
+          <p>Saved reports with simple charts and CSV export to share with your team.</p>
+        </div>
+        <div class="card">
+          <h3>Audit Log</h3>
+          <p>Track changes across entities with an append‑only audit trail.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container flex between center">
+        <h2>Open, simple, yours.</h2>
+        <div>
+          <a class="btn primary" href="../public/">Get started</a>
+          <a class="btn" href="./features.html">See all features</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container flex between top">
+      <div>
+        <div class="brand">🧩 People & Pixel</div>
+        <p class="muted">© <span id="y"></span> People & Pixel. All rights reserved.</p>
+      </div>
+      <nav class="footer-nav">
+        <a href="./impressum.html">Impressum</a>
+        <a href="./contact.html">Contact</a>
+        <a href="./features.html">Features</a>
+      </nav>
+    </div>
+  </footer>
+  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

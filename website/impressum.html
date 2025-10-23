@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Impressum — People & Pixel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container flex between center">
+    <a class="brand" href="./"><span class="logo">🧩</span> People & Pixel</a>
+    <nav class="nav">
+      <a href="./features.html">Features</a>
+      <a href="./screenshots.html">Screenshots</a>
+      <a href="./contact.html">Contact</a>
+      <a class="active" href="./impressum.html">Impressum</a>
+      <a class="btn primary" href="../public/">App öffnen</a>
+    </nav>
+  </div>
+</header>
+<main class="container pad">
+  <h1>Impressum</h1>
+  <p class="lead">Angaben gemäß § 5 TMG (Platzhalter – bitte durch echte Unternehmensdaten ersetzen)</p>
+
+  <div class="card">
+    <h3>Betreiber dieser Website</h3>
+    <p>People & Pixel UG (haftungsbeschränkt)<br>
+    Beispielstraße 1<br>
+    12345 Beispielstadt</p>
+
+    <p>E‑Mail: <a href="mailto:hello@example.com">hello@example.com</a></p>
+    <p>Vertretungsberechtigte Geschäftsführer: Max Mustermann</p>
+    <p>Registereintrag: Amtsgericht Beispielstadt, HRB 123456</p>
+    <p>USt‑ID: DE123456789</p>
+  </div>
+
+  <h3>Haftung für Inhalte</h3>
+  <p>Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. 
+  Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen 
+  oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.</p>
+
+  <h3>Urheberrecht</h3>
+  <p>Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. 
+  Beiträge Dritter sind als solche gekennzeichnet.</p>
+
+  <h3>Datenschutz</h3>
+  <p>Informationen zum Datenschutz können hier verlinkt werden (Datenschutzerklärung).</p>
+</main>
+<footer class="site-footer">
+  <div class="container flex between top">
+    <div>
+      <div class="brand">🧩 People & Pixel</div>
+      <p class="muted">© <span id="y"></span> People & Pixel.</p>
+    </div>
+    <nav class="footer-nav">
+      <a class="active" href="./impressum.html">Impressum</a>
+      <a href="./contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

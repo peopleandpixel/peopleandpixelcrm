@@ -6,22 +6,30 @@
         "role": "user",
         "permissions": {
             "contacts": {
-                "view": 1,
-                "create": 1,
-                "edit": 1,
-                "delete": 1
+                "own": {
+                    "view": 1,
+                    "create": 1,
+                    "edit": 0,
+                    "delete": 0
+                },
+                "others": {
+                    "view": 0,
+                    "create": 0,
+                    "edit": 0,
+                    "delete": 0
+                }
             },
             "times": {
-                "view": 1,
-                "create": 1,
-                "edit": 1,
-                "delete": 1
+                "view": 0,
+                "create": 0,
+                "edit": 0,
+                "delete": 0
             },
             "tasks": {
-                "view": 1,
-                "create": 1,
-                "edit": 1,
-                "delete": 1
+                "view": 0,
+                "create": 0,
+                "edit": 0,
+                "delete": 0
             },
             "employees": {
                 "view": 0,
@@ -51,8 +59,8 @@
         "password_hash": "$2y$12$GI\/vBQwYiH7zsm6AYDUFxeWC6v\/c0LE5DKGJIfIYpVITRDKW9l7M.",
         "id": 1,
         "created_at": "2025-10-20T15:33:54+00:00",
-        "updated_at": "2025-10-20T15:33:54+00:00",
-        "version": 1
+        "updated_at": "2025-10-23T08:32:32+00:00",
+        "version": 2
     },
     {
         "login": "admin",
@@ -159,11 +167,11 @@
                 }
             }
         },
-        "must_change_password": 1,
-        "password_hash": "$2y$12$n7DutovizUGzvOOGR\/jvnuQPyOro1KPbrdAfN7n5Kxq9I2lSYJm0q",
+        "must_change_password": 0,
+        "password_hash": "$2y$12$fN6NLo0mCuuTG\/4oM1687eeV8ddq0lIroesducB6jIF7IGBn6KzcS",
         "id": 2,
         "created_at": "2025-10-20T21:21:45+02:00",
-        "updated_at": "2025-10-20T21:21:45+02:00",
-        "version": 1
+        "updated_at": "2025-10-20T21:22:08+02:00",
+        "version": 2
     }
 ]

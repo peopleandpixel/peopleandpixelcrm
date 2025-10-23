@@ -1,0 +1,33 @@
+{% extends "layout.twig" %}
+{% block content %}
+<h1>{{ __('Reports') }}</h1>
+<p><a class="btn btn-primary" href="{{ url('/reports/new') }}">{{ __('New report') }}</a></p>
+<table class="table">
+  <thead>
+    <tr>
+      <th>{{ __('Name') }}</th>
+      <th>{{ __('Entity') }}</th>
+      <th>{{ __('Group by') }}</th>
+      <th>{{ __('Metric') }}</th>
+      <th>{{ __('Created') }}</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for r in reports %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ r.entity }}</td>
+      <td>{{ r.group_by }}</td>
+      <td>{{ r.metric }}</td>
+      <td>{{ r.created_at ?? '' }}</td>
+      <td>
+        <a href="{{ url('/reports/run', {id: r.id}) }}">{{ __('Run') }}</a>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6">{{ __('No reports yet') }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

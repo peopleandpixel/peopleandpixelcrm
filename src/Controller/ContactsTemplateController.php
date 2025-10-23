@@ -23,6 +23,7 @@ readonly class ContactsTemplateController
         private ?object $timesStore = null,
         private ?object $tasksStore = null,
         private ?object $groupsStore = null,
+        private ?object $activitiesStore = null,
     ) {}
 
     public function view(): void
@@ -35,12 +36,30 @@ readonly class ContactsTemplateController
         // Prepend ID and append Created if present
         array_unshift($fields, ['name' => 'id', 'label' => 'ID']);
         $fields[] = ['name' => 'created_at', 'label' => __('Created')];
+        // Load activities timeline for this contact
+        $activities = [];
+        if ($this->activitiesStore) {
+            try {
+                foreach ($this->activitiesStore->all() as $a) {
+                    if ((int)($a['contact_id'] ?? 0) === $id) { $activities[] = $a; }
+                }
+            } catch (\Throwable $e) { /* ignore missing file */ }
+            // Sort desc by created_at
+            usort($activities, function($a, $b) {
+                $da = strtotime((string)($a['created_at'] ?? '')) ?: 0;
+                $db = strtotime((string)($b['created_at'] ?? '')) ?: 0;
+                if ($da === $db) { return 0; }
+                return $da < $db ? 1 : -1;
+            });
+        }
         render('entity_view', [
             'title' => __('Contact') . ': ' . ($item['name'] ?? ('#' . $id)),
             'fields' => $fields,
             'item' => $item,
             'back_url' => url('/contacts'),
-            'edit_url' => url('/contacts/edit', ['id' => $id])
+            'edit_url' => url('/contacts/edit', ['id' => $id]),
+            'activities' => $activities,
+            'add_note_url' => url('/contacts/activity/add')
         ]);
     }
 
@@ -102,9 +121,15 @@ readonly class ContactsTemplateController
             render('contacts_form', ['title' => __('Add Contact'), 'form_action' => url('/contacts/new'), 'error' => $error, 'errors' => $errors, 'cancel_url' => url('/contacts'), 'groups' => $this->groupsStore ? $this->groupsStore->all() : []] + $data);
             return;
         }
-        $this->contactsStore->add($dto->toArray() + [
+        $created = $this->contactsStore->add($dto->toArray() + [
             'created_at' => Dates::nowAtom(),
         ]);
+        // Log activity
+        if (is_array($created)) {
+            $cid = (int)($created['id'] ?? 0);
+            $name = (string)($created['name'] ?? '');
+            $this->logActivity('contact.created', $cid, __('Contact created') . ($name !== '' ? ': ' . $name : ''));
+        }
         Flash::success(__('Contact created successfully.'));
         redirect('/contacts');
     }
@@ -132,6 +157,9 @@ readonly class ContactsTemplateController
             return;
         }
         $this->contactsStore->update($id, $dto->toArray());
+        // Log activity
+        $name = (string)($dto->toArray()['name'] ?? '');
+        $this->logActivity('contact.updated', $id, __('Contact updated') . ($name !== '' ? ': ' . $name : ''));
         Flash::success(__('Contact updated successfully.'));
         redirect('/contacts');
     }
@@ -157,7 +185,41 @@ readonly class ContactsTemplateController
             redirect('/contacts');
         }
         $this->contactsStore->delete($id);
+        // Log activity
+        $this->logActivity('contact.deleted', $id, __('Contact deleted'));
         Flash::success(__('Contact deleted.'));
         redirect('/contacts');
+    }
+
+    private function logActivity(string $type, int $contactId, string $message, array $extra = []): void
+    {
+        if (!$this->activitiesStore) { return; }
+        $user = \App\Util\Auth::user();
+        $data = [
+            'type' => $type,
+            'contact_id' => $contactId,
+            'message' => $message,
+            'created_at' => Dates::nowAtom(),
+            'created_by' => $user ? ($user['username'] ?? ($user['fullname'] ?? '')) : 'system',
+        ] + $extra;
+        try {
+            $this->activitiesStore->add($data);
+        } catch (\Throwable $e) {
+            // ignore logging errors to not block main flow
+        }
+    }
+
+    public function addNote(): void
+    {
+        $contactId = (int)($_POST['contact_id'] ?? 0);
+        $note = trim((string)($_POST['note'] ?? ''));
+        if ($contactId <= 0) { redirect('/contacts'); }
+        if ($note === '') {
+            Flash::error(__('Note cannot be empty.'));
+            redirect(url('/contacts/view', ['id' => $contactId]));
+        }
+        $this->logActivity('note', $contactId, $note);
+        Flash::success(__('Note added.'));
+        redirect(url('/contacts/view', ['id' => $contactId]));
     }
 }

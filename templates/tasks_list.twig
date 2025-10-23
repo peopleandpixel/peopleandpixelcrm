@@ -59,11 +59,19 @@
                   {% if it.project_name %}<span class="badge badge-ghost">{{ it.project_name|e }}</span>{% endif %}
                   {% if it.contact_name %}<span class="badge badge-outline">{{ it.contact_name|e }}</span>{% endif %}
                   {% if it.employee_name %}<span class="badge badge-info badge-outline">{{ it.employee_name|e }}</span>{% endif %}
+                  {% if it.tags is defined and it.tags %}
+                    {% for tg in it.tags %}
+                      <span class="badge badge-ghost">#{{ tg|e }}</span>
+                    {% endfor %}
+                  {% endif %}
                 </div>
                 <div class="flex items-center justify-between text-sm">
                   <div class="flex items-center gap-2">
                     {% if it.due_date %}
                       <span class="badge {% if s.key == 'done' %}badge-success{% elseif it.due_date < ("now"|date('Y-m-d')) %}badge-error{% else %}badge-warning{% endif %} badge-outline">{{ __('Due')|e }} {{ it.due_date|e }}</span>
+                    {% endif %}
+                    {% if it.reminder_at %}
+                      <span class="badge {% if it.reminder_at <= ("now"|date('c')) %}badge-error{% else %}badge-info{% endif %} badge-outline">{{ __('Reminder')|e }} {{ it.reminder_at|e }}</span>
                     {% endif %}
                     {% if it.done_date %}
                       <span class="badge badge-success badge-outline">{{ __('Done')|e }} {{ it.done_date|e }}</span>

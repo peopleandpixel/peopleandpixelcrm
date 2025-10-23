@@ -78,7 +78,7 @@ class Permission
      */
     public static function mapPathToCheck(string $method, string $path): ?array
     {
-        $entities = ['contacts','times','tasks','employees','candidates','payments','storage'];
+        $entities = ['contacts','times','tasks','employees','candidates','payments','storage','projects','deals'];
         foreach ($entities as $e) {
             if ($path === '/' . $e) return [$e, 'view'];
             if ($path === '/' . $e . '/view') return [$e, 'view'];
@@ -89,7 +89,30 @@ class Permission
                 if ($path === '/storage/adjust' && $method === 'POST') return [$e, 'edit'];
                 if ($path === '/storage/history') return [$e, 'view'];
             }
+            if ($e === 'deals') {
+                if ($path === '/deals/board') return [$e, 'view'];
+            }
         }
+        // Reports
+        if (str_starts_with($path, '/reports')) {
+            if ($path === '/reports/new') return ['reports', $method === 'POST' ? 'create' : 'create'];
+            if ($path === '/reports/export.csv') return ['reports', 'view'];
+            return ['reports', 'view'];
+        }
+        // Search
+        if ($path === '/search' || $path === '/search.json') { return ['search','view']; }
+        // Calendar
+        if (str_starts_with($path, '/calendar')) { return ['calendar','view']; }
+        // Import
+        if ($path === '/import') { return ['import', $method === 'POST' ? 'create' : 'view']; }
+        // Export
+        if (str_starts_with($path, '/export/')) { return ['export','view']; }
+        // Files secure serving
+        if (str_starts_with($path, '/files/')) { return ['files','view']; }
+        // API endpoints (token auth handles main protection; expose as 'api' module for visibility)
+        if (str_starts_with($path, '/api/')) { return ['api','view']; }
+        // Audit log
+        if ($path === '/audit') { return ['audit','view']; }
         // Admin users management – require admin privileges via 'users' pseudo-entity
         if (str_starts_with($path, '/admin/users')) {
             // Map GET to view, POST to edit/create/delete accordingly

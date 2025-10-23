@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact — People & Pixel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container flex between center">
+    <a class="brand" href="./"><span class="logo">🧩</span> People & Pixel</a>
+    <nav class="nav">
+      <a href="./features.html">Features</a>
+      <a href="./screenshots.html">Screenshots</a>
+      <a class="active" href="./contact.html">Contact</a>
+      <a href="./impressum.html">Impressum</a>
+      <a class="btn primary" href="../public/">Open App</a>
+    </nav>
+  </div>
+</header>
+<main class="container pad">
+  <h1>Contact</h1>
+  <p class="lead">We’d love to hear from you. For support, feedback, and partnerships:</p>
+
+  <section class="grid-2">
+    <div>
+      <form action="mailto:hello@example.com" method="post" enctype="text/plain">
+        <label>Your name</label>
+        <input type="text" name="name" placeholder="Jane Doe" required>
+        <label>Your email</label>
+        <input type="email" name="email" placeholder="jane@example.com" required>
+        <label>Message</label>
+        <textarea name="message" placeholder="How can we help?" required></textarea>
+        <p class="small muted">This opens your email client to send the message. For production, replace with your preferred form backend.</p>
+        <p><button class="btn primary" type="submit">Send</button></p>
+      </form>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Direct</h3>
+        <p>Email: <a href="mailto:hello@example.com">hello@example.com</a></p>
+        <p>GitHub: <a href="https://github.com/" target="_blank" rel="noreferrer">github.com</a></p>
+        <h3>Company</h3>
+        <p>People & Pixel UG (placeholder)</p>
+        <p>Example Street 1<br>12345 Example City<br>Country</p>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="container flex between top">
+    <div>
+      <div class="brand">🧩 People & Pixel</div>
+      <p class="muted">© <span id="y"></span> People & Pixel.</p>
+    </div>
+    <nav class="footer-nav">
+      <a href="./impressum.html">Impressum</a>
+      <a class="active" href="./contact.html">Contact</a>
+    </nav>
+  </div>
+</footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

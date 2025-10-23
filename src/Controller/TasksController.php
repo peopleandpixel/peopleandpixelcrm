@@ -15,6 +15,41 @@ use function render;
 
 class TasksController
 {
+    /**
+     * Build the next occurrence of a recurring task based on recurrence rule.
+     * Returns array for adding to store or null if cannot advance.
+     * @param array<string,mixed> $base
+     */
+    private function buildNextRecurringTask(array $base, string $recurrence): ?array
+    {
+        $addSpec = match($recurrence) {
+            'daily' => 'P1D',
+            'weekly' => 'P1W',
+            'monthly' => 'P1M',
+            default => null,
+        };
+        if ($addSpec === null) { return null; }
+        $title = (string)($base['title'] ?? '');
+        if ($title === '') { return null; }
+        $due = (string)($base['due_date'] ?? '');
+        $rem = (string)($base['reminder_at'] ?? '');
+        $newDue = $due;
+        if ($due !== '') {
+            try { $d = new \DateTimeImmutable($due); $newDue = $d->add(new \DateInterval($addSpec))->format('Y-m-d'); } catch (\Throwable) {}
+        }
+        $newReminder = '';
+        if ($rem !== '') {
+            try { $r = new \DateTimeImmutable($rem); $newReminder = $r->add(new \DateInterval($addSpec))->format(DATE_ATOM); } catch (\Throwable) {}
+        }
+        $copyFields = ['project_id','contact_id','employee_id','title','notes','tags','custom_fields','recurrence'];
+        $next = [];
+        foreach ($copyFields as $f) { if (array_key_exists($f, $base)) { $next[$f] = $base[$f]; } }
+        $next['due_date'] = $newDue;
+        $next['reminder_at'] = $newReminder;
+        $next['status'] = 'open';
+        $next['done_date'] = '';
+        return $next;
+    }
     public function __construct(
         private readonly \App\Domain\Repository\TasksRepositoryInterface $tasksStore,
         private readonly object $contactsStore,
@@ -50,6 +85,7 @@ class TasksController
         }
         // Preserve other fields, only change status + done_date transitions
         $existing = $task;
+        $prevStatus = (string)($existing['status'] ?? 'open');
         $doneDate = (string)($existing['done_date'] ?? '');
         if ($status === 'done') {
             if ($doneDate === '') {
@@ -59,6 +95,14 @@ class TasksController
             $doneDate = '';
         }
         $this->tasksStore->update($id, ['status' => $status, 'done_date' => $doneDate]);
+        // Recurrence: generate next when transitioning into done
+        if ($status === 'done' && $prevStatus !== 'done') {
+            $rec = strtolower((string)($existing['recurrence'] ?? 'none'));
+            if (in_array($rec, ['daily','weekly','monthly'], true)) {
+                $next = $this->buildNextRecurringTask($existing, $rec);
+                if ($next) { $this->tasksStore->add($next); }
+            }
+        }
         \App\Http\Response::json(['ok' => true, 'task' => ['id' => $id, 'status' => $status, 'done_date' => $doneDate]])->send();
     }
 
@@ -284,6 +328,16 @@ class TasksController
         }
         $data['done_date'] = $doneDate;
         $this->tasksStore->update($id, $data);
+        // Recurrence: if transitioning into done, generate next
+        $prevStatus = (string)($existing['status'] ?? 'open');
+        if (($data['status'] ?? 'open') === 'done' && $prevStatus !== 'done') {
+            $rec = strtolower((string)($existing['recurrence'] ?? ($data['recurrence'] ?? 'none')));
+            if (in_array($rec, ['daily','weekly','monthly'], true)) {
+                $base = $existing + $data; // merged view
+                $next = $this->buildNextRecurringTask($base, $rec);
+                if ($next) { $this->tasksStore->add($next); }
+            }
+        }
         Flash::success(__('Task updated successfully.'));
         redirect('/tasks');
     }

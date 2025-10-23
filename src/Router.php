@@ -48,6 +48,21 @@ class Router
         $this->add('POST', $path, $handler);
     }
 
+    public function put(string $path, callable|array $handler): void
+    {
+        $this->add('PUT', $path, $handler);
+    }
+
+    public function patch(string $path, callable|array $handler): void
+    {
+        $this->add('PATCH', $path, $handler);
+    }
+
+    public function delete(string $path, callable|array $handler): void
+    {
+        $this->add('DELETE', $path, $handler);
+    }
+
     /**
      * Route grouping with optional per-group middleware.
      * Middleware signature: function(string $method, string $path, callable $next): void

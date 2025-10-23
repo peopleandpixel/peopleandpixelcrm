@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Features — People & Pixel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container flex between center">
+    <a class="brand" href="./"><span class="logo">🧩</span> People & Pixel</a>
+    <nav class="nav">
+      <a class="active" href="./features.html">Features</a>
+      <a href="./screenshots.html">Screenshots</a>
+      <a href="./contact.html">Contact</a>
+      <a href="./impressum.html">Impressum</a>
+      <a class="btn primary" href="../public/">Open App</a>
+    </nav>
+  </div>
+</header>
+<main class="container pad">
+  <h1>Features</h1>
+  <p class="lead">A pragmatic, self‑hosted toolset for small teams. Everything you need, nothing you don’t.</p>
+
+  <h2>Implemented</h2>
+  <div class="grid-3 features">
+    <div class="card"><h3>Contacts</h3><p>Contacts with tags, custom fields, activity timeline, and file attachments.</p></div>
+    <div class="card"><h3>Tasks</h3><p>Task lists and Kanban board with recurrence and reminders.</p></div>
+    <div class="card"><h3>Projects</h3><p>Lightweight projects with dates, status, and linked tasks.</p></div>
+    <div class="card"><h3>Deals</h3><p>Simple pipeline with stages and a visual board.</p></div>
+    <div class="card"><h3>Calendar + ICS</h3><p>Server‑side ICS feed to subscribe in Google/Outlook. Export birthdays, tasks and project dates.</p></div>
+    <div class="card"><h3>Global Search</h3><p>Find contacts, tasks, deals, and projects with one query.</p></div>
+    <div class="card"><h3>Reports</h3><p>Saved reports with filters, simple charts, and CSV export.</p></div>
+    <div class="card"><h3>Time tracking</h3><p>Track working time entries and export CSV.</p></div>
+    <div class="card"><h3>Files</h3><p>Upload files with safe serving from a protected directory.</p></div>
+    <div class="card"><h3>Import/Export</h3><p>CSV and JSON import/export helpers per entity.</p></div>
+    <div class="card"><h3>Permissions</h3><p>Basic roles with entity‑level rights (own/others), admin bypass.</p></div>
+    <div class="card"><h3>Public API + Webhooks</h3><p>Token‑protected REST API CRUD for main entities; webhooks on create/update/delete.</p></div>
+    <div class="card"><h3>Audit log</h3><p>Append‑only audit trail of changes, accessible per entity and via the Audit page.</p></div>
+  </div>
+
+  <h2>Upcoming</h2>
+  <div class="grid-2 features">
+    <div class="card"><h3>Granular permissions</h3><p>Owner‑based access rules across entities with optional object‑level controls.</p></div>
+    <div class="card"><h3>Email integration</h3><p>SMTP outbound with templates; optional IMAP ingestion mapped to contacts.</p></div>
+    <div class="card"><h3>PWA & notifications</h3><p>Offline‑ready PWA shell and web push for reminders.</p></div>
+    <div class="card"><h3>Full‑text search & performance</h3><p>FTS indexes for DB mode and caching for heavy lists.</p></div>
+    <div class="card"><h3>Bulk operations</h3><p>Multi‑select list actions for faster edits.</p></div>
+  </div>
+
+  <section class="callout">
+    <h3>Simple architecture</h3>
+    <ul class="checklist">
+      <li>JSON storage or SQL database via PDO</li>
+      <li>Monolog logging, light validation and i18n</li>
+      <li>Plain PHP, Twig templates, no framework lock‑in</li>
+    </ul>
+  </section>
+
+  <p><a class="btn" href="../README.md">Read the project README</a></p>
+</main>
+<footer class="site-footer">
+  <div class="container flex between top">
+    <div>
+      <div class="brand">🧩 People & Pixel</div>
+      <p class="muted">© <span id="y"></span> People & Pixel.</p>
+    </div>
+    <nav class="footer-nav">
+      <a href="./impressum.html">Impressum</a>
+      <a href="./contact.html">Contact</a>
+    </nav>
+  </div>
+</footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

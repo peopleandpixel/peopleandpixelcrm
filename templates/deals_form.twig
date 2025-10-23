@@ -1,0 +1,86 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section class="space-y-4">
+  <h2 class="text-2xl font-bold">{{ title|default(__('Add Deal'))|e }}</h2>
+  <form method="post" class="space-y-6"{% if form_action %} action="{{ form_action }}"{% endif %}>
+    {{ csrf_field()|raw }}
+    {% if error is defined and error %}
+      <div class="alert alert-error"><span>{{ error|e }}</span></div>
+    {% endif %}
+    {% set data = {
+      id: (id|default(deal.id|default(0)))|int,
+      title: title|default(deal.title|default('')),
+      contact_id: contact_id|default(deal.contact_id|default(0)),
+      stage: stage|default(deal.stage|default('prospecting')),
+      value: value|default(deal.value|default(0)),
+      currency: currency|default(deal.currency|default('EUR')),
+      probability: probability|default(deal.probability|default(0)),
+      expected_close: expected_close|default(deal.expected_close|default('')),
+      notes: notes|default(deal.notes|default('')),
+    } %}
+    {% if data.id %}<input type="hidden" name="id" value="{{ data.id }}">{% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="title" class="label"><span class="label-text">{{ __('Title')|e }} *</span></label>
+        <input id="title" name="title" type="text" required value="{{ data.title|e }}" class="input input-bordered">
+        {% if errors.title is defined %}<label class="label"><span class="label-text-alt text-error">{{ errors.title|e }}</span></label>{% endif %}
+      </div>
+      <div class="form-control">
+        <label for="contact_id" class="label"><span class="label-text">{{ __('Contact')|e }} *</span></label>
+        <select id="contact_id" name="contact_id" class="select select-bordered">
+          <option value="0">{{ __('Select contact…')|e }}</option>
+          {% for c in contacts|default([]) %}
+            <option value="{{ (c.id|default(0))|int }}" {{ data.contact_id == (c.id|default(0)) ? 'selected' : '' }}>{{ c.name|default('#'~c.id)|e }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.contact_id is defined %}<label class="label"><span class="label-text-alt text-error">{{ errors.contact_id|e }}</span></label>{% endif %}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="form-control">
+        <label for="stage" class="label"><span class="label-text">{{ __('Stage')|e }}</span></label>
+        <select id="stage" name="stage" class="select select-bordered">
+          {% set st = data.stage %}
+          {% for k,lab in stages|default({}) %}
+            <option value="{{ k|e }}" {{ st == k ? 'selected' : '' }}>{{ lab|e }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-control">
+        <label for="value" class="label"><span class="label-text">{{ __('Value')|e }}</span></label>
+        <input id="value" name="value" type="number" step="0.01" min="0" value="{{ data.value|e }}" class="input input-bordered">
+        {% if errors.value is defined %}<label class="label"><span class="label-text-alt text-error">{{ errors.value|e }}</span></label>{% endif %}
+      </div>
+      <div class="form-control">
+        <label for="currency" class="label"><span class="label-text">{{ __('Currency')|e }}</span></label>
+        <input id="currency" name="currency" type="text" value="{{ data.currency|e }}" class="input input-bordered" placeholder="EUR">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label for="probability" class="label"><span class="label-text">{{ __('Probability %')|e }}</span></label>
+        <input id="probability" name="probability" type="number" min="0" max="100" value="{{ data.probability|e }}" class="input input-bordered">
+        {% if errors.probability is defined %}<label class="label"><span class="label-text-alt text-error">{{ errors.probability|e }}</span></label>{% endif %}
+      </div>
+      <div class="form-control">
+        <label for="expected_close" class="label"><span class="label-text">{{ __('Expected close')|e }}</span></label>
+        <input id="expected_close" name="expected_close" type="date" value="{{ data.expected_close|e }}" class="input input-bordered">
+        {% if errors.expected_close is defined %}<label class="label"><span class="label-text-alt text-error">{{ errors.expected_close|e }}</span></label>{% endif %}
+      </div>
+    </div>
+
+    <div class="form-control">
+      <label for="notes" class="label"><span class="label-text">{{ __('Notes')|e }}</span></label>
+      <textarea id="notes" name="notes" rows="3" class="textarea textarea-bordered">{{ data.notes|e }}</textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2">
+      <a class="btn btn-ghost" href="{{ url('/deals') }}">{{ __('Cancel')|e }}</a>
+      <button class="btn btn-primary" type="submit">{{ submit_label|default(__('Save')|e) }}</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

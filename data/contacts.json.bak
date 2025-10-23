@@ -5,23 +5,75 @@
         "company": "openWebX",
         "notes": "tzuz u zu",
         "birthdate": "1980-01-01",
-        "picture": "https://example.com/avatar.jpg",
+        "picture": "https:\/\/example.com\/avatar.jpg",
         "phones": [
-            {"value": "+49 176 63613420", "tag": "business", "kind": "mobile"},
-            {"value": "+49 6151 12345", "tag": "private", "kind": "landline"}
+            {
+                "value": "+49 176 63613420",
+                "tag": "business",
+                "kind": "mobile"
+            },
+            {
+                "value": "+49 6151 12345",
+                "tag": "private",
+                "kind": "landline"
+            }
         ],
         "emails": [
-            {"value": "jens@reinemuth.rocks", "tag": "business"},
-            {"value": "jr@example.org", "tag": "private"}
+            {
+                "value": "jens@reinemuth.rocks",
+                "tag": "business"
+            },
+            {
+                "value": "jr@example.org",
+                "tag": "private"
+            }
         ],
         "websites": [
-            {"value": "https://openwebx.example", "tag": "business"}
+            {
+                "value": "https:\/\/openwebx.example",
+                "tag": "business"
+            }
         ],
         "socials": [
-            {"value": "https://linkedin.com/in/jens-reinemuth", "tag": "business"}
+            {
+                "value": "https:\/\/linkedin.com\/in\/jens-reinemuth",
+                "tag": "business"
+            }
         ],
         "email": "jens@reinemuth.rocks",
         "phone": "+49 176 63613420",
         "created_at": "2025-09-24T07:33:52+02:00"
+    },
+    {
+        "name": "Jens Reinemuth",
+        "company": "openWebX",
+        "notes": "",
+        "birthdate": "",
+        "picture": "\/uploads\/20250929_074002_91bcf45a2c387b7c_maulwurf.png",
+        "phones": [
+            {
+                "value": "+4917663613420",
+                "kind": "mobile",
+                "tag": "business"
+            }
+        ],
+        "emails": [
+            {
+                "value": "jens@reinemuth.rocks",
+                "tag": "business"
+            }
+        ],
+        "websites": [],
+        "socials": [],
+        "phones_text": "",
+        "emails_text": "",
+        "websites_text": "",
+        "socials_text": "",
+        "email": "jens@reinemuth.rocks",
+        "phone": "+4917663613420",
+        "created_at": "2025-09-29T07:40:02+02:00",
+        "id": 2,
+        "updated_at": "2025-09-29T07:40:02+02:00",
+        "version": 1
     }
 ]

@@ -1,0 +1,41 @@
+{% extends "layout.twig" %}
+{% block content %}
+<h1>{{ __('Audit log') }}</h1>
+<p class="text-sm text-base-content/70">{{ __('Showing recent activity across entities.') }}</p>
+<table class="table table-zebra w-full mt-3">
+  <thead>
+    <tr>
+      <th>{{ __('Time') }}</th>
+      <th>{{ __('User') }}</th>
+      <th>{{ __('Event') }}</th>
+      <th>{{ __('Entity') }}</th>
+      <th>{{ __('Item ID') }}</th>
+      <th>{{ __('Details') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for e in entries %}
+    <tr>
+      <td><time datetime="{{ e.at }}">{{ e.at }}</time></td>
+      <td>{{ e.username ?? 'system' }}</td>
+      <td class="uppercase">{{ e.event }}</td>
+      <td>{{ e.entity }}</td>
+      <td>{{ e.item_id ?? '' }}</td>
+      <td>
+        {% if e.after %}
+          <span class="badge badge-outline">after</span>
+        {% endif %}
+        {% if e.before %}
+          <span class="badge badge-outline">before</span>
+        {% endif %}
+        {% if e.ip %}
+          <span class="badge">IP {{ e.ip }}</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6">{{ __('No audit entries yet') }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

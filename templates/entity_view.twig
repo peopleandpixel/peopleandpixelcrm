@@ -8,5 +8,40 @@
     back_url: back_url|default('/'),
     edit_url: edit_url|default(null)
   } %}
+
+  {% if activities is defined %}
+  <hr>
+  <h2>{{ __('Activity timeline') }}</h2>
+  <div class="timeline">
+    {% if activities|length == 0 %}
+      <p>{{ __('No activity yet.') }}</p>
+    {% else %}
+      <ul class="list-unstyled">
+        {% for a in activities %}
+          <li class="mb-2 p-2 border rounded">
+            <div class="small text-muted">
+              <strong>{{ a.type|e }}</strong>
+              • {{ a.created_at ? a.created_at|date('Y-m-d H:i') : '' }}
+              {% if a.created_by %} • {{ __('by') }} {{ a.created_by|e }}{% endif %}
+            </div>
+            <div>{{ nl2br_e(a.message|default('')) }}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+
+  <div class="mt-3">
+    <form method="post" action="{{ add_note_url }}">
+      {{ csrf_field()|raw }}
+      <input type="hidden" name="contact_id" value="{{ item.id|int }}">
+      <div class="mb-2">
+        <label for="note" class="form-label">{{ __('Add note') }}</label>
+        <textarea id="note" name="note" rows="3" class="form-control" placeholder="{{ __('Write a note...') }}"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">{{ __('Add note') }}</button>
+    </form>
+  </div>
+  {% endif %}
 </section>
 {% endblock %}

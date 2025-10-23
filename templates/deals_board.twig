@@ -1,0 +1,44 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-2xl font-bold">{{ __('Deals Board')|e }}</h2>
+    <div class="flex items-center gap-2">
+      <a class="btn" href="{{ url('/deals') }}">{{ __('List')|e }}</a>
+      <a class="btn btn-primary" href="{{ url('/deals/new') }}">+ {{ __('Add Deal')|e }}</a>
+    </div>
+  </div>
+
+  <div class="flex gap-4 overflow-x-auto pb-2">
+    {% for key,label in stages %}
+      {% set cards = grouped[key]|default([]) %}
+      <div class="min-w-[260px] w-72 bg-base-200 rounded-lg p-3 flex-shrink-0" data-stage="{{ key }}">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-semibold">{{ label|e }}</h3>
+          <span class="badge">{{ cards|length }}</span>
+        </div>
+        <div class="space-y-3">
+          {% for it in cards %}
+            <div class="card bg-base-100 shadow-sm border border-base-300">
+              <div class="card-body p-3 gap-2">
+                <div class="flex items-start justify-between">
+                  <a href="{{ url('/deals/view', {id: it.id}) }}" class="font-medium hover:underline line-clamp-2">{{ it.title|default('#'~it.id)|e }}</a>
+                  <a href="{{ url('/deals/edit', {id: it.id}) }}" class="btn btn-ghost btn-xs">{{ __('Edit')|e }}</a>
+                </div>
+                <div class="flex flex-wrap gap-2 text-sm opacity-80">
+                  {% if it.contact_name %}<span class="badge badge-outline">{{ it.contact_name|e }}</span>{% endif %}
+                  {% if it.value is defined %}<span class="badge badge-ghost">{{ __('Value')|e }} {{ it.value|e }} {{ it.currency|default('')|e }}</span>{% endif %}
+                  {% if it.probability is defined %}<span class="badge badge-ghost">{{ it.probability|e }}%</span>{% endif %}
+                  {% if it.expected_close %}<span class="badge badge-warning badge-outline">{{ it.expected_close|e }}</span>{% endif %}
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="text-sm opacity-70">{{ __('No deals')|e }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

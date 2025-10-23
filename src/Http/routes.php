@@ -42,8 +42,22 @@ return static function (Container $container, Router $router): void {
         InstallerController::submit($container->get('config'));
     });
 
-    // Home
-    $router->get('/', [$container->get('homeController'), 'index']);
+    // Home → start page shows Dashboard
+    $router->get('/', [$container->get('dashboardController'), 'index']);
+
+    // Dashboard (explicit path kept for direct linking)
+    $router->get('/dashboard', [$container->get('dashboardController'), 'index']);
+
+    // Global Search
+    $router->get('/search', [$container->get('searchController'), 'html']);
+    $router->get('/search.json', [$container->get('searchController'), 'json']);
+
+    // Reports
+    $router->get('/reports', [$container->get('reportsController'), 'list']);
+    $router->get('/reports/new', [$container->get('reportsController'), 'newForm']);
+    $router->post('/reports/new', [$container->get('reportsController'), 'create']);
+    $router->get('/reports/run', [$container->get('reportsController'), 'run']);
+    $router->get('/reports/export.csv', [$container->get('reportsController'), 'exportCsv']);
 
     // Auth
     $router->get('/login', function() {
@@ -78,6 +92,10 @@ return static function (Container $container, Router $router): void {
     // Generic upload endpoint (for AJAX file uploads)
     $router->post('/upload', [$container->get('uploadController'), 'handle']);
 
+    // Saved views
+    $router->post('/views/save', [$container->get('viewsController'), 'save']);
+    $router->post('/views/delete', [$container->get('viewsController'), 'delete']);
+
     // Secure file serving from var/uploads
     $router->get('/files/{subdir}/{file}', [$container->get('filesController'), 'serve']);
 
@@ -95,6 +113,8 @@ return static function (Container $container, Router $router): void {
     $router->get('/contacts/edit', [$container->get('contactsController'), 'editForm']);
     $router->post('/contacts/edit', [$container->get('contactsController'), 'update']);
     $router->post('/contacts/delete', [$container->get('contactsController'), 'delete']);
+    // Contact activities
+    $router->post('/contacts/activity/add', [$container->get('contactsController'), 'addNote']);
 
     // Times
     $router->get('/times', function() use ($container) {
@@ -120,6 +140,25 @@ return static function (Container $container, Router $router): void {
     $router->get('/tasks/new', [$container->get('tasksController'), 'newForm']);
     $router->get('/tasks/view', [$container->get('tasksController'), 'view']);
     $router->post('/tasks/new', [$container->get('tasksController'), 'create']);
+
+    // Deals
+    $router->get('/deals', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) {
+            send_list_cache_headers([$cfg->jsonPath('deals.json'), $cfg->jsonPath('contacts.json')], 60);
+        }
+        ($container->get('dealsController'))->list();
+    });
+    $router->get('/deals/board', [$container->get('dealsController'), 'board']);
+    $router->get('/deals/new', [$container->get('dealsController'), 'newForm']);
+    $router->post('/deals/new', [$container->get('dealsController'), 'create']);
+    $router->get('/deals/view', function() use ($container) {
+        // simple entity view rendering using schema
+        ($container->get('dealsController'))->view();
+    });
+    $router->get('/deals/edit', [$container->get('dealsController'), 'editForm']);
+    $router->post('/deals/edit', [$container->get('dealsController'), 'update']);
+    $router->post('/deals/delete', [$container->get('dealsController'), 'delete']);
 
     // Projects
     $router->get('/projects', function() use ($container) {
@@ -176,6 +215,7 @@ return static function (Container $container, Router $router): void {
     // Calendar
     $router->get('/calendar', [$container->get('calendarController'), 'index']);
     $router->get('/calendar/events', [$container->get('calendarController'), 'events']);
+    $router->get('/calendar/ics', [$container->get('calendarController'), 'ics']);
     $router->get('/storage/new', [$container->get('storageController'), 'newForm']);
     $router->get('/storage/view', [$container->get('storageController'), 'view']);
     $router->post('/storage/new', function() use ($container) { ($container->get('storageController'))->create($container->get('storageStore')); });
@@ -242,4 +282,36 @@ return static function (Container $container, Router $router): void {
     $router->get('/admin/users/edit', [$container->get('usersController'), 'editForm']);
     $router->post('/admin/users/edit', [$container->get('usersController'), 'update']);
     $router->post('/admin/users/delete', [$container->get('usersController'), 'delete']);
+
+    // Audit log
+    $router->get('/audit', [$container->get('auditController'), 'list']);
+
+    // Public REST API
+    // Lists
+    $router->get('/api/{entity}', function(string $entity) use ($container) {
+        ($container->get('apiController'))->list($entity);
+    });
+    // Read single
+    $router->get('/api/{entity}/{id}', function(string $entity, string $id) use ($container) {
+        $_GET['id'] = $id; ($container->get('apiController'))->get($entity);
+    });
+    // Create
+    $router->post('/api/{entity}', function(string $entity) use ($container) {
+        ($container->get('apiController'))->create($entity);
+    });
+    // Update
+    $router->post('/api/{entity}/{id}', function(string $entity, string $id) use ($container) {
+        // Allow POST to update for environments that block PUT/PATCH
+        $_GET['id'] = $id; ($container->get('apiController'))->update($entity);
+    });
+    $router->put('/api/{entity}/{id}', function(string $entity, string $id) use ($container) {
+        $_GET['id'] = $id; ($container->get('apiController'))->update($entity);
+    });
+    $router->patch('/api/{entity}/{id}', function(string $entity, string $id) use ($container) {
+        $_GET['id'] = $id; ($container->get('apiController'))->update($entity);
+    });
+    // Delete
+    $router->delete('/api/{entity}/{id}', function(string $entity, string $id) use ($container) {
+        $_GET['id'] = $id; ($container->get('apiController'))->delete($entity);
+    });
 };

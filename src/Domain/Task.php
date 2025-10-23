@@ -19,6 +19,16 @@ class Task
     public string $done_date; // Y-m-d or ''
     public string $status; // open|in_progress|review|blocked|done
     public string $notes;
+    /** @var array<int,string> */
+    public array $tags = [];
+    /** @var array<string,mixed> */
+    public array $custom_fields = [];
+    public string $tags_text = '';
+    public string $custom_fields_json = '';
+    // Reminders and recurrence
+    public string $reminder_at = '';
+    public string $last_reminded_at = '';
+    public string $recurrence = 'none';
 
     public function __construct(int $contact_id, int $employee_id, string $title, string $due_date = '', string $status = 'open', string $notes = '', string $done_date = '', int $project_id = 0)
     {
@@ -58,7 +68,61 @@ class Task
         $notes = Sanitizer::string($in['notes'] ?? '');
         $rawDone = Sanitizer::string($in['done_date'] ?? '');
         $done_date = $rawDone === '' ? '' : (\App\Util\Dates::toIsoDate($rawDone) ?? $rawDone);
-        return new self($contact_id, $employee_id, $title, $due_date, $status, $notes, $done_date, $project_id);
+        $self = new self($contact_id, $employee_id, $title, $due_date, $status, $notes, $done_date, $project_id);
+        // Reminders and recurrence
+        $rawReminder = Sanitizer::string($in['reminder_at'] ?? '');
+        $self->reminder_at = '';
+        if ($rawReminder !== '') {
+            // Accept 'Y-m-d H:i' or 'Y-m-d\TH:i' or full RFC3339; store as ATOM
+            $val = $rawReminder;
+            $val = str_replace('T', ' ', $val);
+            $val = preg_replace('/\s+/', ' ', $val ?? '') ?? '';
+            $dt = \DateTimeImmutable::createFromFormat('Y-m-d H:i', $val) ?: (function($raw){
+                try { return new \DateTimeImmutable($raw); } catch (\Throwable) { return null; }
+            })($rawReminder);
+            if ($dt) {
+                $self->reminder_at = $dt->format(DATE_ATOM);
+            }
+        }
+        $rec = strtolower(Sanitizer::string($in['recurrence'] ?? 'none'));
+        $self->recurrence = in_array($rec, ['none','daily','weekly','monthly'], true) ? $rec : 'none';
+        // Tags and custom fields
+        $self->tags_text = Sanitizer::string($in['tags_text'] ?? '');
+        $self->tags = [];
+        $rawTags = $self->tags_text;
+        if ($rawTags === '' && isset($in['tags']) && is_array($in['tags'])) {
+            $rawTags = implode(',', $in['tags']);
+        }
+        if ($rawTags !== '') {
+            $parts = preg_split('/[\s,;]+/', $rawTags) ?: [];
+            $tags = [];
+            foreach ($parts as $t) {
+                $t = trim((string)$t);
+                if ($t === '') { continue; }
+                $t = strip_tags($t);
+                $t = mb_substr($t, 0, 50);
+                $tags[] = $t;
+            }
+            $self->tags = array_values(array_unique($tags));
+        }
+        $self->custom_fields_json = Sanitizer::string($in['custom_fields_json'] ?? '');
+        $self->custom_fields = [];
+        if ($self->custom_fields_json !== '') {
+            $decoded = json_decode($self->custom_fields_json, true);
+            if (is_array($decoded)) {
+                $map = [];
+                foreach ($decoded as $k => $v) {
+                    $key = (string)$k;
+                    if ($key === '') { continue; }
+                    if (is_array($v) || is_object($v)) {
+                        $v = json_encode($v, JSON_UNESCAPED_UNICODE);
+                    }
+                    $map[$key] = $v;
+                }
+                $self->custom_fields = $map;
+            }
+        }
+        return $self;
     }
 
     public function validate(): array
@@ -79,6 +143,14 @@ class Task
             'done_date' => $this->done_date,
             'status' => $this->status,
             'notes' => $this->notes,
+            'tags' => $this->tags,
+            'custom_fields' => $this->custom_fields,
+            'reminder_at' => $this->reminder_at,
+            'last_reminded_at' => $this->last_reminded_at,
+            'recurrence' => $this->recurrence,
+            // echo-back helpers
+            'tags_text' => $this->tags_text,
+            'custom_fields_json' => $this->custom_fields_json,
         ];
     }
 }

@@ -1,0 +1,55 @@
+{% extends "layout.twig" %}
+{% block content %}
+<h1>{{ title }}</h1>
+<div class="mb-3">
+  <a class="btn btn-secondary" href="{{ url('/reports') }}">{{ __('Back to reports') }}</a>
+  <a class="btn btn-outline-primary" href="{{ url('/reports/export.csv', def) }}">{{ __('Export CSV') }}</a>
+</div>
+
+<style>
+.report-bars { max-width: 800px; }
+.report-bars .bar { display: flex; align-items: center; margin: 6px 0; }
+.report-bars .bar .label { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.report-bars .bar .meter { background: #e9ecef; height: 18px; flex: 1; margin: 0 10px; position: relative; }
+.report-bars .bar .meter span { display: block; height: 100%; background: #6fa8dc; }
+.report-bars .bar .value { width: 80px; text-align: right; }
+</style>
+
+{% set maxv = 0 %}
+{% for r in report.rows %}
+  {% if r.value > maxv %}{% set maxv = r.value %}{% endif %}
+{% endfor %}
+
+<div class="report-bars">
+  {% for r in report.rows %}
+    {% set width = maxv > 0 ? (r.value / maxv * 100) : 0 %}
+    <div class="bar">
+      <div class="label" title="{{ r.label }}">{{ r.label }}</div>
+      <div class="meter"><span style="width: {{ width }}%"></span></div>
+      <div class="value">{{ r.value }}</div>
+    </div>
+  {% else %}
+    <p>{{ __('No data for this report') }}</p>
+  {% endfor %}
+</div>
+
+<h2 class="mt-4">{{ __('Table') }}</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th>{{ __('Label') }}</th>
+      <th>{{ __('Value') }}</th>
+      <th>{{ __('Count') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in report.rows %}
+      <tr>
+        <td>{{ r.label }}</td>
+        <td>{{ r.value }}</td>
+        <td>{{ r.count }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

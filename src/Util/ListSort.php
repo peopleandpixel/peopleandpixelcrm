@@ -25,11 +25,35 @@ class ListSort
     public static function getSortedList(Request $request, string $type, string $schema, object $store, ?array $allowed = null, ?array $searchFields = null): void
     {
         $path = current_path();
-        $q = trim((string)($request->get('q') ?? ''));
-        $sort = (string)($request->get('sort') ?? 'name');
-        $dir = strtolower((string)($request->get('dir') ?? 'asc')) === 'desc' ? 'desc' : 'asc';
+        // Saved views support: load available views and apply selected view defaults
+        $views = [];
+        $currentViewId = (int)($request->get('view') ?? 0);
+        $viewCfg = [];
+        try {
+            global $container;
+            /** @var object $viewsStore */
+            $viewsStore = $container->get('viewsStore');
+            $allViews = $viewsStore->all();
+            if (is_array($allViews)) {
+                foreach ($allViews as $v) {
+                    if (($v['entity'] ?? '') === $schema) {
+                        $views[] = $v;
+                    }
+                    if ($currentViewId > 0 && (int)($v['id'] ?? 0) === $currentViewId) {
+                        $viewCfg = is_array($v['config'] ?? null) ? $v['config'] : [];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore if views store not available
+        }
+
+        $q = trim((string)($request->get('q') ?? ($viewCfg['q'] ?? '')));
+        $tag = trim((string)($request->get('tag') ?? ($viewCfg['tag'] ?? '')));
+        $sort = (string)($request->get('sort') ?? ($viewCfg['sort'] ?? 'name'));
+        $dir = strtolower((string)($request->get('dir') ?? ($viewCfg['dir'] ?? 'asc'))) === 'desc' ? 'desc' : 'asc';
         $page = (int)($request->get('page') ?? 1);
-        $per = (int)($request->get('per') ?? 10);
+        $per = (int)($request->get('per') ?? ($viewCfg['per'] ?? 10));
         if ($page < 1) { $page = 1; }
         if ($per < 1) { $per = 10; }
         if ($per > 100) { $per = 100; }
@@ -64,6 +88,19 @@ class ListSort
                     if ($v !== '' && str_contains($v, $needle)) {
                         return true;
                     }
+                }
+                return false;
+            }));
+        }
+        if ($tag !== '') {
+            $tagNeedle = mb_strtolower($tag);
+            $items = array_values(array_filter($items, function($it) use ($tagNeedle) {
+                $tags = $it['tags'] ?? [];
+                if (!is_array($tags)) { return false; }
+                foreach ($tags as $t) {
+                    $tv = mb_strtolower((string)$t);
+                    if ($tv === '') { continue; }
+                    if ($tv === $tagNeedle || str_contains($tv, $tagNeedle)) { return true; }
                 }
                 return false;
             }));
@@ -121,8 +158,11 @@ class ListSort
             'sort' => $sort,
             'dir' => $dir,
             'q' => $q,
+            'tag' => $tag,
             'path' => $path,
-            'columns' => $schemaDef['columns']
+            'columns' => $schemaDef['columns'],
+            'views' => $views,
+            'currentViewId' => $currentViewId,
         ]);
     }
 }

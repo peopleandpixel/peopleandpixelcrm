@@ -128,7 +128,7 @@ class I18n
         return $text ?: (string)$count;
     }
 
-    public static function formatDate(\DateTimeInterface $date, int $dateType = IntlDateFormatter::MEDIUM, int $timeType = IntlDateFormatter::NONE): string
+    public static function formatDate(\DateTimeInterface $date, int $dateType = 2, int $timeType = 0): string
     {
         $locale = self::$lang;
         if (class_exists(IntlDateFormatter::class)) {
@@ -138,13 +138,19 @@ class I18n
         return $date->format('Y-m-d');
     }
 
-    public static function formatNumber(int|float $number, int $style = NumberFormatter::DECIMAL, int $precision = 2): string
+    public static function formatNumber(int|float $number, int $style = 1, int $precision = 2): string
     {
         $locale = self::$lang;
         if (class_exists(NumberFormatter::class)) {
             $fmt = new NumberFormatter($locale, $style);
-            if ($style === NumberFormatter::DECIMAL) {
-                $fmt->setAttribute(NumberFormatter::FRACTION_DIGITS, $precision);
+            // 1 corresponds to NumberFormatter::DECIMAL
+            if (defined('NumberFormatter::DECIMAL')) {
+                $decimalConst = \NumberFormatter::DECIMAL;
+            } else {
+                $decimalConst = 1;
+            }
+            if ($style === $decimalConst) {
+                $fmt->setAttribute(\NumberFormatter::FRACTION_DIGITS, $precision);
             }
             $res = $fmt->format($number);
             if ($res !== false) return $res;

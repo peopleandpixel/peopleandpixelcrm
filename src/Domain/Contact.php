@@ -26,11 +26,18 @@ class Contact
     public string $birthdate = '';
     public string $picture = '';
 
+    /** @var array<int,string> */
+    public array $tags = [];
+    /** @var array<string,mixed> */
+    public array $custom_fields = [];
+
     // For forms (textarea inputs)
     public string $phones_text = '';
     public string $emails_text = '';
     public string $websites_text = '';
     public string $socials_text = '';
+    public string $tags_text = '';
+    public string $custom_fields_json = '';
 
     public function __construct(string $name, string $company = '', string $notes = '')
     {
@@ -117,6 +124,43 @@ class Contact
         }
         if (empty($self->socials) && $self->socials_text !== '') {
             $self->socials = self::parseTaggedList($self->socials_text);
+        }
+
+        // Tags and custom fields
+        $self->tags_text = Sanitizer::string($in['tags_text'] ?? '');
+        $self->tags = [];
+        $rawTags = $self->tags_text;
+        if ($rawTags === '' && isset($in['tags']) && is_array($in['tags'])) {
+            $rawTags = implode(',', $in['tags']);
+        }
+        if ($rawTags !== '') {
+            $parts = preg_split('/[\s,;]+/', $rawTags) ?: [];
+            $tags = [];
+            foreach ($parts as $t) {
+                $t = trim((string)$t);
+                if ($t === '') { continue; }
+                $t = strip_tags($t);
+                $t = mb_substr($t, 0, 50);
+                $tags[] = $t;
+            }
+            $self->tags = array_values(array_unique($tags));
+        }
+        $self->custom_fields_json = Sanitizer::string($in['custom_fields_json'] ?? '');
+        $self->custom_fields = [];
+        if ($self->custom_fields_json !== '') {
+            $decoded = json_decode($self->custom_fields_json, true);
+            if (is_array($decoded)) {
+                $map = [];
+                foreach ($decoded as $k => $v) {
+                    $key = (string)$k;
+                    if ($key === '') { continue; }
+                    if (is_array($v) || is_object($v)) {
+                        $v = json_encode($v, JSON_UNESCAPED_UNICODE);
+                    }
+                    $map[$key] = $v;
+                }
+                $self->custom_fields = $map;
+            }
         }
 
         return $self;
@@ -245,11 +289,15 @@ class Contact
             'emails' => $this->emails,
             'websites' => $this->websites,
             'socials' => $this->socials,
+            'tags' => $this->tags,
+            'custom_fields' => $this->custom_fields,
             // Form helper echo-back fields (not stored in DB)
             'phones_text' => $this->phones_text,
             'emails_text' => $this->emails_text,
             'websites_text' => $this->websites_text,
             'socials_text' => $this->socials_text,
+            'tags_text' => $this->tags_text,
+            'custom_fields_json' => $this->custom_fields_json,
             // Derived/legacy fields for backward compatibility
             'email' => $primaryEmail,
             'phone' => $primaryPhone,

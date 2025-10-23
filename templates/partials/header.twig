@@ -1,15 +1,31 @@
 <header id="app-header" class="navbar bg-base-200">
   <div class="flex-1 items-center gap-3">
-    <a href="{{ url('/') }}" class="btn btn-ghost text-xl">{{ __('People & Pixel')|e }}</a>
+    <a href="{{ url('/') }}" class="btn btn-ghost text-xl brand">{{ __('People & Pixel')|e }}</a>
     <span id="running-timer" class="hidden badge badge-warning gap-1" aria-live="off">
       <span class="inline-flex items-center" aria-hidden="true">⏱️</span>
       <span data-time>00:00:00</span>
     </span>
   </div>
-  <div class="flex-none flex items-center gap-1">
+  <div class="flex-none flex items-center gap-2 quick">
+    <a href="{{ url('/contacts/edit') }}" class="btn btn-sm btn-primary" title="{{ __('New Contact')|e }}">➕ {{ __('Contact')|e }}</a>
+    <a href="{{ url('/tasks/edit') }}" class="btn btn-sm" title="{{ __('New Task')|e }}">➕ {{ __('Task')|e }}</a>
     <button id="theme-toggle" class="btn btn-ghost btn-circle" title="{{ __('Toggle theme')|e }}" aria-label="{{ __('Toggle theme')|e }}" aria-pressed="false">
       <span data-icon role="img" aria-hidden="true">☀️</span>
     </button>
+    {% set u = current_user() %}
+    {% if u %}
+      {# User avatar/icon with hover tooltip #}
+      {% set name = (u.fullname|default('') ?: u.username|default('')) %}
+      {% set initials = (name ? name|split(' ') : []) %}
+      {% set initials = (initials|length > 1) ? (initials[0]|slice(0,1) ~ initials[1]|slice(0,1)) : (name|slice(0,2)) %}
+      <div class="tooltip tooltip-bottom" data-tip="{{ name|e }}{% if u.role %} · {{ (u.role)|e }}{% endif %}">
+        <div class="avatar placeholder">
+          <div class="bg-neutral text-neutral-content rounded-full w-9 h-9 flex items-center justify-center border border-base-300" title="{{ __('Logged in as')|e }} {{ name|e }}">
+            <span class="text-sm">{{ initials|upper }}</span>
+          </div>
+        </div>
+      </div>
+    {% endif %}
     <a href="{{ url('/logout') }}" class="btn btn-ghost btn-circle" title="{{ __('Logout')|e }}" aria-label="{{ __('Logout')|e }}">
       <span aria-hidden="true">⏻</span>
     </a>

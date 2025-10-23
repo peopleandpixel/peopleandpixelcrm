@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Screenshots — People & Pixel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container flex between center">
+    <a class="brand" href="./"><span class="logo">🧩</span> People & Pixel</a>
+    <nav class="nav">
+      <a href="./features.html">Features</a>
+      <a class="active" href="./screenshots.html">Screenshots</a>
+      <a href="./contact.html">Contact</a>
+      <a href="./impressum.html">Impressum</a>
+      <a class="btn primary" href="../public/">Open App</a>
+    </nav>
+  </div>
+</header>
+<main class="container pad">
+  <h1>Screenshots</h1>
+  <p class="lead">A quick look at the interface. Replace the placeholder images with real screenshots for production.</p>
+  <div class="gallery">
+    <figure>
+      <img src="./img/hero-dashboard.png" alt="Dashboard" onerror="this.src='./img/placeholder-16x9.svg'">
+      <figcaption>Dashboard</figcaption>
+    </figure>
+    <figure>
+      <img src="./img/contacts-list.png" alt="Contacts" onerror="this.src='./img/placeholder-16x9.svg'">
+      <figcaption>Contacts</figcaption>
+    </figure>
+    <figure>
+      <img src="./img/tasks-kanban.png" alt="Tasks Kanban" onerror="this.src='./img/placeholder-16x9.svg'">
+      <figcaption>Tasks Kanban</figcaption>
+    </figure>
+    <figure>
+      <img src="./img/deals-board.png" alt="Deals board" onerror="this.src='./img/placeholder-16x9.svg'">
+      <figcaption>Deals board</figcaption>
+    </figure>
+    <figure>
+      <img src="./img/reports.png" alt="Reports" onerror="this.src='./img/placeholder-16x9.svg'">
+      <figcaption>Reports</figcaption>
+    </figure>
+    <figure>
+      <img src="./img/calendar-ics.png" alt="Calendar + ICS" onerror="this.src='./img/placeholder-16x9.svg'">
+      <figcaption>Calendar + ICS</figcaption>
+    </figure>
+  </div>
+  <details class="muted">
+    <summary>How to update screenshots</summary>
+    <ol>
+      <li>Open the app and navigate to the target page (e.g., /tasks).</li>
+      <li>Take a full‑HD screenshot (1920×1080) and save it under website/img/.</li>
+      <li>Update the file names above if needed.</li>
+    </ol>
+  </details>
+</main>
+<footer class="site-footer">
+  <div class="container flex between top">
+    <div>
+      <div class="brand">🧩 People & Pixel</div>
+      <p class="muted">© <span id="y"></span> People & Pixel.</p>
+    </div>
+    <nav class="footer-nav">
+      <a href="./impressum.html">Impressum</a>
+      <a href="./contact.html">Contact</a>
+    </nav>
+  </div>
+</footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>

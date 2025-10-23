@@ -106,6 +106,12 @@ Architecture overview
 Internationalization
 - UI strings live under lang/. Default language is DEFAULT_LANG; per-session overrides are supported. Twig exposes __(), n__(), format_date(), etc.
 
+Reminders scheduler
+- A simple CLI scheduler emits due task reminders based on each task's reminder_at field and marks last_reminded_at.
+- Run manually: php bin/schedule dry-run (no changes) or php bin/schedule run
+- Cron example (every minute):
+  * * * * * /usr/bin/php /path/to/peopleandpixel/bin/schedule run >> /path/to/peopleandpixel/var/log/reminders.log 2>&1
+
 Security and safety
 - CSRF tokens for forms, sanitization helpers, and output escaping in templates.
 - Basic session auth can be enabled/used for protected actions.
@@ -114,6 +120,7 @@ Documentation
 - Routing: docs/routing.md
 - Entities: docs/entities.md
 - Contributing: docs/CONTRIBUTING.md
+- Competitive analysis and improvement roadmap: docs/competitive-analysis.md
 
 Troubleshooting
 - Logs: var/log/app.log (level depends on APP_ENV/LOG_LEVEL)

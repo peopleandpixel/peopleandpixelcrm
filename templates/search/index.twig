@@ -1,0 +1,35 @@
+{% extends 'layout.twig' %}
+
+{% block title %}{{ __('Search') }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="mb-3">{{ __('Search') }}</h1>
+  <form method="get" action="{{ url('/search') }}" class="mb-4">
+    <div class="input-group">
+      <input type="text" name="q" value="{{ q|e }}" class="form-control" placeholder="{{ __('Search contacts, tasks, deals, projects…') }}" autofocus>
+      <button class="btn btn-primary" type="submit">{{ __('Search') }}</button>
+    </div>
+  </form>
+
+  {% if q is defined and q %}
+    {% if results is not empty %}
+      <div class="list-group">
+        {% for r in results %}
+          <a class="list-group-item list-group-item-action" href="{{ r.url }}">
+            <div class="d-flex w-100 justify-content-between">
+              <h5 class="mb-1">{{ r.title|e }}</h5>
+              <small class="text-muted text-uppercase">{{ r.type }}</small>
+            </div>
+            {% if r.subtitle %}
+              <p class="mb-1 text-muted">{{ r.subtitle|e }}</p>
+            {% endif %}
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted">{{ __('No results for') }} "{{ q|e }}"</p>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

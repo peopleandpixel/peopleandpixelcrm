@@ -72,13 +72,13 @@ if (!function_exists('n__')) {
     function n__(string $key, int|float $count, array $repl = []): string { return I18n::plural($key, $count, $repl + ['count' => $count]); }
 }
 if (!function_exists('format_date')) {
-    function format_date(DateTimeInterface $date, int $dateType = \IntlDateFormatter::MEDIUM, int $timeType = \IntlDateFormatter::NONE): string { return I18n::formatDate($date, $dateType, $timeType); }
+    function format_date(DateTimeInterface $date, int $dateType = 2, int $timeType = 0): string { return I18n::formatDate($date, $dateType, $timeType); }
 }
 if (!function_exists('format_datetime')) {
-    function format_datetime(DateTimeInterface $dateTime, int $dateType = \IntlDateFormatter::MEDIUM, int $timeType = \IntlDateFormatter::SHORT): string { return I18n::formatDate($dateTime, $dateType, $timeType); }
+    function format_datetime(DateTimeInterface $dateTime, int $dateType = 2, int $timeType = 3): string { return I18n::formatDate($dateTime, $dateType, $timeType); }
 }
 if (!function_exists('format_number')) {
-    function format_number(int|float $number, int $style = \NumberFormatter::DECIMAL, int $precision = 2): string { return I18n::formatNumber($number, $style, $precision); }
+    function format_number(int|float $number, int $style = 1, int $precision = 2): string { return I18n::formatNumber($number, $style, $precision); }
 }
 
 // Request helper

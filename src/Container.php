@@ -88,9 +88,9 @@ class Container
             // Add functions mapping to existing helpers if present
             $twig->addFunction(new TwigFunction('__', fn(string $key, array $repl = []) => I18n::t($key, $repl)));
             $twig->addFunction(new TwigFunction('n__', fn(string $key, $count, array $repl = []) => I18n::plural($key, (int)$count, $repl + ['count' => $count])));
-            $twig->addFunction(new TwigFunction('format_date', fn(\DateTimeInterface $d, int $dateType = \IntlDateFormatter::MEDIUM, int $timeType = \IntlDateFormatter::NONE) => I18n::formatDate($d, $dateType, $timeType)));
-            $twig->addFunction(new TwigFunction('format_datetime', fn(\DateTimeInterface $d, int $dateType = \IntlDateFormatter::MEDIUM, int $timeType = \IntlDateFormatter::SHORT) => I18n::formatDate($d, $dateType, $timeType)));
-            $twig->addFunction(new TwigFunction('format_number', fn($n, int $style = \NumberFormatter::DECIMAL, int $precision = 2) => I18n::formatNumber((float)$n, $style, $precision)));
+            $twig->addFunction(new TwigFunction('format_date', fn(\DateTimeInterface $d, int $dateType = 2, int $timeType = 0) => I18n::formatDate($d, $dateType, $timeType)));
+            $twig->addFunction(new TwigFunction('format_datetime', fn(\DateTimeInterface $d, int $dateType = 2, int $timeType = 3) => I18n::formatDate($d, $dateType, $timeType)));
+            $twig->addFunction(new TwigFunction('format_number', fn($n, int $style = 1, int $precision = 2) => I18n::formatNumber((float)$n, $style, $precision)));
             $twig->addFunction(new TwigFunction('csrf_field', fn() => (function(){ return \App\Util\Csrf::fieldName() ? '<input type="hidden" name="' . \App\Util\Csrf::fieldName() . '" value="' . htmlspecialchars(\App\Util\Csrf::getToken(), ENT_QUOTES, 'UTF-8') . '">': ''; })(), ['is_safe' => ['html']]) );
             $twig->addFunction(new TwigFunction('url', fn(string $path = '/', array $params = []) => url($path, $params)));
             $twig->addFunction(new TwigFunction('canonical_url', fn(?string $path = null, array $params = []) => canonical_url($path, $params)));
@@ -98,6 +98,8 @@ class Container
             $twig->addFunction(new TwigFunction('current_path', fn() => current_path()));
             // Auth helpers
             $twig->addFunction(new TwigFunction('is_admin', fn() => \App\Util\Auth::isAdmin()));
+            $twig->addFunction(new TwigFunction('current_user', fn() => \App\Util\Auth::user()));
+            $twig->addFunction(new TwigFunction('can', fn(string $entity, string $action) => \App\Util\Permission::can($entity, $action)));
             // View helpers wrappers
             $twig->addFunction(new TwigFunction('sort_link', fn(string $label, string $key, ?string $currentKey, string $currentDir, string $path, array $extraQuery = []) => \App\Util\View::sortLink($label, $key, $currentKey, $currentDir, $path, $extraQuery), ['is_safe' => ['html']]));
             $twig->addFunction(new TwigFunction('paginate', fn(int $total, int $page, int $perPage, string $path, array $extraQuery = []) => \App\Util\View::paginate($total, $page, $perPage, $path, $extraQuery), ['is_safe' => ['html']]));
@@ -116,7 +118,9 @@ class Container
             return new \App\Controller\ContactsTemplateController(
                 $c->get('contactsStore'),
                 $c->get('timesStore'),
-                $c->get('tasksStore')
+                $c->get('tasksStore'),
+                $c->get('groupsStore'),
+                $c->get('activitiesStore')
             );
         };
         $this->factories['timesController'] = function(self $c) {
@@ -204,6 +208,91 @@ class Container
                 $c->get('tasksStore')
             );
         };
+        $this->factories['viewsController'] = function(self $c) {
+            return new \App\Controller\ViewsController(
+                $c->get('viewsStore')
+            );
+        };
+        $this->factories['dashboardController'] = function(self $c) {
+            return new \App\Controller\DashboardController(
+                $c->get('tasksStore'),
+                $c->get('contactsStore'),
+                $c->get('storageStore')
+            );
+        };
+        $this->factories['dealsController'] = function(self $c) {
+            return new \App\Controller\DealsController(
+                $c->get('dealsStore'),
+                $c->get('contactsStore')
+            );
+        };
+        // Search
+        $this->factories['searchService'] = function(self $c) {
+            return new \App\Service\SearchService(
+                $c->get('contactsStore'),
+                $c->get('tasksStore'),
+                $c->get('dealsStore'),
+                $c->get('projectsStore')
+            );
+        };
+        $this->factories['searchController'] = function(self $c) {
+            return new \App\Controller\SearchController(
+                $c->get('searchService')
+            );
+        };
+        // Reports
+        $this->factories['reportService'] = function(self $c) {
+            return new \App\Service\ReportService(
+                $c->get('config'),
+                $c->get('contactsStore'),
+                $c->get('tasksStore'),
+                $c->get('dealsStore'),
+                $c->get('projectsStore'),
+                $c->get('timesStore'),
+                $c->get('paymentsStore')
+            );
+        };
+        $this->factories['reportsController'] = function(self $c) {
+            return new \App\Controller\ReportsController(
+                $c->get('reportService'),
+                $c->get('reportsStore')
+            );
+        };
+        // Webhooks
+        $this->factories['webhookService'] = function(self $c) {
+            return new \App\Service\WebhookService(
+                $c->get('config'),
+                $c->get('logger')
+            );
+        };
+        // Audit
+        $this->factories['auditService'] = function(self $c) {
+            return new \App\Service\AuditService(
+                $c->get('auditStore')
+            );
+        };
+        $this->factories['auditController'] = function(self $c) {
+            return new \App\Controller\AuditController(
+                $c->get('auditStore')
+            );
+        };
+        // API Controller
+        $this->factories['apiController'] = function(self $c) {
+            return new \App\Controller\ApiController(
+                $c->get('config'),
+                $c->get('webhookService'),
+                $c->get('auditService'),
+                $c->get('contactsStore'),
+                $c->get('tasksStore'),
+                $c->get('dealsStore'),
+                $c->get('projectsStore'),
+                $c->get('timesStore'),
+                $c->get('paymentsStore'),
+                $c->get('employeesStore'),
+                $c->get('candidatesStore'),
+                $c->get('storageStore')
+            );
+        };
     }
 
     public function set(string $id, callable $factory): void
@@ -240,7 +329,7 @@ class Container
             $path = $cfg->jsonPath($name . '.json');
             return new JsonStore($path);
         };
-        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects','groups'] as $entity) {
+        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects','groups','views','deals','activities','reports','audit'] as $entity) {
             $this->factories[$entity . 'Store'] = function(self $c) use ($makeStore, $entity) {
                 $store = $makeStore($c, $entity);
                 if ($entity === 'users') {
@@ -261,7 +350,7 @@ class Container
             }
             if ($hasAdmin) return;
             // Build full-rights permissions matrix (own and others all 1)
-            $entities = ['contacts','times','tasks','employees','candidates','payments','storage'];
+            $entities = ['contacts','times','tasks','employees','candidates','payments','storage','projects','deals','users','groups'];
             $permissions = [];
             foreach ($entities as $e) {
                 $permissions[$e] = [
@@ -269,6 +358,15 @@ class Container
                     'others' => ['view'=>1,'create'=>1,'edit'=>1,'delete'=>1],
                 ];
             }
+            // Utilities / special sections granted as view/create appropriately
+            $permissions['reports'] = [ 'own'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1], 'others'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1] ];
+            $permissions['calendar'] = [ 'own'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1], 'others'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1] ];
+            $permissions['search'] = [ 'own'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1], 'others'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1] ];
+            $permissions['import'] = [ 'own'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1], 'others'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1] ];
+            $permissions['export'] = [ 'own'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1], 'others'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1] ];
+            $permissions['files'] = [ 'own'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1], 'others'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1] ];
+            $permissions['api'] = [ 'own'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1], 'others'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1] ];
+            $permissions['audit'] = [ 'own'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1], 'others'=>['view'=>1,'create'=>1,'edit'=>1,'delete'=>1] ];
             $store->add([
                 'login' => 'admin',
                 'fullname' => 'Administrator',
