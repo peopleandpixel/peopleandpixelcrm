@@ -41,6 +41,9 @@ return [
     // Example pluralization pattern
     'items.count' => '{count, plural, one {# Element} other {# Elemente}}',
 
+            // Social / followers
+            'followers.count' => '{count, plural, one {# Follower} other {# Follower}}',
+
         // Tasks extras
         'Done date' => 'Erledigt am',
         'Edit Task' => 'Aufgabe bearbeiten',

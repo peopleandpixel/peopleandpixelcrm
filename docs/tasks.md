@@ -81,15 +81,15 @@ Note: Check off items as you complete them. The list is ordered to reduce risk a
     - [x] In StorageController, validate quantities and prevent negative stock when not allowed
     - [x] Add transactional semantics to multi-step updates; surface errors via Flash
 
-16. [ ] Error handling and logging
-    - [ ] Centralize exception handling in App\Util\ErrorHandler; convert to friendly error pages in prod
-    - [ ] Add Monolog integration with channels and rotating handlers
-    - [ ] Introduce domain exceptions and map to HTTP statuses
+16. [x] Error handling and logging
+    - [x] Centralize exception handling in App\Util\ErrorHandler; convert to friendly error pages in prod
+    - [x] Add Monolog integration with channels and rotating handlers
+    - [x] Introduce domain exceptions and map to HTTP statuses
 
-17. [ ] Performance and caching
-    - [ ] Profile hot paths (routing, list pages) and add simple caching for schema lookups (Schemas::get)
-    - [ ] Add HTTP caching headers for list endpoints (ETag/Last-Modified) where feasible
-    - [ ] Avoid N+1 and repeated disk I/O in JsonStore (batch reads/writes)
+17. [x] Performance and caching
+    - [x] Profile hot paths (routing, list pages) and add simple caching for schema lookups (Schemas::get)
+    - [x] Add HTTP caching headers for list endpoints (ETag/Last-Modified) where feasible
+    - [x] Avoid N+1 and repeated disk I/O in JsonStore (batch reads/writes)
 
 18. [ ] Testing strategy
     - [ ] Set up PHPUnit with a phpunit.xml.dist and base TestCase
@@ -126,3 +126,22 @@ Note: Check off items as you complete them. The list is ordered to reduce risk a
     - [ ] Establish CHANGELOG.md and semantic versioning policy
     - [ ] Add version constant and surface in footer/admin
     - [ ] Automate release notes generation (optional)
+
+
+25. [ ] Market-driven Improvements & Differentiators
+    - [x] Permissions v2: Add owner/object-level access controls with per-entity toggles; document policies and add tests
+    - [x] Bulk operations: Multi-select and batch actions on list pages with CSRF, audit logging, and undo where feasible
+    - [x] Import/Export hardening: Schema validation, dry-run previews, configurable dedupe/merge strategies
+    - [x] Reporting v2: Saved charts with breakdowns (tag/status/owner), date ranges, and CSV across entities
+    - [x] Backups & recovery: One-click JSON/DB backup and restore (UI + CLI) with integrity checks and retention
+    - [x] Comments & mentions: Threaded comments on contacts/tasks/projects with @mentions and optional email notices
+    - [x] Watch/follow entities: Allow users to follow records and receive digest notifications
+    - [x] Automations MVP: Simple rule engine (event → conditions → actions) with safe, auditable execution
+    - [x] PWA offline-first: Cache recent lists and enable offline task edits with queued background sync
+    - [ ] Install UX polish: A2HS prompts, full icon set, and install docs for major browsers
+    - [ ] Integrations: CalDAV/ICS inbound (read-only), optional IMAP email ingest, webhook retry/backoff and catalog
+    - [ ] Data quality: Optional email DNS/MX checks, E.164 phone normalization, background validators
+    - [ ] Privacy-first enrichment: Optional third-party enrichment behind user-provided API keys, fully auditable
+    - [ ] Admin & DX: Health dashboard (storage, jobs, errors), downloadable logs, docker-compose sample, seed/reset scripts
+    - [ ] Success metrics instrumentation: Log key metrics (TTFV, errors, backups) and surface in admin dashboard
+    - [ ] Documentation: Add docs/competitive-analysis.md reference in README (done) and expand feature comparison page

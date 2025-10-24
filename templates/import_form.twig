@@ -18,11 +18,29 @@
     <label><input type="radio" name="format" value="csv" {% if old and old.format=='csv' %}checked{% endif %}> CSV</label>
   </div>
   <div class="field">
+    <label for="strategy">Strategy</label>
+    <select id="strategy" name="strategy">
+      {% set s = old and old.strategy ? old.strategy : 'insert' %}
+      <option value="insert" {% if s=='insert' %}selected{% endif %}>Insert only (skip if exists)</option>
+      <option value="upsert" {% if s=='upsert' %}selected{% endif %}>Upsert (update if exists)</option>
+      <option value="merge" {% if s=='merge' %}selected{% endif %}>Merge (fill empty fields; contacts: union tags)</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="key_field">Match by</label>
+    {% set k = old and old.key_field ? old.key_field : 'id' %}
+    <select id="key_field" name="key_field">
+      <option value="id" {% if k=='id' %}selected{% endif %}>ID</option>
+      <option value="email" {% if k=='email' %}selected{% endif %}>Email (contacts/candidates/employees)</option>
+    </select>
+    <small>Used for upsert/merge to find existing records.</small>
+  </div>
+  <div class="field">
     <label for="payload">Data (JSON array or CSV with header)</label>
     <textarea id="payload" name="payload" rows="12" required>{{ old and old.payload ? old.payload : '' }}</textarea>
   </div>
   <div class="field">
-    <label><input type="checkbox" name="dry_run" value="1" {% if not old or old.dryRun %}checked{% endif %}> Dry-run (validate only, do not save)</label>
+    <label><input type="checkbox" name="dry_run" value="1" {% if not old or old.dryRun %}checked{% endif %}> Dry-run (validate only, show preview, do not save)</label>
   </div>
   <div class="actions">
     <button type="submit" class="btn">Validate Import</button>

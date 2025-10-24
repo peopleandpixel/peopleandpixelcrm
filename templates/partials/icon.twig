@@ -1,0 +1,12 @@
+{# Reusable inline SVG icon. Usage:
+   {% include 'partials/icon.twig' with { name: 'home', title: 'Home', classes: 'w-5 h-5' } %}
+   - name: symbol id from /icons/sprite.svg
+   - title: optional accessible title (omit for decorative icons)
+   - classes: optional CSS utility classes for size/alignment
+#}
+{% set cls = classes|default('w-5 h-5 inline-block align-middle') %}
+{% set labelled = title is defined and title %}
+<svg class="icon {{ cls }}" viewBox="0 0 24 24" role="img" aria-hidden="{{ labelled ? 'false' : 'true' }}">
+  {% if labelled %}<title>{{ title|e }}</title>{% endif %}
+  <use href="{{ url('/icons/sprite.svg') }}#{{ name|e }}"></use>
+</svg>

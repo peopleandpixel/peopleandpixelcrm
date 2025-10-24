@@ -41,6 +41,9 @@ return [
     // Example pluralization pattern
     'items.count' => '{count, plural, one {# item} other {# items}}',
 
+        // Social / followers
+        'followers.count' => '{count, plural, one {# follower} other {# followers}}',
+
     // Validation
     'validation.required' => 'This field is required.',
     'validation.email' => 'Invalid email format.',

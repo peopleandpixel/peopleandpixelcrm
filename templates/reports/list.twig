@@ -1,33 +1,45 @@
-{% extends "layout.twig" %}
+{% extends 'layout.twig' %}
 {% block content %}
-<h1>{{ __('Reports') }}</h1>
-<p><a class="btn btn-primary" href="{{ url('/reports/new') }}">{{ __('New report') }}</a></p>
-<table class="table">
-  <thead>
-    <tr>
-      <th>{{ __('Name') }}</th>
-      <th>{{ __('Entity') }}</th>
-      <th>{{ __('Group by') }}</th>
-      <th>{{ __('Metric') }}</th>
-      <th>{{ __('Created') }}</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for r in reports %}
-    <tr>
-      <td>{{ r.name }}</td>
-      <td>{{ r.entity }}</td>
-      <td>{{ r.group_by }}</td>
-      <td>{{ r.metric }}</td>
-      <td>{{ r.created_at ?? '' }}</td>
-      <td>
-        <a href="{{ url('/reports/run', {id: r.id}) }}">{{ __('Run') }}</a>
-      </td>
-    </tr>
+<section class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-2xl font-bold">{{ __('Reports')|e }}</h2>
+    <div class="flex items-center gap-2">
+      <a class="btn btn-primary" href="{{ url('/reports/new') }}">+ {{ __('New report')|e }}</a>
+    </div>
+  </div>
+
+  {% if reports is defined and reports|length > 0 %}
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>{{ __('Name')|e }}</th>
+          <th>{{ __('Entity')|e }}</th>
+          <th>{{ __('Group by')|e }}</th>
+          <th>{{ __('Metric')|e }}</th>
+          <th>{{ __('Created')|e }}</th>
+          <th>{{ __('Actions')|e }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reports %}
+        <tr>
+          <td>{{ r.name|e }}</td>
+          <td>{{ r.entity|e }}</td>
+          <td>{{ r.group_by|e }}</td>
+          <td>{{ r.metric|e }}</td>
+          <td>{{ r.created_at|e }}</td>
+          <td class="space-x-2">
+            <a class="btn btn-xs" href="{{ url('/reports/run', { id: r.id }) }}">{{ __('Run')|e }}</a>
+            <a class="btn btn-xs" href="{{ url('/reports/export.csv', { name: r.name, entity: r.entity, group_by: r.group_by, metric: r.metric, period: r.period|default('month') }) }}">CSV</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
-    <tr><td colspan="6">{{ __('No reports yet') }}</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+    <div class="alert">{{ __('No saved reports yet.')|e }}</div>
+  {% endif %}
+</section>
 {% endblock %}

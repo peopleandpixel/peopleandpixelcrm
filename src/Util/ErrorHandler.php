@@ -3,6 +3,13 @@
 namespace App\Util;
 
 use App\Config;
+use App\Domain\Exception\BadRequestException;
+use App\Domain\Exception\ConflictException;
+use App\Domain\Exception\DomainException;
+use App\Domain\Exception\ForbiddenException;
+use App\Domain\Exception\NotFoundException;
+use App\Domain\Exception\UnauthorizedException;
+use App\Domain\Exception\ValidationException;
 use Psr\Log\LoggerInterface;
 
 class ErrorHandler
@@ -37,12 +44,24 @@ class ErrorHandler
 
     public function handleException(\Throwable $e): void
     {
-        http_response_code(500);
-        $this->logger->error('Unhandled exception: {message}', [
+        // Map exception types to status codes
+        [$status, $level] = $this->mapStatusAndLevel($e);
+        http_response_code($status);
+        $context = [
             'message' => $e->getMessage(),
             'exception' => $e,
-        ]);
-        $this->render500($e);
+            'code' => $status,
+            'type' => $e::class,
+        ];
+        // Log using channel-provided logger (http)
+        if ($level === 'error') {
+            $this->logger->error('HTTP {code} {type}: {message}', $context);
+        } elseif ($level === 'warning') {
+            $this->logger->warning('HTTP {code} {type}: {message}', $context);
+        } else {
+            $this->logger->info('HTTP {code} {type}: {message}', $context);
+        }
+        $this->renderError($status, $e);
     }
 
     public function handleShutdown(): void
@@ -54,10 +73,11 @@ class ErrorHandler
         }
     }
 
-    private function render500(?\Throwable $e): void
+    private function renderError(int $status, ?\Throwable $e = null): void
     {
         $templatesDir = $this->projectRoot . '/templates';
-        $twigPath = $templatesDir . '/errors/500.twig';
+        $template = in_array($status, [400,401,403,404,422,500], true) ? (string)$status : '500';
+        $twigPath = $templatesDir . '/errors/' . $template . '.twig';
         $details = null;
         if ($this->debug && $e) {
             $details = [
@@ -83,7 +103,7 @@ class ErrorHandler
                     $options['auto_reload'] = true;
                 }
                 $twig = new \Twig\Environment($loader, $options);
-                echo $twig->render('errors/500.twig', [
+                echo $twig->render('errors/' . $template . '.twig', [
                     'errorDetails' => $details,
                 ]);
                 return;
@@ -93,17 +113,33 @@ class ErrorHandler
         }
         // Fallback plain text
         header('Content-Type: text/plain; charset=UTF-8');
-        echo 'An internal error occurred.';
+        $titles = [
+            400 => 'Bad Request',
+            401 => 'Unauthorized',
+            403 => 'Forbidden',
+            404 => 'Not Found',
+            422 => 'Unprocessable Entity',
+            500 => 'Internal Server Error',
+        ];
+        $title = $titles[$status] ?? 'Error';
+        echo $status . ' – ' . $title;
         if ($details) {
             echo "\n\n" . $details['class'] . ': ' . $details['message'] . "\n" . $details['file'] . ':' . $details['line'] . "\n" . $details['trace'];
         }
     }
 
-    private function isDebug(): bool
+    private function mapStatusAndLevel(\Throwable $e): array
     {
-        $env = getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'prod');
-        $debug = getenv('APP_DEBUG') ?: ($_ENV['APP_DEBUG'] ?? '');
-        $isDebug = strtolower((string)$debug);
-        return $env === 'dev' || $isDebug === '1' || $isDebug === 'true' || $isDebug === 'yes';
+        // Returns [status, level]
+        return match (true) {
+            $e instanceof ValidationException => [422, 'warning'],
+            $e instanceof NotFoundException => [404, 'info'],
+            $e instanceof UnauthorizedException => [401, 'info'],
+            $e instanceof ForbiddenException => [403, 'warning'],
+            $e instanceof ConflictException => [409, 'warning'],
+            $e instanceof BadRequestException => [400, 'info'],
+            $e instanceof DomainException => [400, 'warning'],
+            default => [500, 'error'],
+        };
     }
 }

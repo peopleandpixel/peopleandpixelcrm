@@ -113,7 +113,7 @@ final class ApiController
         $data = $this->readJsonBody();
         if (!is_array($data)) { $this->badRequest('Invalid JSON'); return; }
         $data['id'] = $existing['id'];
-        $updated = $store->update($data);
+        $updated = $store->update((int)$existing['id'], $data);
         // Audit + Webhook
         $this->audit->record('updated', $entity, $existing['id'] ?? null, is_array($existing) ? $existing : null, is_array($updated) ? $updated : null, ['source' => 'api']);
         $this->webhook->emit('updated', $entity, $updated, ['before' => $existing]);
@@ -128,7 +128,7 @@ final class ApiController
         $id = isset($_GET['id']) ? (string)$_GET['id'] : '';
         $existing = $this->findById($store->all(), $id);
         if (!$existing) { $this->notFound(); return; }
-        $store->delete((string)$existing['id']);
+        $store->delete((int)$existing['id']);
         // Audit + Webhook
         $this->audit->record('deleted', $entity, $existing['id'] ?? null, is_array($existing) ? $existing : null, null, ['source' => 'api']);
         $this->webhook->emit('deleted', $entity, ['id' => $existing['id']]);

@@ -329,4 +329,6 @@ $router->use(function(string $method, string $path, callable $next) {
 });
 
 // Finally, dispatch the request
+$__pp_start = microtime(true);
 $router->dispatch();
+try { $logger = $container->get('logger'); if ($logger) { $dur = (int)round((microtime(true) - $__pp_start)*1000); $method = $_SERVER['REQUEST_METHOD'] ?? 'GET'; $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'; $logger->info('http_request', ['method'=>$method,'path'=>$path,'ms'=>$dur,'ip'=>($_SERVER['REMOTE_ADDR'] ?? null)]); } } catch (\Throwable $e) { /* ignore logging errors */ }

@@ -145,6 +145,28 @@ class ListSort
         $items = array_map(fn($d) => $d['__row'], $decorated);
 
         $total = count($items);
+
+        // HTTP caching for list endpoints (ETag/Last-Modified)
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+            $lastModTs = 0;
+            if (is_object($store) && method_exists($store, 'lastModified')) {
+                try { $lastModTs = (int)$store->lastModified(); } catch (\Throwable) { $lastModTs = 0; }
+            }
+            $etag = 'W/"' . sha1($schema . '|' . $lastModTs . '|' . $total . '|' . $sort . '|' . $dir . '|' . $q . '|' . $tag . '|' . $page . '|' . $per) . '"';
+            header('ETag: ' . $etag);
+            header('Cache-Control: private, must-revalidate');
+            if ($lastModTs > 0) {
+                header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModTs) . ' GMT');
+            }
+            $ifNoneMatch = $_SERVER['HTTP_IF_NONE_MATCH'] ?? '';
+            $ifModifiedSince = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
+            $imsTs = $ifModifiedSince !== '' ? strtotime($ifModifiedSince) : false;
+            if (($ifNoneMatch !== '' && trim($ifNoneMatch) === $etag) || ($imsTs !== false && $lastModTs > 0 && $lastModTs <= $imsTs)) {
+                http_response_code(304);
+                return; // Not Modified
+            }
+        }
+
         $offset = ($page - 1) * $per;
         $paged = $offset >= 0 ? array_slice($items, $offset, $per) : $items;
 

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="{{ currentLang|default('en')|e }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>400 – Bad Request</title>
+  <link rel="stylesheet" href="{{ url('/style.css') }}">
+</head>
+<body>
+  <main class="container" style="padding:24px;">
+    <h1>400 – {{ __('Bad Request')|e }}</h1>
+    <p>{{ __('The request could not be understood or was missing required parameters.')|e }}</p>
+    {% if errorDetails is defined and errorDetails %}
+      <details open>
+        <summary>Details (debug)</summary>
+        <pre style="white-space:pre-wrap">{{ (errorDetails.class ~ ': ' ~ errorDetails.message ~ '\n' ~ errorDetails.file ~ ':' ~ errorDetails.line ~ '\n' ~ errorDetails.trace)|e }}</pre>
+      </details>
+    {% endif %}
+    <p><a href="{{ url('/') }}">&larr; {{ __('Back to home')|e }}</a></p>
+  </main>
+</body>
+</html>

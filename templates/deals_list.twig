@@ -45,7 +45,12 @@
       dir: dir|default('asc'),
       q: q|default(''),
       per: per|default(10),
-      actions: { view_url: url('/deals/view'), edit_url: url('/deals/edit'), delete_url: url('/deals/delete'), id_field: 'id' }
+      actions: { view_url: url('/deals/view'), edit_url: url('/deals/edit'), delete_url: url('/deals/delete'), id_field: 'id' },
+      bulk: {
+        post_url: url('/deals/bulk'),
+        actions: [ {value:'delete',label:__('Delete')}, {value:'change_stage',label:__('Change stage')} ],
+        placeholders: { change_stage: __('Stage (e.g., qualified)') }
+      }
     } %}
     <div class="mt-4">
       {% set extra = {q: q|default(''), per: (per|default(10))|int} %}

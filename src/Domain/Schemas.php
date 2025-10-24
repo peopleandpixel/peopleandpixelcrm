@@ -13,10 +13,19 @@ namespace App\Domain;
  */
 final class Schemas
 {
+    /**
+     * Simple in-process cache for schema definitions to avoid repeated allocations per request.
+     * @var array<string, array{fields: array<int, array>, columns: array<int, array>}>|null
+     */
+    private static ?array $cache = null;
+
     /** @return array<string, array{fields: array<int, array>, columns: array<int, array>}> */
     public static function all(): array
     {
-        return [
+        if (self::$cache !== null) {
+            return self::$cache;
+        }
+        self::$cache = [
             'contacts' => [
                 'fields' => [
                     ['name' => 'name', 'label' => __('Name'), 'type' => 'text', 'required' => true],
@@ -236,6 +245,7 @@ final class Schemas
                 ],
             ],
         ];
+        return self::$cache;
     }
 
     /**

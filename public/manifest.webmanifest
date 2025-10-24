@@ -1,0 +1,13 @@
+{
+  "name": "People & Pixel",
+  "short_name": "P&P CRM",
+  "description": "Lightweight, self‑hosted CRM & project hub.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#0b1020",
+  "icons": [
+    { "src": "/icons/app-icon.svg", "sizes": "192x192 256x256 384x384 512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

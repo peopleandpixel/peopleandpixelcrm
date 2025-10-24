@@ -6,7 +6,7 @@
  - data: associative array with values (e.g., entity data)
  - cancel_url: URL to go back
 #}
-<section class="space-y-4">
+<section class="space-y-6">
     <h2 class="text-2xl font-semibold">{{ title|default('')|e }}</h2>
     {# Determine if we need multipart form (file upload). If any field has type 'file' or field name is 'picture', enable it. #}
     {% set hasFile = false %}
@@ -15,7 +15,53 @@
             {% set hasFile = true %}
         {% endif %}
     {% endfor %}
-    <form method="post" class="space-y-4"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}{% if hasFile %} enctype="multipart/form-data"{% endif %}>
+
+    {# Heuristic grouping and ordering of fields by type/name #}
+    {% set primaryNames = ['title','name','subject','company','project','deal'] %}
+    {% set statusNames  = ['status','stage','phase','priority'] %}
+    {% set idNames      = ['code','slug'] %}
+    {% set moneyNames   = ['amount','budget','price','cost','rate','value'] %}
+    {% set contactNames = ['email','emails','emails_text','phone','phones','phones_text','website','websites','websites_text','socials','socials_text','address'] %}
+    {% set dateHints    = ['date','_at','due','start','end','birth'] %}
+    {% set textNames    = ['description','notes','comment','comments','summary'] %}
+
+    {% set prim = [] %}
+    {% set status = [] %}
+    {% set ids = [] %}
+    {% set media = [] %}
+    {% set money = [] %}
+    {% set contacts = [] %}
+    {% set dates = [] %}
+    {% set texts = [] %}
+    {% set others = [] %}
+
+    {% for f in fields %}
+        {% set n = (f.name|default('')) %}
+        {% set t = (f.type|default('text')) %}
+        {% set lname = n|lower %}
+        {% if lname in primaryNames %}
+            {% set prim = prim|merge([f]) %}
+        {% elseif lname in statusNames %}
+            {% set status = status|merge([f]) %}
+        {% elseif lname in idNames or lname == 'id' %}
+            {% set ids = ids|merge([f]) %}
+        {% elseif lname in contactNames %}
+            {% set contacts = contacts|merge([f]) %}
+        {% elseif t == 'file' or lname in ['picture','avatar','image','logo'] %}
+            {% set media = media|merge([f]) %}
+        {% elseif lname in moneyNames %}
+            {% set money = money|merge([f]) %}
+        {% elseif (dateHints|filter(h => lname contains h))|length > 0 or t in ['date','datetime-local','time'] %}
+            {% set dates = dates|merge([f]) %}
+        {% elseif lname in textNames or t == 'textarea' %}
+            {% set texts = texts|merge([f]) %}
+        {% else %}
+            {% set others = others|merge([f]) %}
+        {% endif %}
+    {% endfor %}
+    {% set ordered = prim|merge(status)|merge(ids)|merge(media)|merge(money)|merge(contacts)|merge(dates)|merge(others)|merge(texts) %}
+
+    <form method="post" class="space-y-6"{% if form_action is defined and form_action %} action="{{ form_action }}"{% endif %}{% if hasFile %} enctype="multipart/form-data"{% endif %}>
         {{ csrf_field()|raw }}
         {% if error is defined and error %}
             <div class="alert alert-error"><span>{{ error|e }}</span></div>
@@ -24,18 +70,18 @@
             <input type="hidden" name="id" value="{{ (data.id)|int }}">
         {% endif %}
 
-        {% for f in fields %}
+        {# Render sections: Primary, Status, Media, Money & Numbers, Contacts & Links, Dates, Other, Notes #}
+        {% macro render_field(f, data, errors) %}
+            {% import _self as self %}
             {% set fname = f.name %}
             {% set ftype = f.type|default('text') %}
             {% set flabel = f.label|default(fname)|e %}
             {% set fval = attribute(data, fname)|default('') %}
             {% set ferr = (errors is defined) ? attribute(errors, fname)|default(null) : null %}
-            {# Normalize error to a message string if Validator provided an array of errors #}
             {% set ferrMsg = null %}
             {% if ferr is iterable %}
                 {% set first = ferr|first %}
                 {% if first is iterable %}
-                    {# Prefer localization via key or code, fallback to provided message or raw #}
                     {% if attribute(first, 'key') is defined %}
                         {% set ferrMsg = __(first.key, attribute(first, 'params') is defined ? first.params : {}) %}
                     {% elseif attribute(first, 'code') is defined %}
@@ -53,7 +99,6 @@
             {% endif %}
             <div class="form-control">
                 <label class="label" for="{{ fname }}"><span class="label-text">{{ flabel }}{% if f.required %} *{% endif %}</span></label>
-                {# Special handling for contact picture: render URL + file input together #}
                 {% if fname == 'picture' %}
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
                         <div class="md:col-span-2 space-y-2">
@@ -89,7 +134,88 @@
                     <div class="text-error text-sm mt-1">{{ ferrMsg|e }}</div>
                 {% endif %}
             </div>
-        {% endfor %}
+        {% endmacro %}
+        {% import _self as self %}
+
+        {% set section = function(name, items, cols) %}
+        {% endset %}
+
+        {% if prim or status %}
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h3 class="card-title text-lg mb-2">{{ __('Basics')|e }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for f in prim %}{{ self.render_field(f, data, errors) }}{% endfor %}
+                    {% for f in status %}{{ self.render_field(f, data, errors) }}{% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if media %}
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h3 class="card-title text-lg mb-2">{{ __('Media')|e }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for f in media %}{{ self.render_field(f, data, errors) }}{% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if money or ids %}
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h3 class="card-title text-lg mb-2">{{ __('Numbers & IDs')|e }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for f in money %}{{ self.render_field(f, data, errors) }}{% endfor %}
+                    {% for f in ids %}{{ self.render_field(f, data, errors) }}{% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if contacts %}
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h3 class="card-title text-lg mb-2">{{ __('Contacts & Links')|e }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for f in contacts %}{{ self.render_field(f, data, errors) }}{% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if dates %}
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h3 class="card-title text-lg mb-2">{{ __('Dates')|e }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for f in dates %}{{ self.render_field(f, data, errors) }}{% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if others %}
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+                <h3 class="card-title text-lg mb-2">{{ __('Details')|e }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for f in others %}{{ self.render_field(f, data, errors) }}{% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if texts %}
+        <div class="card bg-base-100 border border-base-300">
+            <div class="card-body space-y-4">
+                <h3 class="card-title text-lg mb-2">{{ __('Notes')|e }}</h3>
+                {% for f in texts %}{{ self.render_field(f, data, errors) }}{% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <div class="flex items-center gap-2 justify-end">
             {% if cancel_url is defined and cancel_url %}

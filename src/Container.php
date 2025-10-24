@@ -7,6 +7,7 @@ namespace App;
 use App\Util\ErrorHandler;
 use App\Util\Flash;
 use InvalidArgumentException;
+use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
@@ -39,17 +40,42 @@ class Container
             if (!is_dir($logDir)) {
                 @mkdir($logDir, 0777, true);
             }
-            $logFile = $logDir . '/app.log';
             $level = $cfg->getLogLevel();
+            // Base app logger with daily rotation, keep 14 days
             $logger = new Logger('app');
-            $logger->pushHandler(new StreamHandler($logFile, $level));
+            $logger->pushHandler(new RotatingFileHandler($logDir . '/app.log', 14, $level));
+            return $logger;
+        };
+        // Channel-specific loggers
+        $this->factories['logger.http'] = function(self $c) : LoggerInterface {
+            /** @var Config $cfg */
+            $cfg = $c->get('config');
+            $logDir = $cfg->getLogDir();
+            if (!is_dir($logDir)) {
+                @mkdir($logDir, 0777, true);
+            }
+            $level = $cfg->getLogLevel();
+            $logger = new Logger('http');
+            $logger->pushHandler(new RotatingFileHandler($logDir . '/http.log', 14, $level));
+            return $logger;
+        };
+        $this->factories['logger.security'] = function(self $c) : LoggerInterface {
+            /** @var Config $cfg */
+            $cfg = $c->get('config');
+            $logDir = $cfg->getLogDir();
+            if (!is_dir($logDir)) {
+                @mkdir($logDir, 0777, true);
+            }
+            $level = $cfg->getLogLevel();
+            $logger = new Logger('security');
+            $logger->pushHandler(new RotatingFileHandler($logDir . '/security.log', 30, $level));
             return $logger;
         };
         $this->factories['errorHandler'] = function(self $c) {
             /** @var Config $cfg */
             $cfg = $c->get('config');
             /** @var LoggerInterface $logger */
-            $logger = $c->get('logger');
+            $logger = $c->get('logger.http');
             return new ErrorHandler($cfg, $logger);
         };
         // Twig environment
@@ -120,6 +146,17 @@ class Container
                 $c->get('timesStore'),
                 $c->get('tasksStore'),
                 $c->get('groupsStore'),
+                $c->get('activitiesStore'),
+                $c->get('auditService'),
+                $c->get('commentsStore'),
+                $c->get('followsStore'),
+            );
+        };
+        $this->factories['contactsDedupeController'] = function(self $c) {
+            return new \App\Controller\ContactsDedupeController(
+                $c->get('contactsStore'),
+                $c->get('timesStore'),
+                $c->get('tasksStore'),
                 $c->get('activitiesStore')
             );
         };
@@ -146,7 +183,10 @@ class Container
                 $c->get('employeesStore'),
                 $c->get('projectsStore'),
                 $c->get('timesStore'),
-                $c->get('listService')
+                $c->get('listService'),
+                $c->get('commentsStore'),
+                $c->get('followsStore'),
+                $c->get('automationService'),
             );
         };
         $this->factories['projectsController'] = function(self $c) {
@@ -154,7 +194,10 @@ class Container
                 $c->get('projectsStore'),
                 $c->get('contactsStore'),
                 $c->get('employeesStore'),
-                $c->get('tasksStore')
+                $c->get('tasksStore'),
+                $c->get('auditService'),
+                $c->get('commentsStore'),
+                $c->get('followsStore'),
             );
         };
         $this->factories['employeesController'] = function(self $c) {
@@ -184,6 +227,14 @@ class Container
         $this->factories['usersController'] = function(self $c) {
             return new \App\Controller\UsersController(
                 $c->get('usersStore')
+            );
+        };
+        // Email controller
+        $this->factories['emailController'] = function(self $c) {
+            return new \App\Controller\EmailController(
+                $c->get('emailService'),
+                $c->get('contactsStore'),
+                $c->get('activitiesStore')
             );
         };
         $this->factories['groupsController'] = function(self $c) {
@@ -223,12 +274,16 @@ class Container
         $this->factories['dealsController'] = function(self $c) {
             return new \App\Controller\DealsController(
                 $c->get('dealsStore'),
-                $c->get('contactsStore')
+                $c->get('contactsStore'),
+                $c->get('auditService'),
+                $c->get('commentsStore'),
+                $c->get('followsStore'),
             );
         };
         // Search
         $this->factories['searchService'] = function(self $c) {
             return new \App\Service\SearchService(
+                $c->get('config'),
                 $c->get('contactsStore'),
                 $c->get('tasksStore'),
                 $c->get('dealsStore'),
@@ -265,6 +320,43 @@ class Container
                 $c->get('logger')
             );
         };
+        // Email
+        $this->factories['emailService'] = function(self $c) {
+            return new \App\Service\EmailService(
+                $c->get('config')
+            );
+        };
+        // Automations
+        $this->factories['automationService'] = function(self $c) {
+            return new \App\Service\AutomationService(
+                $c->get('automationsStore'),
+                $c->get('commentsStore'),
+                $c->get('emailService'),
+                $c->get('config'),
+                $c->get('auditService'),
+                $c->get('logger')
+            );
+        };
+        // Comments
+        $this->factories['commentsController'] = function(self $c) {
+            return new \App\Controller\CommentsController(
+                $c->get('commentsStore'),
+                $c->get('usersStore'),
+                $c->get('emailService'),
+                $c->get('config'),
+                $c->get('automationService'),
+            );
+        };
+        // Follows
+        $this->factories['followsController'] = function(self $c) {
+            return new \App\Controller\FollowsController(
+                $c->get('followsStore'),
+                $c->get('commentsStore'),
+                $c->get('usersStore'),
+                $c->get('emailService'),
+                $c->get('config')
+            );
+        };
         // Audit
         $this->factories['auditService'] = function(self $c) {
             return new \App\Service\AuditService(
@@ -275,6 +367,19 @@ class Container
             return new \App\Controller\AuditController(
                 $c->get('auditStore')
             );
+        };
+        // Health
+        $this->factories['healthController'] = function(self $c) {
+            return new \App\Controller\HealthController(
+                $c->get('config')
+            );
+        };
+        // Backups
+        $this->factories['backupService'] = function(self $c) {
+            return new \App\Service\BackupService($c->get('config'));
+        };
+        $this->factories['backupsController'] = function(self $c) {
+            return new \App\Controller\BackupsController($c->get('backupService'));
         };
         // API Controller
         $this->factories['apiController'] = function(self $c) {
@@ -291,6 +396,15 @@ class Container
                 $c->get('employeesStore'),
                 $c->get('candidatesStore'),
                 $c->get('storageStore')
+            );
+        };
+        // Bulk operations
+        $this->factories['bulkController'] = function(self $c) {
+            return new \App\Controller\BulkController(
+                $c->get('contactsStore'),
+                $c->get('dealsStore'),
+                $c->get('projectsStore'),
+                $c->get('auditService'),
             );
         };
     }
@@ -329,7 +443,7 @@ class Container
             $path = $cfg->jsonPath($name . '.json');
             return new JsonStore($path);
         };
-        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects','groups','views','deals','activities','reports','audit'] as $entity) {
+        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects','groups','views','deals','activities','reports','audit','comments','follows','automations'] as $entity) {
             $this->factories[$entity . 'Store'] = function(self $c) use ($makeStore, $entity) {
                 $store = $makeStore($c, $entity);
                 if ($entity === 'users') {

@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Domain\Project as ProjectDTO;
 use App\Domain\Schemas;
 use App\Util\ListSort;
+use App\Util\Csrf;
 use JetBrains\PhpStorm\NoReturn;
 use function __;
 use function redirect;
@@ -19,6 +20,9 @@ class ProjectsController
         private readonly object $contactsStore,
         private readonly object $employeesStore,
         private readonly object $tasksStore,
+        private readonly ?\App\Service\AuditService $audit = null,
+        private readonly ?object $commentsStore = null,
+        private readonly ?object $followsStore = null,
     ) {}
 
     public function view(): void
@@ -26,6 +30,7 @@ class ProjectsController
         $id = (int)($_GET['id'] ?? 0);
         $item = $id ? $this->projectsStore->get($id) : null;
         if (!$item) { redirect('/projects'); }
+        if (!\App\Util\Permission::enforceRecord('projects', 'view', $item)) { return; }
         // Enrich with customer name
         $contactsById = [];
         foreach ($this->contactsStore->all() as $c) { $contactsById[$c['id']] = $c; }
@@ -38,12 +43,39 @@ class ProjectsController
         unset($f);
         array_unshift($fields, ['name' => 'id', 'label' => 'ID']);
         $fields[] = ['name' => 'created_at', 'label' => __('Created')];
+        $comments = [];
+        if ($this->commentsStore) {
+            try {
+                foreach ($this->commentsStore->all() as $c) {
+                    if (($c['entity'] ?? '') === 'projects' && (int)($c['entity_id'] ?? 0) === $id) { $comments[] = $c; }
+                }
+                usort($comments, fn($a,$b) => strcmp((string)($a['created_at'] ?? ''), (string)($b['created_at'] ?? '')));
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+        // Follows info
+        $isFollowing = false; $followersCount = 0;
+        if ($this->followsStore) {
+            try {
+                $me = \App\Util\Auth::user();
+                $login = $me ? strtolower((string)($me['login'] ?? '')) : '';
+                foreach ($this->followsStore->all() as $f) {
+                    if (($f['entity'] ?? '') === 'projects' && (int)($f['entity_id'] ?? 0) === $id) {
+                        $followersCount++;
+                        if ($login !== '' && strtolower((string)($f['user_login'] ?? '')) === $login) { $isFollowing = true; }
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+        }
         render('entity_view', [
             'title' => __('Project') . ': ' . ($item['name'] ?? ('#' . $id)),
             'fields' => $fields,
             'item' => $item,
             'back_url' => url('/projects'),
-            'edit_url' => url('/projects/edit', ['id' => $id])
+            'edit_url' => url('/projects/edit', ['id' => $id]),
+            'comments' => $comments,
+            'comments_entity' => 'projects',
+            'is_following' => $isFollowing,
+            'followers_count' => $followersCount,
         ]);
     }
 
@@ -137,6 +169,7 @@ class ProjectsController
         $id = (int)($_GET['id'] ?? 0);
         $project = $id ? $this->projectsStore->get($id) : null;
         if (!$project) { redirect('/projects'); }
+        if (!\App\Util\Permission::enforceRecord('projects', 'edit', $project)) { return; }
         $schema = Schemas::get('projects');
         $fields = $this->injectOptions($schema['fields']);
         render('projects_add', ['edit' => true, 'project' => $project, 'fields' => $fields, 'cancel_url' => url('/projects')] + $project);
@@ -146,6 +179,8 @@ class ProjectsController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) { redirect('/projects'); }
+        $existing = $this->projectsStore->get($id) ?? null;
+        if (!\App\Util\Permission::enforceRecord('projects', 'edit', is_array($existing) ? $existing : null)) { return; }
         $dto = ProjectDTO::fromInput($_POST);
         $errors = $dto->validate();
         if (!empty($errors)) {
@@ -164,7 +199,57 @@ class ProjectsController
     public function delete(): void
     {
         $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) { $this->projectsStore->delete($id); }
+        if ($id > 0) {
+            $existing = $this->projectsStore->get($id) ?? null;
+            if (!\App\Util\Permission::enforceRecord('projects', 'delete', is_array($existing) ? $existing : null)) { return; }
+            $this->projectsStore->delete($id);
+        }
+        redirect('/projects');
+    }
+
+    public function bulk(): void
+    {
+        $action = (string)($_POST['action'] ?? '');
+        $ids = isset($_POST['ids']) && is_array($_POST['ids']) ? array_unique(array_map('intval', $_POST['ids'])) : [];
+        $value = trim((string)($_POST['value'] ?? ''));
+        if (empty($ids)) { \App\Util\Flash::error(__('No items selected.')); redirect('/projects'); }
+        $ok = 0; $skip = 0; $fail = 0; $deleted = [];
+        foreach ($ids as $id) {
+            if ($id <= 0) { $skip++; continue; }
+            $item = $this->projectsStore->get($id);
+            if (!$item) { $skip++; continue; }
+            if ($action === 'delete') {
+                if (!\App\Util\Permission::enforceRecord('projects', 'delete', $item)) { $fail++; continue; }
+                $before = is_array($item) ? $item : null;
+                $this->projectsStore->delete($id);
+                $deleted[] = $before;
+                if ($this->audit) { $this->audit->record('deleted','projects',$id,$before,null,['bulk'=>1]); }
+                $ok++;
+            } elseif ($action === 'set_status') {
+                if ($value === '') { $fail++; continue; }
+                if (!\App\Util\Permission::enforceRecord('projects', 'edit', $item)) { $fail++; continue; }
+                $item['status'] = $value;
+                $this->projectsStore->update($id, $item);
+                if ($this->audit) { $this->audit->record('action','projects',$id,null,null,['bulk'=>1,'action'=>'set_status','status'=>$value]); }
+                $ok++;
+            } else {
+                $fail++;
+            }
+        }
+        if (!empty($deleted)) {
+            if (session_status() !== PHP_SESSION_ACTIVE) { @session_start(); }
+            if (!isset($_SESSION['_bulk_undo'])) { $_SESSION['_bulk_undo'] = []; }
+            $token = bin2hex(random_bytes(8));
+            $_SESSION['_bulk_undo'][$token] = [ 'entity' => 'projects', 'records' => $deleted, 'at' => time() ];
+            $undoUrl = url('/bulk/undo');
+            $field = \App\Util\Csrf::fieldName();
+            $csrf = '<input type="hidden" name="' . htmlspecialchars($field, ENT_QUOTES) . '" value="' . htmlspecialchars(\App\Util\Csrf::getToken(), ENT_QUOTES) . '">';
+            $msg = __('Deleted: ') . $ok . ' · ' . __('Failed: ') . $fail . ' · ' . __('Undo available for 5 minutes.');
+            $msg .= ' <form method="post" action="' . htmlspecialchars($undoUrl, ENT_QUOTES) . '" class="inline"><input type="hidden" name="token" value="' . htmlspecialchars($token, ENT_QUOTES) . '">' . $csrf . '<input type="hidden" name="entity" value="projects"><button class="btn btn-xs" type="submit">' . htmlspecialchars(__('Undo'), ENT_QUOTES) . '</button></form>';
+            \App\Util\Flash::info($msg);
+        } else {
+            \App\Util\Flash::success(__('Updated: ') . $ok . ' · ' . __('Skipped: ') . $skip . ' · ' . __('Failed: ') . $fail);
+        }
         redirect('/projects');
     }
 

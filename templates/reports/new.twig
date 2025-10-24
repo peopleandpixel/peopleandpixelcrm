@@ -1,77 +1,76 @@
-{% extends "layout.twig" %}
+{% extends 'layout.twig' %}
 {% block content %}
-<h1>{{ __('New report') }}</h1>
-<form method="post" action="{{ url('/reports/new') }}">
-  {{ csrf_field()|raw }}
-  <div class="form-group">
-    <label>{{ __('Name') }}</label>
-    <input type="text" name="name" class="form-control" />
-  </div>
-  <div class="form-group">
-    <label>{{ __('Entity') }}</label>
-    <select name="entity" class="form-control">
-      <option value="tasks">tasks</option>
-      <option value="contacts">contacts</option>
-      <option value="deals">deals</option>
-      <option value="projects">projects</option>
-      <option value="times">times</option>
-      <option value="payments">payments</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label>{{ __('Group by') }}</label>
-    <select name="group_by" class="form-control">
-      <option value="status">status</option>
-      <option value="owner_id">owner</option>
-      <option value="tags">tag(s)</option>
-      <option value="date">date</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label>{{ __('Metric') }}</label>
-    <select name="metric" class="form-control">
-      <option value="count">count</option>
-      <option value="sum_amount">sum_amount</option>
-      <option value="sum_time">sum_time</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label>{{ __('Period (for date grouping)') }}</label>
-    <select name="period" class="form-control">
-      <option value="month">month</option>
-      <option value="day">day</option>
-    </select>
-  </div>
-  <fieldset>
-    <legend>{{ __('Filters (optional)') }}</legend>
-    <div class="form-row">
-      <div class="col">
-        <label>from (YYYY-MM-DD)</label>
-        <input type="text" name="from" class="form-control" placeholder="2025-01-01" />
+<section class="space-y-4 max-w-2xl">
+  <h2 class="text-2xl font-bold">{{ __('New report')|e }}</h2>
+  <form method="post" action="{{ url('/reports/new') }}" class="space-y-3">
+    {{ csrf_field()|raw }}
+    <div>
+      <label class="block mb-1" for="name">{{ __('Name')|e }}</label>
+      <input id="name" name="name" type="text" class="input input-bordered w-full" placeholder="{{ __('Optional name')|e }}">
+    </div>
+    <div>
+      <label class="block mb-1" for="entity">{{ __('Entity')|e }}</label>
+      <select id="entity" name="entity" class="select select-bordered w-full">
+        {% for e in ['contacts','tasks','deals','projects','times','payments'] %}
+          <option value="{{ e|e }}">{{ e|e }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div>
+        <label class="block mb-1" for="group_by">{{ __('Group by')|e }}</label>
+        <select id="group_by" name="group_by" class="select select-bordered w-full">
+          <option value="status">{{ __('Status')|e }}</option>
+          <option value="owner_id">{{ __('Owner')|e }}</option>
+          <option value="tag">{{ __('Tag')|e }}</option>
+          <option value="date">{{ __('Date')|e }}</option>
+        </select>
       </div>
-      <div class="col">
-        <label>to (YYYY-MM-DD)</label>
-        <input type="text" name="to" class="form-control" placeholder="2025-12-31" />
+      <div>
+        <label class="block mb-1" for="metric">{{ __('Metric')|e }}</label>
+        <select id="metric" name="metric" class="select select-bordered w-full">
+          <option value="count">{{ __('Count')|e }}</option>
+          <option value="sum_amount">{{ __('Sum amount')|e }}</option>
+          <option value="sum_time">{{ __('Sum time (minutes)')|e }}</option>
+        </select>
       </div>
     </div>
-    <div class="form-row">
-      <div class="col">
-        <label>status</label>
-        <input type="text" name="status" class="form-control" />
-      </div>
-      <div class="col">
-        <label>owner_id</label>
-        <input type="text" name="owner_id" class="form-control" />
-      </div>
-      <div class="col">
-        <label>tag</label>
-        <input type="text" name="tag" class="form-control" />
-      </div>
+    <div>
+      <label class="block mb-1" for="period">{{ __('Period')|e }}</label>
+      <select id="period" name="period" class="select select-bordered w-full">
+        <option value="month">{{ __('Monthly')|e }}</option>
+        <option value="day">{{ __('Daily')|e }}</option>
+      </select>
     </div>
-  </fieldset>
-  <div class="form-group mt-3">
-    <button class="btn btn-primary" type="submit">{{ __('Save') }}</button>
-    <a class="btn btn-secondary" href="{{ url('/reports') }}">{{ __('Cancel') }}</a>
-  </div>
-</form>
+    <fieldset class="border border-base-300 rounded p-3">
+      <legend class="px-2 text-sm opacity-70">{{ __('Filters (optional)')|e }}</legend>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label class="block mb-1" for="from">{{ __('From (YYYY-MM-DD)')|e }}</label>
+          <input id="from" name="from" type="date" class="input input-bordered w-full">
+        </div>
+        <div>
+          <label class="block mb-1" for="to">{{ __('To (YYYY-MM-DD)')|e }}</label>
+          <input id="to" name="to" type="date" class="input input-bordered w-full">
+        </div>
+        <div>
+          <label class="block mb-1" for="status">{{ __('Status')|e }}</label>
+          <input id="status" name="status" type="text" class="input input-bordered w-full" placeholder="open/active/won...">
+        </div>
+        <div>
+          <label class="block mb-1" for="owner_id">{{ __('Owner ID')|e }}</label>
+          <input id="owner_id" name="owner_id" type="text" class="input input-bordered w-full">
+        </div>
+        <div class="md:col-span-2">
+          <label class="block mb-1" for="tag">{{ __('Tag contains')|e }}</label>
+          <input id="tag" name="tag" type="text" class="input input-bordered w-full">
+        </div>
+      </div>
+    </fieldset>
+    <div class="flex gap-2">
+      <button class="btn btn-primary" type="submit">{{ __('Save report')|e }}</button>
+      <a class="btn" href="{{ url('/reports') }}">{{ __('Cancel')|e }}</a>
+    </div>
+  </form>
+</section>
 {% endblock %}

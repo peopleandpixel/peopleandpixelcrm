@@ -1,55 +1,59 @@
-{% extends "layout.twig" %}
+{% extends 'layout.twig' %}
 {% block content %}
-<h1>{{ title }}</h1>
-<div class="mb-3">
-  <a class="btn btn-secondary" href="{{ url('/reports') }}">{{ __('Back to reports') }}</a>
-  <a class="btn btn-outline-primary" href="{{ url('/reports/export.csv', def) }}">{{ __('Export CSV') }}</a>
-</div>
-
-<style>
-.report-bars { max-width: 800px; }
-.report-bars .bar { display: flex; align-items: center; margin: 6px 0; }
-.report-bars .bar .label { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.report-bars .bar .meter { background: #e9ecef; height: 18px; flex: 1; margin: 0 10px; position: relative; }
-.report-bars .bar .meter span { display: block; height: 100%; background: #6fa8dc; }
-.report-bars .bar .value { width: 80px; text-align: right; }
-</style>
-
-{% set maxv = 0 %}
-{% for r in report.rows %}
-  {% if r.value > maxv %}{% set maxv = r.value %}{% endif %}
-{% endfor %}
-
-<div class="report-bars">
-  {% for r in report.rows %}
-    {% set width = maxv > 0 ? (r.value / maxv * 100) : 0 %}
-    <div class="bar">
-      <div class="label" title="{{ r.label }}">{{ r.label }}</div>
-      <div class="meter"><span style="width: {{ width }}%"></span></div>
-      <div class="value">{{ r.value }}</div>
+<section class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-2xl font-bold">{{ title|e }}</h2>
+    <div class="flex items-center gap-2">
+      <a class="btn" href="{{ url('/reports') }}">{{ __('Back')|e }}</a>
+      <a class="btn" href="{{ url('/reports/export.csv', { name: def.name|default('report'), entity: def.entity, group_by: def.group_by, metric: def.metric, period: def.period|default('month'), from: def.filters.from|default(''), to: def.filters.to|default(''), status: def.filters.status|default(''), owner_id: def.filters.owner_id|default(''), tag: def.filters.tag|default('') }) }}">CSV</a>
     </div>
-  {% else %}
-    <p>{{ __('No data for this report') }}</p>
-  {% endfor %}
-</div>
+  </div>
 
-<h2 class="mt-4">{{ __('Table') }}</h2>
-<table class="table">
-  <thead>
-    <tr>
-      <th>{{ __('Label') }}</th>
-      <th>{{ __('Value') }}</th>
-      <th>{{ __('Count') }}</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in report.rows %}
-      <tr>
-        <td>{{ r.label }}</td>
-        <td>{{ r.value }}</td>
-        <td>{{ r.count }}</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  {% if def is defined %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div class="card bg-base-100 p-3 shadow">
+      <div class="font-semibold">{{ __('Definition')|e }}</div>
+      <div class="text-sm opacity-80">
+        <div>{{ __('Entity')|e }}: {{ def.entity|e }}</div>
+        <div>{{ __('Group by')|e }}: {{ def.group_by|e }}</div>
+        <div>{{ __('Metric')|e }}: {{ def.metric|e }}</div>
+        <div>{{ __('Period')|e }}: {{ def.period|default('month')|e }}</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 p-3 shadow">
+      <div class="font-semibold">{{ __('Filters')|e }}</div>
+      <div class="text-sm opacity-80">
+        {% if def.filters is defined and def.filters %}
+          {% for k,v in def.filters %}
+            <div>{{ k|e }}: {{ v|e }}</div>
+          {% endfor %}
+        {% else %}
+          <div>{{ __('None')|e }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>{{ __('Label')|e }}</th>
+          <th>{{ __('Value')|e }}</th>
+          <th>{{ __('Count')|e }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in report.rows %}
+        <tr>
+          <td>{{ r.label|e }}</td>
+          <td>{{ r.value }}</td>
+          <td>{{ r.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 {% endblock %}

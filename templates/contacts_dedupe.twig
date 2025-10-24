@@ -1,0 +1,49 @@
+{% extends "layout.twig" %}
+{% block content %}
+<h1>{{ __('Find duplicates') }}</h1>
+<p class="text-sm text-base-content/70">{{ __('Suspected duplicates based on identical email, phone, or exact name. Choose which contact to keep and merge the other into it.') }}</p>
+
+<table class="table w-full mt-3">
+  <thead>
+    <tr>
+      <th>{{ __('Reason') }}</th>
+      <th>{{ __('Contact A') }}</th>
+      <th></th>
+      <th>{{ __('Contact B') }}</th>
+      <th>{{ __('Actions') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for p in pairs %}
+    <tr>
+      <td class="uppercase text-xs">{{ p.reason }}</td>
+      <td>
+        <div><strong>#{{ p.a.id }}</strong> {{ p.a.name ?? '' }}</div>
+        <div class="text-sm text-base-content/70">{{ p.a.email ?? '' }} {{ p.a.phone ? ' · ' ~ p.a.phone : '' }}</div>
+      </td>
+      <td class="text-center">↔</td>
+      <td>
+        <div><strong>#{{ p.b.id }}</strong> {{ p.b.name ?? '' }}</div>
+        <div class="text-sm text-base-content/70">{{ p.b.email ?? '' }} {{ p.b.phone ? ' · ' ~ p.b.phone : '' }}</div>
+      </td>
+      <td>
+        <form method="post" action="{{ url('/contacts/merge') }}" class="flex flex-col gap-1">
+          {{ csrf_field()|raw }}
+          <input type="hidden" name="merge_id" value="{{ p.a.id }}">
+          <input type="hidden" name="keep_id" value="{{ p.b.id }}">
+          <button class="btn btn-sm" type="submit">{{ __('Keep B, merge A → B') }}</button>
+        </form>
+        <form method="post" action="{{ url('/contacts/merge') }}" class="flex flex-col gap-1 mt-1">
+          {{ csrf_field()|raw }}
+          <input type="hidden" name="merge_id" value="{{ p.b.id }}">
+          <input type="hidden" name="keep_id" value="{{ p.a.id }}">
+          <button class="btn btn-sm" type="submit">{{ __('Keep A, merge B → A') }}</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">{{ __('No duplicates found') }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

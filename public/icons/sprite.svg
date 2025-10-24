@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <!-- All icons are outline, 24x24, stroke=currentColor, fill=none -->
+    <symbol id="home" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 11.5L12 4l9 7.5"/>
+        <path d="M5 10.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9.5"/>
+        <path d="M9 21v-6h6v6"/>
+      </g>
+    </symbol>
+
+    <symbol id="users" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </g>
+    </symbol>
+
+    <symbol id="checklist" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 6h11"/>
+        <path d="M9 12h11"/>
+        <path d="M9 18h11"/>
+        <path d="m3 6 1.5 1.5L7 5"/>
+        <path d="m3 12 1.5 1.5L7 11"/>
+        <path d="m3 18 1.5 1.5L7 17"/>
+      </g>
+    </symbol>
+
+    <symbol id="chart-up" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3v18h18"/>
+        <path d="m6 15 4-4 4 3 5-6"/>
+      </g>
+    </symbol>
+
+    <symbol id="box" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        <path d="M3.3 7.3 12 12l8.7-4.7"/>
+        <path d="M12 22V12"/>
+      </g>
+    </symbol>
+
+    <symbol id="calendar" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <path d="M16 2v4M8 2v4M3 10h18"/>
+      </g>
+    </symbol>
+
+    <symbol id="chart-pie" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.21 15.89A10 10 0 1 1 12 2v10l9.21 3.89Z"/>
+        <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+      </g>
+    </symbol>
+
+    <symbol id="search" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </g>
+    </symbol>
+
+    <symbol id="briefcase" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="7" width="18" height="13" rx="2"/>
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+        <path d="M3 13h18"/>
+      </g>
+    </symbol>
+
+    <symbol id="stopwatch" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="13" r="8"/>
+        <path d="M12 9v4l2 2"/>
+        <path d="M9 2h6"/>
+      </g>
+    </symbol>
+
+    <symbol id="magnet" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 7v4a8 8 0 0 0 16 0V7"/>
+        <path d="M4 7h6v4a2 2 0 1 1-4 0V7"/>
+        <path d="M14 7h6v4a2 2 0 1 1-4 0V7"/>
+      </g>
+    </symbol>
+
+    <symbol id="credit-card" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/>
+        <path d="M2 10h20"/>
+        <path d="M6 15h6"/>
+      </g>
+    </symbol>
+
+    <symbol id="archive" viewBox="0 0 24 24">
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="4" rx="1"/>
+        <path d="M5 8h14v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/>
+        <path d="M9 12h6"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>

@@ -7,6 +7,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="canonical" href="{{ canonical_url() }}">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="{{ url('/manifest.webmanifest') }}">
+    <link rel="icon" href="{{ url('/icons/app-icon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url('/icons/app-icon.svg') }}">
     <!-- Tailwind CSS + DaisyUI -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
@@ -21,22 +25,25 @@
         <aside class="w-56 shrink-0">
             <nav class="menu bg-base-200 rounded-box" role="navigation" aria-label="{{ __('Primary')|e }}">
                 <ul>
-                    <li><a href="{{ url('/') }}" class="{{ active_class('/') ? 'active' : '' }}" {{ active_class('/') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🏠</span> {{ __('Home')|e }}</a></li>
-                    {% if can('contacts','view') %}<li><a href="{{ url('/contacts') }}" class="{{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current="page"' : '' }}><span aria-hidden="true">👥</span> {{ __('Contacts')|e }}</a></li>{% endif %}
-                    {% if can('tasks','view') %}<li><a href="{{ url('/tasks') }}" class="{{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}><span aria-hidden="true">✅</span> {{ __('Tasks')|e }}</a></li>{% endif %}
-                    {% if can('deals','view') %}<li><a href="{{ url('/deals') }}" class="{{ active_class('/deals') ? 'active' : '' }}" {{ active_class('/deals') ? 'aria-current="page"' : '' }}><span aria-hidden="true">📈</span> {{ __('Deals')|e }}</a></li>{% endif %}
-                    {% if can('projects','view') %}<li><a href="{{ url('/projects') }}" class="{{ active_class('/projects') ? 'active' : '' }}" {{ active_class('/projects') ? 'aria-current="page"' : '' }}><span aria-hidden="true">📦</span> {{ __('Projects')|e }}</a></li>{% endif %}
-                    <li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}><span aria-hidden="true">📅</span> {{ __('Calendar')|e }}</a></li>
-                    {% if can('reports','view') %}<li><a href="{{ url('/reports') }}" class="{{ active_class('/reports') ? 'active' : '' }}" {{ active_class('/reports') ? 'aria-current="page"' : '' }}><span aria-hidden="true">📊</span> {{ __('Reports')|e }}</a></li>{% endif %}
-                    <li><a href="{{ url('/search') }}" class="{{ active_class('/search') ? 'active' : '' }}" {{ active_class('/search') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🔎</span> {{ __('Search')|e }}</a></li>
+                    <li><a href="{{ url('/') }}" class="{{ active_class('/') ? 'active' : '' }}" {{ active_class('/') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'home', classes: 'w-5 h-5 mr-2' } %} {{ __('Home')|e }}</a></li>
+                    {% if can('contacts','view') %}
+                    <li><a href="{{ url('/contacts') }}" class="{{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'users', classes: 'w-5 h-5 mr-2' } %} {{ __('Contacts')|e }}</a></li>
+                    <li><a href="{{ url('/contacts/dedupe') }}" class="{{ active_class('/contacts/dedupe') ? 'active' : '' }}">↳ {{ __('Find duplicates')|e }}</a></li>
+                    {% endif %}
+                    {% if can('tasks','view') %}<li><a href="{{ url('/tasks') }}" class="{{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'checklist', classes: 'w-5 h-5 mr-2' } %} {{ __('Tasks')|e }}</a></li>{% endif %}
+                    {% if can('deals','view') %}<li><a href="{{ url('/deals') }}" class="{{ active_class('/deals') ? 'active' : '' }}" {{ active_class('/deals') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'chart-up', classes: 'w-5 h-5 mr-2' } %} {{ __('Deals')|e }}</a></li>{% endif %}
+                    {% if can('projects','view') %}<li><a href="{{ url('/projects') }}" class="{{ active_class('/projects') ? 'active' : '' }}" {{ active_class('/projects') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'box', classes: 'w-5 h-5 mr-2' } %} {{ __('Projects')|e }}</a></li>{% endif %}
+                    <li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'calendar', classes: 'w-5 h-5 mr-2' } %} {{ __('Calendar')|e }}</a></li>
+                    {% if can('reports','view') %}<li><a href="{{ url('/reports') }}" class="{{ active_class('/reports') ? 'active' : '' }}" {{ active_class('/reports') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'chart-pie', classes: 'w-5 h-5 mr-2' } %} {{ __('Reports')|e }}</a></li>{% endif %}
+                    <li><a href="{{ url('/search') }}" class="{{ active_class('/search') ? 'active' : '' }}" {{ active_class('/search') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'search', classes: 'w-5 h-5 mr-2' } %} {{ __('Search')|e }}</a></li>
 
                     <li class="menu-title"><span>{{ __('More')|e }}</span></li>
-                    {% if can('employees','view') %}<li><a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🧑‍💼</span> {{ __('Employees')|e }}</a></li>{% endif %}
-                    {% if can('times','view') %}<li><a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}><span aria-hidden="true">⏱️</span> {{ __('Working Times')|e }}</a></li>{% endif %}
-                    {% if can('candidates','view') %}<li><a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🧲</span> {{ __('Recruiting')|e }}</a></li>{% endif %}
-                    {% if can('payments','view') %}<li><a href="{{ url('/payments') }}" class="{{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}><span aria-hidden="true">💳</span> {{ __('Payments')|e }}</a></li>{% endif %}
+                    {% if can('employees','view') %}<li><a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'briefcase', classes: 'w-5 h-5 mr-2' } %} {{ __('Employees')|e }}</a></li>{% endif %}
+                    {% if can('times','view') %}<li><a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'stopwatch', classes: 'w-5 h-5 mr-2' } %} {{ __('Working Times')|e }}</a></li>{% endif %}
+                    {% if can('candidates','view') %}<li><a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'magnet', classes: 'w-5 h-5 mr-2' } %} {{ __('Recruiting')|e }}</a></li>{% endif %}
+                    {% if can('payments','view') %}<li><a href="{{ url('/payments') }}" class="{{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'credit-card', classes: 'w-5 h-5 mr-2' } %} {{ __('Payments')|e }}</a></li>{% endif %}
                     {% if can('storage','view') %}
-                      <li><a href="{{ url('/storage') }}" class="{{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}><span aria-hidden="true">🗂️</span> {{ __('Storage')|e }}</a></li>
+                      <li><a href="{{ url('/storage') }}" class="{{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'archive', classes: 'w-5 h-5 mr-2' } %} {{ __('Storage')|e }}</a></li>
                       <li><a href="{{ url('/storage/history') }}" class="{{ active_class('/storage/history') ? 'active' : '' }}">↳ {{ __('Storage history')|e }}</a></li>
                     {% endif %}
                     <li class="menu-title"><span>{{ __('Data I/O')|e }}</span></li>
@@ -92,6 +99,13 @@
         const q = params.toString();
         window.location.href = loc.pathname + (q ? ('?' + q) : '');
       }
+    });
+  }
+
+  // Register Service Worker for offline-first
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      try { navigator.serviceWorker.register('{{ url('/sw.js') }}'); } catch(e) { /* ignore */ }
     });
   }
 
@@ -196,6 +210,10 @@
         if (startMs == null || Math.abs(startMs - start) > 1000){
           startMs = start; lastDocTitle = lastDocTitle || document.title; setActive(true);
           const sr = document.getElementById('sr-live'); if (sr) { sr.textContent = 'Timer started'; }
+          // Try to show a local notification when timer starts
+          if (window.ppNotify) {
+            window.ppNotify('Timer started', { body: 'Your working timer is now running.', icon: '/website/img/placeholder-16x9.svg', badge: '/website/img/placeholder-16x9.svg' });
+          }
         }
         if (!timer){ timer = setInterval(render, 1000); }
         render();
@@ -207,6 +225,43 @@
     // If page becomes visible again, refresh immediately
     document.addEventListener('visibilitychange', function(){ if (!document.hidden) check(); });
   })();
+</script>
+<script>
+// Register service worker for PWA
+(function(){
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('{{ url('/sw.js') }}').catch(function(){ /* ignore */ });
+    });
+  }
+  // Notifications helper used by timer code
+  window.ppNotify = function(title, options){
+    try{
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(function(p){ if (p !== 'granted') return; window.ppNotify(title, options); });
+        return;
+      }
+      if (Notification.permission !== 'granted') return;
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'notify', title: title, options: options || {} });
+      } else if (navigator.serviceWorker) {
+        navigator.serviceWorker.getRegistration().then(function(reg){ if (reg && reg.showNotification) reg.showNotification(title || 'Notification', options || {}); });
+      }
+    } catch(e) { /* ignore */ }
+  };
+})();
+</script>
+<script>
+// Accessibility: focus search on '/'
+(function(){
+  document.addEventListener('keydown', function(e){
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      var el = document.querySelector('input[name="q"]');
+      if (el) { e.preventDefault(); el.focus(); try{ el.select(); }catch(_){} }
+    }
+  });
+})();
 </script>
 </body>
 </html>
