@@ -6,6 +6,34 @@ namespace App\Util;
 
 class Permission
 {
+    /** @var array<string,bool>|null */
+    private static ?array $objectLevelEntities = null;
+
+    /**
+     * Configure which entities enforce object-level (owner-aware) permissions.
+     * Values can come from env PERMISSIONS_OBJECT_LEVEL as a comma-separated list.
+     */
+    public static function isObjectLevelEnabled(string $entity): bool
+    {
+        if (self::$objectLevelEntities === null) {
+            $env = $_ENV['PERMISSIONS_OBJECT_LEVEL'] ?? getenv('PERMISSIONS_OBJECT_LEVEL') ?: '';
+            $list = [];
+            if (is_string($env) && trim($env) !== '') {
+                foreach (explode(',', $env) as $e) {
+                    $e = strtolower(trim($e));
+                    if ($e !== '') { $list[$e] = true; }
+                }
+            } else {
+                // Default enable for core entities
+                foreach (['contacts','times','tasks','employees','candidates','payments','storage','projects','deals'] as $e) {
+                    $list[$e] = true;
+                }
+            }
+            self::$objectLevelEntities = $list;
+        }
+        return (bool)(self::$objectLevelEntities[strtolower($entity)] ?? false);
+    }
+
     /**
      * Check if current user can perform action on entity (no ownership context).
      * Admin users are allowed to do everything.
@@ -55,6 +83,23 @@ class Permission
     }
 
     /**
+     * Enforce permission for a specific record. If object-level is disabled for the entity,
+     * falls back to entity-level Permission::can.
+     */
+    public static function enforceRecord(string $entity, string $action, ?array $record): bool
+    {
+        $ok = self::isObjectLevelEnabled($entity)
+            ? self::canOnRecord($entity, $action, $record)
+            : self::can($entity, $action);
+        if (!$ok) {
+            http_response_code(403);
+            render('errors/403');
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Enforce permission based on request path and method.
      * Returns true if allowed; otherwise sends 403 response and returns false.
      */
@@ -85,6 +130,11 @@ class Permission
             if ($path === '/' . $e . '/new') return [$e, $method === 'POST' ? 'create' : 'create'];
             if ($path === '/' . $e . '/edit') return [$e, $method === 'POST' ? 'edit' : 'edit'];
             if ($path === '/' . $e . '/delete' && $method === 'POST') return [$e, 'delete'];
+            if ($e === 'contacts') {
+                if ($path === '/contacts/email/send' && $method === 'POST') return [$e, 'create'];
+                if ($path === '/contacts/dedupe') return [$e, 'view'];
+                if ($path === '/contacts/merge' && $method === 'POST') return [$e, 'edit'];
+            }
             if ($e === 'storage') {
                 if ($path === '/storage/adjust' && $method === 'POST') return [$e, 'edit'];
                 if ($path === '/storage/history') return [$e, 'view'];
@@ -122,6 +172,8 @@ class Permission
             if ($path === '/admin/users/delete' && $method === 'POST') return ['users', 'delete'];
             return ['users', 'view'];
         }
+        // Admin backup
+        if ($path === '/admin/backup/download') { return ['export','view']; }
         return null;
     }
 }

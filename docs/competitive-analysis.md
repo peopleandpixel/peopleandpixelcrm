@@ -1,72 +1,117 @@
-# Competitive Analysis: People & Pixel vs. CRM/Project Management Tools
+# People & Pixel — Competitive Analysis and Improvement Roadmap
 
-Scope: This document benchmarks People & Pixel (P&P) against common capabilities in lightweight CRMs and SMB project management tools (e.g., HubSpot Free CRM, Pipedrive, Zoho CRM (Standard), Trello/Asana, Monday, Basecamp, Notion Projects). It identifies gaps and proposes practical improvements aligned with P&P’s philosophy: lightweight, self‑hostable, simple.
+Date: 2025-10-24
 
-Summary
-- P&P is a compact, self-hosted CRM with contacts, tasks, time tracking, basic payments, employees/candidates, and simple inventory. JSON storage mode makes it easy to deploy; a DB mode exists for scale.
-- Strengths: simplicity, low‑ops, JSON mode, i18n, validation, templating, basic access roles, Monolog, migrations, and a unified list/sort/filter component.
-- Gaps vs. sector norms (updated): email integration, Google Calendar sync, full‑text search (DB mode), richer reporting/visuals, Zapier/Make marketplace, mobile PWA/offline and push, automation, bulk edits, advanced permissions and audit depth.
+Purpose
+This document compares People & Pixel to adjacent tools on the market and distills a prioritized, actionable roadmap. It focuses on the target segment: small teams and freelancers who prefer self‑hosting, simplicity, and data ownership over deep enterprise features.
 
-Feature comparison (high‑level)
-- Contacts/Companies: P&P ✓ basic with tags and custom fields. Sector norm: ownership, dedupe, merge, richer timelines.
-- Deals/Pipeline: P&P ✓ basic (stages + board). Sector norm: probability/forecasting, win/loss analyses.
-- Tasks/Projects: P&P ✓ list + Kanban; ✓ recurrence and reminders; ✗ Gantt/dependencies. Sector norm: timelines, assignees, watchers, batch ops.
-- Time tracking: P&P ✓ basic (times.json). Sector norm: per‑task timers, billable rates, approvals, reporting.
-- Calendar: P&P ✓ templates + ✓ ICS feed; ✗ Google sync.
-- Email/Comms: P&P ✗ native. Sector norm: send/track emails, IMAP/SMTP, templates, logging to timeline.
-- Reporting: P&P ✓ saved reports + simple charts and CSV export; depth could improve.
-- Files: P&P ✓ uploads with safety checks. Sector norm: previews, versioning, linking to entities.
-- Search/Filters: P&P ✓ schema-driven list filtering + ✓ saved views + ✓ global search; ✗ full‑text.
-- Permissions: P&P ✓ roles with own/others granularity; ✓ basic audit log; ✗ full object‑level ACLs.
-- Integrations/API: P&P ✓ public REST + ✓ webhooks; ✗ Zapier/Make.
-- Mobile: P&P responsive ✓; ✗ PWA/offline, push notifications.
+Target Segment and JTBD
+- Self‑hosted micro/small teams (1–20 people) and privacy‑minded freelancers
+- Jobs to be done:
+  - Keep contacts, tasks, deals, and projects in one simple place
+  - Track activities, files, and time without SaaS lock‑in
+  - Export/import data easily; run on modest infrastructure
 
-Recommendations (prioritized, only items not yet implemented)
+Competitor Landscape (snapshot)
+- Open source/self‑hosted:
+  - Monica (personal CRM): strong contacts and activities; less business flows.
+  - EspoCRM: broad CRM modules (leads/opportunities), heavier, extensible; steeper learning curve.
+  - SuiteCRM: enterprise‑leaning breadth; heavy UI and ops overhead for small teams.
+  - Dolibarr: ERP/CRM suite; wide scope, not minimalistic.
+- Popular SaaS (as reference):
+  - HubSpot, Pipedrive, Zoho CRM: polished UI, deep reporting, marketplaces, and automation; cost and lock‑in not ideal for our segment.
 
-Medium impact (up to a week)
-1) Email integration (incremental)
-- Outbound: SMTP settings + send templates; log to activity timeline.
-- Inbound: IMAP fetcher (optional CLI) to attach emails to contacts by matching address.
+Current Strengths (People & Pixel)
+- Lightweight, understandable PHP app with JSON or DB storage
+- Pragmatic features already implemented: contacts, tasks, projects, deals, global search, ICS calendar, reports, time tracking, files, import/export, API/webhooks, audit log, PWA basics
+- Simplicity of deployment; minimal dependencies; good i18n foundations
+- Clear UX principles (POST/redirect-GET, validation, error handling)
 
-2) Performance and search
-- Add full-text search for DB mode (SQLite FTS5 or MySQL MATCH AGAINST).
-- Cache schema lookups and list queries; batch JSON I/O.
+Gaps vs. Market (high‑level)
+- Automation: limited rules/automation compared to SaaS (workflows, triggers).
+- Collaboration UX: comments/mentions/notifications are basic; no watch/follow model.
+- Mobile experience: PWA exists but offline and push are limited; no install guidance.
+- Integrations: few out-of-the-box connectors beyond SMTP and webhooks.
+- Reporting depth: basic charts; limited pivoting, cohort and funnel analysis.
+- Permissions: roles exist but lack fine‑grained, object‑level controls.
+- Data quality: dedupe exists; enrichment and validation (email/phone) could improve.
+- Admin/ops: backups/restore flows and health checks are basic.
 
-3) Mobile/PWA and notifications
-- Add a PWA manifest and service worker for basic offline caching of lists.
-- Push notifications (web push) for reminders in supported browsers.
+Differentiation Opportunities
+- First‑class self‑host UX: one‑command setup, backups, and updates tailored for micro teams.
+- Privacy‑first enrichment: local or user‑provided API keys, with clear limits and auditability.
+- Simple automations: readable, file‑backed rule engine (YAML/JSON) with safe sandboxed actions.
+- Better PWA: robust offline caching for key views, background sync for drafts/uploads, and install prompts.
+- Extensibility: small plugin hooks (events + webhooks) and template overrides without forking.
 
-Foundational/platform (longer-term)
-4) Integrations marketplace
-- Zapier/Make connectors; prebuilt recipes for common flows (e.g., form → contact + task).
+Prioritized Improvement Roadmap
+1) Must‑have market parity (near‑term)
+- Permissions: introduce owner/object‑level controls with simple policies (own/role/team) and per-entity toggles.
+  - Scope: Add owner field on core entities; policies: owner, same-role, same-team; per-entity enable/disable. UI for admins to configure defaults.
+  - Acceptance: Non-owners blocked per policy; admin override works; audit log records denials; tests cover view/edit/delete matrix. See docs/tasks.md §25 "Permissions v2".
+  - Dependencies: Auth/Session roles, Team model (if enabled). Out-of-scope: row-level sharing links, ACL editor.
+  - First milestones: (M1) Policy engine + config flags; (M2) Enforce in controllers; (M3) Admin UI + docs.
+- Bulk operations: multi‑select and batch edits on list pages with CSRF and audit logging.
+  - Scope: Checkbox multi-select on contacts/tasks/deals; actions: assign owner, add/remove tags, status change, delete, export. Confirm dialogs + CSRF.
+  - Acceptance: Selection persists across pagination; actions logged with before/after counts; failures surfaced; undo for tag/assign where feasible. See docs/tasks.md §25 "Bulk operations".
+  - Dependencies: List component, CSRF, AuditLog. Out-of-scope: cross-entity bulk editing modals.
+  - First milestones: (M1) Shared BulkAction service; (M2) Wire on contacts list; (M3) Extend to tasks/deals.
+- Import/export hardening: schema validation, dry‑run preview, dedupe merge strategies.
+  - Scope: JSON/CSV schema validation per entity; dry-run shows row-level issues; dedupe by email/phone/name with merge strategies (skip, overwrite, merge-missing).
+  - Acceptance: Dry-run never mutates; import produces summary with created/updated/skipped; backup before destructive import; tests with corrupt/malformed data. See docs/tasks.md §25 "Import/Export hardening".
+  - Dependencies: Validator, Schemas, Backup service. Out-of-scope: third-party enrichment during import.
+  - First milestones: (M1) Schema JSON for entities; (M2) Import dry-run; (M3) Merge strategies + backup hook.
+- Reporting v2: saved charts with breakdowns by tag/status/owner and CSV export across date ranges.
+  - Scope: Allow saving report definitions (entity, filters, breakdown, metric); render simple bar/line; CSV export respects filters and timezone.
+  - Acceptance: Reports persist in data/reports.json (or DB); shareable link with perms; P95 render <200ms on 2k items; tests for CSV headers and date ranges. See docs/tasks.md §25 "Reporting v2".
+  - Dependencies: ReportsStore, List filter pipeline, Timezone handling. Out-of-scope: pivot tables and drill-down.
+  - First milestones: (M1) Report DTO + store; (M2) Save/load UI; (M3) CSV export + cache.
+- Backups and recovery: one‑click JSON/DB backup, download, and restore with integrity checks.
+  - Scope: UI button to create zip with data/, uploads metadata, and schema version; download link; restore flow with pre-check and confirmation.
+  - Acceptance: Backup zip includes manifest and checksums; restore validates version and checksum; errors are recoverable; CLI parity for headless. See docs/tasks.md §25 "Backups & recovery".
+  - Dependencies: File storage service, Migrator. Out-of-scope: incremental backups and remote storage.
+  - First milestones: (M1) Backup manifest + zip; (M2) Restore dry-run; (M3) UI wiring + docs.
 
-5) Advanced permissions and audit depth
-- Object-level ACLs and field restrictions; exportable audit trail and retention controls.
+2) Collaboration & workflow (mid‑term)
+- Comments and mentions: comment threads on contacts/tasks with @mentions and email notifications (opt‑in).
+- Watch/follow: users can follow entities to get digest notifications.
+- Automations MVP: event → conditions → actions engine (e.g., when deal stage changes to Won, add follow‑up task; when task overdue, notify assignee).
 
-Additional improvements to consider
-- Contact data quality: dedupe/merge workflows; email/phone validation.
-- Bulk operations: multi-select actions across lists (assign owner, status changes, delete, tag add/remove).
-- Accessibility and UX: keyboard shortcuts, improved focus management, color‑contrast, ARIA in forms/lists.
-- Import/export: safer CSV import with preview/validation; full backup/restore helpers in UI.
-- Security: rate limiting on auth, optional 2FA (TOTP), per‑user API tokens with scopes when API lands.
-- Observability: structured app logs and event metrics; lightweight health/status page.
+3) PWA & mobile excellence (mid‑term)
+- Offline‑first lists: cache recent contacts/tasks/projects; allow offline task edits queued for sync.
+- Background sync: service worker sync for queued operations; conflict resolution rules.
+- Install UX: add “Add to Home Screen” prompts and guidance across major browsers; icon set polish.
 
-Alignment with current codebase
-- The dynamic list component and schema-driven design make Global Search and Saved Reports tractable.
-- The migration system and repository interfaces ease the addition of Activities/AuditLog tables and API routes.
-- Monolog is present; extend with channels for audit and integrations.
-- i18n exists; extract new strings and pluralization accordingly.
+4) Integrations (ongoing)
+- CalDAV/ICS inbound: allow subscribing to external calendars (read‑only) and mapping to tasks/events.
+- Email ingest: optional IMAP connector to log inbound emails to contacts by matching addresses.
+- Webhooks catalog: documented examples and test webhook receiver; retry with exponential backoff.
 
-Risk and sequencing notes
-- Start with non-destructive schema extensions (nullable fields, new optional modules).
-- Preserve JSON mode by adding defaults and migration scripts for data shape upgrades.
-- Provide import/export safeguards (backup, validate) for any new entities or bulk operations.
+5) Data quality & enrichment (optional, privacy‑first)
+- Validation services: optional DNS/MX check for emails, E.164 phone normalization; run in background.
+- Local enrichment: company logo via Clearbit‑like service with user‑provided key; configurable and auditable.
 
-Success metrics
-- Adoption: # of active users/week; setup-to-first-contact time < 10 minutes.
-- Productivity: time to find a contact < 3s; create/update task flow < 10s median.
-- Data quality: <1% invalid writes; dedupe rate; audit coverage 100% of mutating actions.
+6) Admin & DX
+- Backup/restore CLI and UI, with scheduled backups (zip) and retention.
+- Health dashboard: storage usage, job status, error rates; downloadable logs.
+- One‑file docker-compose with volumes and sample .env; seed/reset scripts.
 
-Appendix: Implementation notes
-- ICS: supply Content-Type: text/calendar; entity UID as stable identifier.
-- API: start with token in .env; later per-user tokens with scopes; rate limit via middleware.
+Success Metrics
+- Time‑to‑value: new user can import contacts and complete a task flow in under 10 minutes.
+- Page performance: P95 list render < 200ms server time at 2k items in JSON mode.
+- Reliability: zero data loss incidents across routine operations; automated daily backups.
+- Adoption: increase in weekly active users and integrations enabled.
+
+Risks and Mitigations
+- Scope creep: keep automations readable and limited; avoid building a full BPM engine.
+- Privacy/legal: enrichment features off by default; all calls require explicit user‑provided API keys.
+- Complexity: prefer simple, composable features over deep customizations; document trade‑offs.
+
+Appendix: Quick Feature Matrix (very high‑level)
+- Contacts/Tasks/Deals/Projects: P&P ✓ / Monica ✓ / Espo ✓ / Suite ✓ / SaaS ✓
+- Import/Export: P&P ✓ / Monica ✓ / Espo ✓ / Suite ✓ / SaaS ✓
+- Reporting: P&P basic / Monica basic / Espo medium / Suite medium / SaaS advanced
+- Automations: P&P limited / Monica limited / Espo medium / Suite medium / SaaS advanced
+- Permissions: P&P basic / Monica basic / Espo medium / Suite advanced / SaaS advanced
+- Integrations: P&P few / Monica few / Espo medium / Suite many / SaaS many
+- Mobile/PWA: P&P basic / Monica basic / Espo basic / Suite basic / SaaS polished

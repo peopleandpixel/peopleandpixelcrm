@@ -1,0 +1,62 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section class="space-y-4">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">{{ __('Backups')|e }}</h1>
+    <form method="post" action="{{ url('/admin/backups/create') }}">
+      {{ csrf_field()|raw }}
+      <button class="btn btn-primary" type="submit">{{ __('Create backup')|e }}</button>
+    </form>
+  </div>
+
+  <p class="opacity-70">{{ __('Retention')|e }}: {{ retention|int }} {{ __('snapshots')|e }}</p>
+
+  {% if snapshots is empty %}
+    <div class="alert">{{ __('No snapshots yet.')|e }}</div>
+  {% else %}
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th>{{ __('File')|e }}</th>
+            <th>{{ __('Created at')|e }}</th>
+            <th>{{ __('Size')|e }}</th>
+            <th>{{ __('Files')|e }}</th>
+            <th>{{ __('Actions')|e }}</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for s in snapshots %}
+          <tr>
+            <td><a class="link" href="{{ url('/admin/backups/download', {file: s.file}) }}">{{ s.file|e }}</a></td>
+            <td>{{ s.created_at|e }}</td>
+            <td>{{ (s.size / 1024)|number_format(1, '.', ',') }} KB</td>
+            <td>{{ s.files_count|int }}</td>
+            <td class="space-x-2">
+              <form method="post" action="{{ url('/admin/backups/verify') }}" class="inline">
+                {{ csrf_field()|raw }}
+                <input type="hidden" name="file" value="{{ s.file|e }}">
+                <button class="btn btn-xs" type="submit">{{ __('Verify')|e }}</button>
+              </form>
+              <form method="post" action="{{ url('/admin/backups/restore') }}" class="inline" onsubmit="return confirm('{{ __('Are you sure? This will overwrite current data. Make sure you have a fresh backup.')|e }}');">
+                {{ csrf_field()|raw }}
+                <input type="hidden" name="file" value="{{ s.file|e }}">
+                <input type="hidden" name="confirm" value="yes">
+                <button class="btn btn-xs btn-warning" type="submit">{{ __('Restore')|e }}</button>
+              </form>
+              <form method="post" action="{{ url('/admin/backups/delete') }}" class="inline" onsubmit="return confirm('{{ __('Delete this snapshot?')|e }}');">
+                {{ csrf_field()|raw }}
+                <input type="hidden" name="file" value="{{ s.file|e }}">
+                <button class="btn btn-xs btn-error" type="submit">{{ __('Delete')|e }}</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  <p class="text-sm opacity-70">{{ __('Note: Backups are currently supported for JSON storage mode. For DB mode, please use your database backup tooling.')|e }}</p>
+</section>
+{% endblock %}

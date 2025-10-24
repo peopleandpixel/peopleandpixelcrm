@@ -5,6 +5,11 @@ namespace App;
 class JsonStore implements StoreInterface
 {
     private string $file;
+    /**
+     * Per-process, per-request cache to avoid repeated disk I/O.
+     * @var array<string, array{mtime:int,data:array}>
+     */
+    private static array $cache = [];
 
     public function __construct(string $file)
     {
@@ -188,6 +193,11 @@ class JsonStore implements StoreInterface
     private function readJsonLocked()
     {
         $file = $this->file;
+        // Fast path: use cached value if file mtime unchanged
+        $mtime = @filemtime($file) ?: 0;
+        if (isset(self::$cache[$file]) && (int)self::$cache[$file]['mtime'] === $mtime) {
+            return self::$cache[$file]['data'];
+        }
         $fh = @fopen($file, 'c+'); // create if missing
         if ($fh === false) {
             return [];
@@ -205,6 +215,9 @@ class JsonStore implements StoreInterface
             $contents = stream_get_contents($fh) ?: '';
             $data = json_decode($contents, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
+                // Save to cache based on current mtime
+                $mtimeNow = @filemtime($file) ?: 0;
+                self::$cache[$file] = ['mtime' => $mtimeNow, 'data' => $data];
                 return $data;
             }
         } finally {
@@ -289,6 +302,12 @@ class JsonStore implements StoreInterface
             flock($fh, LOCK_UN);
             fclose($fh);
         }
+        // Update in-process cache after successful write
+        $data = json_decode($json, true);
+        if (is_array($data)) {
+            $mtime = @filemtime($file) ?: time();
+            self::$cache[$file] = ['mtime' => $mtime, 'data' => $data];
+        }
     }
 
     /**
@@ -318,6 +337,12 @@ class JsonStore implements StoreInterface
         }
         // Attempt atomic rename
         @rename($tmp, $file) || (@unlink($file) && @rename($tmp, $file));
+        // Update in-process cache after atomic write
+        $data = json_decode($json, true);
+        if (is_array($data)) {
+            $mtime = @filemtime($file) ?: time();
+            self::$cache[$file] = ['mtime' => $mtime, 'data' => $data];
+        }
     }
 
     /**

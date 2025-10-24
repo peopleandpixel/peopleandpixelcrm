@@ -1,0 +1,19 @@
+{# Follow/Unfollow widget. Expects:
+ - entity: 'contacts'|'tasks'|'projects'|'deals'
+ - entity_id: int
+ - is_following: bool
+ - followers_count: int
+#}
+<form method="post" action="{{ url('/follows/toggle') }}" class="inline-flex items-center gap-2">
+  {{ csrf_field()|raw }}
+  <input type="hidden" name="entity" value="{{ entity|e }}">
+  <input type="hidden" name="entity_id" value="{{ entity_id|int }}">
+  {% if current_user() %}
+    <button type="submit" class="btn btn-sm {{ is_following ? 'btn-ghost' : 'btn-outline' }}">
+      {% if is_following %}★ {{ __('Unfollow')|e }}{% else %}☆ {{ __('Follow')|e }}{% endif %}
+    </button>
+  {% else %}
+    <a href="{{ url('/login', {return: current_path()}) }}" class="btn btn-sm btn-outline">☆ {{ __('Follow')|e }}</a>
+  {% endif %}
+  <span class="text-sm opacity-70">{{ n__('followers.count', followers_count, {'count': followers_count}) }}</span>
+</form>

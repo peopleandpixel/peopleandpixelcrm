@@ -5,7 +5,7 @@
     <h2 class="text-2xl font-bold">{{ __('Contacts')|e }}</h2>
     <div class="flex items-center gap-2">
       {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('name'), dir: dir|default('asc') } %}
-      <a class="btn btn-primary" href="{{ url('/' ~ schema ~ '/new') }}">+ {{ __('Add '  ~ type)|e }}</a>
+      {% if can(schema,'create') %}<a class="btn btn-primary" href="{{ url('/' ~ schema ~ '/new') }}">+ {{ __('Add '  ~ type)|e }}</a>{% endif %}
     </div>
   </div>
 
@@ -14,7 +14,12 @@
       title: '',
       items: items|default([]),
       columns: columns,
-      actions: { view_url: url('/' ~ schema ~ '/view'), edit_url: url('/' ~ schema ~ '/edit'), delete_url: url('/' ~ schema ~ '/delete'), id_field: 'id' }
+      actions: { view_url: url('/' ~ schema ~ '/view'), edit_url: url('/' ~ schema ~ '/edit'), delete_url: url('/' ~ schema ~ '/delete'), id_field: 'id' },
+      bulk: {
+        post_url: url('/contacts/bulk'),
+        actions: [ {value:'delete',label:__('Delete')}, {value:'add_tag',label:__('Add tag')} ],
+        placeholders: { add_tag: __('Tag name') }
+      }
     } %}
     <div class="mt-4">
       {% set extra = {q: q|default(''), per: (per|default(10))|int} %}

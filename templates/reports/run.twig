@@ -1,55 +1,143 @@
-{% extends "layout.twig" %}
+{% extends 'layout.twig' %}
 {% block content %}
-<h1>{{ title }}</h1>
-<div class="mb-3">
-  <a class="btn btn-secondary" href="{{ url('/reports') }}">{{ __('Back to reports') }}</a>
-  <a class="btn btn-outline-primary" href="{{ url('/reports/export.csv', def) }}">{{ __('Export CSV') }}</a>
-</div>
-
-<style>
-.report-bars { max-width: 800px; }
-.report-bars .bar { display: flex; align-items: center; margin: 6px 0; }
-.report-bars .bar .label { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.report-bars .bar .meter { background: #e9ecef; height: 18px; flex: 1; margin: 0 10px; position: relative; }
-.report-bars .bar .meter span { display: block; height: 100%; background: #6fa8dc; }
-.report-bars .bar .value { width: 80px; text-align: right; }
-</style>
-
-{% set maxv = 0 %}
-{% for r in report.rows %}
-  {% if r.value > maxv %}{% set maxv = r.value %}{% endif %}
-{% endfor %}
-
-<div class="report-bars">
-  {% for r in report.rows %}
-    {% set width = maxv > 0 ? (r.value / maxv * 100) : 0 %}
-    <div class="bar">
-      <div class="label" title="{{ r.label }}">{{ r.label }}</div>
-      <div class="meter"><span style="width: {{ width }}%"></span></div>
-      <div class="value">{{ r.value }}</div>
+<section class="space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-2xl font-bold">{{ title|e }}</h2>
+    <div class="flex items-center gap-2">
+      <a class="btn" href="{{ url('/reports') }}">{{ __('Back')|e }}</a>
+      <a class="btn" href="{{ url('/reports/export.csv', { name: def.name|default('report'), entity: def.entity, group_by: def.group_by, metric: def.metric, period: def.period|default('month'), from: def.filters.from|default(''), to: def.filters.to|default(''), status: def.filters.status|default(''), owner_id: def.filters.owner_id|default(''), tag: def.filters.tag|default('') }) }}">CSV</a>
     </div>
-  {% else %}
-    <p>{{ __('No data for this report') }}</p>
-  {% endfor %}
-</div>
+  </div>
 
-<h2 class="mt-4">{{ __('Table') }}</h2>
-<table class="table">
-  <thead>
-    <tr>
-      <th>{{ __('Label') }}</th>
-      <th>{{ __('Value') }}</th>
-      <th>{{ __('Count') }}</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in report.rows %}
-      <tr>
-        <td>{{ r.label }}</td>
-        <td>{{ r.value }}</td>
-        <td>{{ r.count }}</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  {% if def is defined %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div class="card bg-base-100 p-3 shadow">
+      <div class="font-semibold">{{ __('Definition')|e }}</div>
+      <div class="text-sm opacity-80">
+        <div>{{ __('Entity')|e }}: {{ def.entity|e }}</div>
+        <div>{{ __('Group by')|e }}: {{ def.group_by|e }}</div>
+        <div>{{ __('Metric')|e }}: {{ def.metric|e }}</div>
+        <div>{{ __('Period')|e }}: {{ def.period|default('month')|e }}</div>
+      </div>
+    </div>
+    <div class="card bg-base-100 p-3 shadow">
+      <div class="font-semibold">{{ __('Filters')|e }}</div>
+      <div class="text-sm opacity-80">
+        {% if def.filters is defined and def.filters %}
+          {% for k,v in def.filters %}
+            <div>{{ k|e }}: {{ v|e }}</div>
+          {% endfor %}
+        {% else %}
+          <div>{{ __('None')|e }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Charts #}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card bg-base-100 p-3 shadow">
+      <div class="font-semibold mb-2">{{ __('Chart (Values)')|e }}</div>
+      <canvas id="reportChartValues" height="220" aria-label="{{ __('Chart (Values)')|e }}" role="img"></canvas>
+    </div>
+    <div class="card bg-base-100 p-3 shadow">
+      <div class="font-semibold mb-2">{{ __('Chart (Counts)')|e }}</div>
+      <canvas id="reportChartCounts" height="220" aria-label="{{ __('Chart (Counts)')|e }}" role="img"></canvas>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>{{ __('Label')|e }}</th>
+          <th>{{ __('Value')|e }}</th>
+          <th>{{ __('Count')|e }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in report.rows %}
+        <tr>
+          <td>{{ r.label|e }}</td>
+          <td>{{ r.value }}</td>
+          <td>{{ r.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# Chart.js via CDN and rendering script #}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha256-U4WmS8VYxVn3AnxH6Tlp7K5qB/8rYkq7X6nq+3C9WlU=" crossorigin="anonymous"></script>
+  <script>
+    (function(){
+      try {
+        const rows = {{ report.rows|json_encode|raw }};
+        const labels = rows.map(r => String(r.label));
+        const values = rows.map(r => Number(r.value));
+        const counts = rows.map(r => Number(r.count));
+
+        // Choose chart type based on number of buckets
+        const many = labels.length > 8;
+        const typeBar = 'bar';
+        const typePie = many ? 'bar' : 'doughnut';
+
+        const baseOpts = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: { display: true, ticks: { autoSkip: true, maxRotation: 45, minRotation: 0 } },
+            y: { beginAtZero: true }
+          }
+        };
+
+        const palette = [
+          '#60a5fa','#34d399','#f87171','#fbbf24','#a78bfa','#f472b6','#4ade80','#f59e0b','#22d3ee','#93c5fd',
+        ];
+
+        // Values chart
+        const cv = document.getElementById('reportChartValues');
+        if (cv) {
+          new Chart(cv.getContext('2d'), {
+            type: typeBar,
+            data: {
+              labels,
+              datasets: [{
+                label: '{{ __('Value')|e }}',
+                data: values,
+                backgroundColor: labels.map((_,i) => palette[i % palette.length]),
+                borderColor: '#111827',
+                borderWidth: 0,
+              }]
+            },
+            options: baseOpts
+          });
+        }
+
+        // Counts chart
+        const cc = document.getElementById('reportChartCounts');
+        if (cc) {
+          new Chart(cc.getContext('2d'), {
+            type: typePie,
+            data: {
+              labels,
+              datasets: [{
+                label: '{{ __('Count')|e }}',
+                data: counts,
+                backgroundColor: labels.map((_,i) => palette[i % palette.length]),
+                borderWidth: 0,
+              }]
+            },
+            options: Object.assign({}, baseOpts, { scales: typePie === 'doughnut' ? {} : baseOpts.scales })
+          });
+        }
+      } catch (e) { console.error('Chart render failed', e); }
+    })();
+  </script>
+</section>
 {% endblock %}

@@ -20,6 +20,9 @@ final class DealsController
     public function __construct(
         private readonly object $dealsStore,
         private readonly object $contactsStore,
+        private readonly ?\App\Service\AuditService $audit = null,
+        private readonly ?object $commentsStore = null,
+        private readonly ?object $followsStore = null,
     ) {}
 
     public function list(): void
@@ -117,16 +120,44 @@ final class DealsController
         $id = (int)($_GET['id'] ?? 0);
         $item = $id ? $this->dealsStore->get($id) : null;
         if (!$item) { redirect('/deals'); }
+        if (!\App\Util\Permission::enforceRecord('deals', 'view', $item)) { return; }
         $schema = Schemas::get('deals');
         $fields = array_map(fn($f) => ['name' => $f['name'], 'label' => $f['label'] ?? $f['name']], $schema['fields']);
         array_unshift($fields, ['name' => 'id', 'label' => 'ID']);
         $fields[] = ['name' => 'created_at', 'label' => __('Created')];
+        $comments = [];
+        if ($this->commentsStore) {
+            try {
+                foreach ($this->commentsStore->all() as $c) {
+                    if (($c['entity'] ?? '') === 'deals' && (int)($c['entity_id'] ?? 0) === $id) { $comments[] = $c; }
+                }
+                usort($comments, fn($a,$b) => strcmp((string)($a['created_at'] ?? ''), (string)($b['created_at'] ?? '')));
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+        // Follows info
+        $isFollowing = false; $followersCount = 0;
+        if ($this->followsStore) {
+            try {
+                $me = \App\Util\Auth::user();
+                $login = $me ? strtolower((string)($me['login'] ?? '')) : '';
+                foreach ($this->followsStore->all() as $f) {
+                    if (($f['entity'] ?? '') === 'deals' && (int)($f['entity_id'] ?? 0) === $id) {
+                        $followersCount++;
+                        if ($login !== '' && strtolower((string)($f['user_login'] ?? '')) === $login) { $isFollowing = true; }
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+        }
         render('entity_view', [
             'title' => __('Deal') . ': ' . ($item['title'] ?? ('#' . $id)),
             'fields' => $fields,
             'item' => $item,
             'back_url' => url('/deals'),
-            'edit_url' => url('/deals/edit', ['id' => $id])
+            'edit_url' => url('/deals/edit', ['id' => $id]),
+            'comments' => $comments,
+            'comments_entity' => 'deals',
+            'is_following' => $isFollowing,
+            'followers_count' => $followersCount,
         ]);
     }
 
@@ -168,6 +199,7 @@ final class DealsController
         $id = (int)($_GET['id'] ?? 0);
         $deal = $id ? $this->dealsStore->get($id) : null;
         if (!$deal) { redirect('/deals'); }
+        if (!\App\Util\Permission::enforceRecord('deals', 'edit', $deal)) { return; }
         $contacts = $this->contactsStore->all();
         render('deals_form', [
             'title' => __('Edit Deal'),
@@ -200,6 +232,8 @@ final class DealsController
         if (!Csrf::validate(is_string($token) ? $token : null)) { http_response_code(400); render('errors/400'); return; }
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) { redirect('/deals'); }
+        $existing = $this->dealsStore->get($id) ?? null;
+        if (!\App\Util\Permission::enforceRecord('deals', 'edit', is_array($existing) ? $existing : null)) { return; }
         $data = $this->normalize($_POST);
         $errors = $this->validate($data);
         if ($errors) {
@@ -219,7 +253,61 @@ final class DealsController
         $token = $_POST[Csrf::fieldName()] ?? null;
         if (!Csrf::validate(is_string($token) ? $token : null)) { http_response_code(400); render('errors/400'); return; }
         $id = (int)($_POST['id'] ?? 0);
-        if ($id > 0) { $this->dealsStore->delete($id); Flash::success(__('Deal deleted.')); }
+        if ($id > 0) {
+            $existing = $this->dealsStore->get($id) ?? null;
+            if (!\App\Util\Permission::enforceRecord('deals', 'delete', is_array($existing) ? $existing : null)) { return; }
+            $this->dealsStore->delete($id);
+            Flash::success(__('Deal deleted.'));
+        }
+        redirect('/deals');
+    }
+
+    public function bulk(): void
+    {
+        $t = $_POST[Csrf::fieldName()] ?? null;
+        if (!Csrf::validate(is_string($t) ? $t : null)) { http_response_code(400); render('errors/400'); return; }
+        $action = (string)($_POST['action'] ?? '');
+        $ids = isset($_POST['ids']) && is_array($_POST['ids']) ? array_unique(array_map('intval', $_POST['ids'])) : [];
+        $value = trim((string)($_POST['value'] ?? ''));
+        if (empty($ids)) { Flash::error(__('No items selected.')); redirect('/deals'); }
+        $ok = 0; $skip = 0; $fail = 0; $deleted = [];
+        foreach ($ids as $id) {
+            if ($id <= 0) { $skip++; continue; }
+            $item = $this->dealsStore->get($id);
+            if (!$item) { $skip++; continue; }
+            if ($action === 'delete') {
+                if (!\App\Util\Permission::enforceRecord('deals', 'delete', $item)) { $fail++; continue; }
+                $before = is_array($item) ? $item : null;
+                $this->dealsStore->delete($id);
+                $deleted[] = $before;
+                if ($this->audit) { $this->audit->record('deleted','deals',$id,$before,null,['bulk'=>1]); }
+                $ok++;
+            } elseif ($action === 'change_stage') {
+                $stages = array_keys(self::stages());
+                if ($value === '' || !in_array($value, $stages, true)) { $fail++; continue; }
+                if (!\App\Util\Permission::enforceRecord('deals', 'edit', $item)) { $fail++; continue; }
+                $item['stage'] = $value;
+                $this->dealsStore->update($id, $item);
+                if ($this->audit) { $this->audit->record('action','deals',$id,null,null,['bulk'=>1,'action'=>'change_stage','stage'=>$value]); }
+                $ok++;
+            } else {
+                $fail++;
+            }
+        }
+        if (!empty($deleted)) {
+            if (session_status() !== PHP_SESSION_ACTIVE) { @session_start(); }
+            if (!isset($_SESSION['_bulk_undo'])) { $_SESSION['_bulk_undo'] = []; }
+            $token = bin2hex(random_bytes(8));
+            $_SESSION['_bulk_undo'][$token] = [ 'entity' => 'deals', 'records' => $deleted, 'at' => time() ];
+            $undoUrl = url('/bulk/undo');
+            $field = \App\Util\Csrf::fieldName();
+            $csrf = '<input type="hidden" name="' . htmlspecialchars($field, ENT_QUOTES) . '" value="' . htmlspecialchars(\App\Util\Csrf::getToken(), ENT_QUOTES) . '">';
+            $msg = __('Deleted: ') . $ok . ' · ' . __('Failed: ') . $fail . ' · ' . __('Undo available for 5 minutes.');
+            $msg .= ' <form method="post" action="' . htmlspecialchars($undoUrl, ENT_QUOTES) . '" class="inline"><input type="hidden" name="token" value="' . htmlspecialchars($token, ENT_QUOTES) . '">' . $csrf . '<input type="hidden" name="entity" value="deals"><button class="btn btn-xs" type="submit">' . htmlspecialchars(__('Undo'), ENT_QUOTES) . '</button></form>';
+            Flash::info($msg);
+        } else {
+            Flash::success(__('Updated: ') . $ok . ' · ' . __('Skipped: ') . $skip . ' · ' . __('Failed: ') . $fail);
+        }
         redirect('/deals');
     }
 

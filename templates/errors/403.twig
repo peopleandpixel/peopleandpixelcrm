@@ -1,10 +1,22 @@
-{% extends 'layout.twig' %}
-{% block content %}
-<section class="space-y-3">
-  <div class="alert alert-warning">
-    <span>403 – {{ __('Forbidden')|e }}</span>
-  </div>
-  <p class="opacity-80">{{ __('You do not have permission to access this resource.')|e }}</p>
-  <p><a class="btn" href="{{ url('/') }}">&larr; {{ __('Back to home')|e }}</a></p>
-</section>
-{% endblock %}
+<!doctype html>
+<html lang="{{ currentLang|default('en')|e }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>403 – Forbidden</title>
+  <link rel="stylesheet" href="{{ url('/style.css') }}">
+</head>
+<body>
+  <main class="container" style="padding:24px;">
+    <h1>403 – {{ __('Forbidden')|e }}</h1>
+    <p>{{ __('You do not have permission to access this resource.')|e }}</p>
+    {% if errorDetails is defined and errorDetails %}
+      <details open>
+        <summary>Details (debug)</summary>
+        <pre style="white-space:pre-wrap">{{ (errorDetails.class ~ ': ' ~ errorDetails.message ~ '\n' ~ errorDetails.file ~ ':' ~ errorDetails.line ~ '\n' ~ errorDetails.trace)|e }}</pre>
+      </details>
+    {% endif %}
+    <p><a href="{{ url('/') }}">&larr; {{ __('Back to home')|e }}</a></p>
+  </main>
+</body>
+</html>

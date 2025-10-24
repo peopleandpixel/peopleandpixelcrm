@@ -43,14 +43,20 @@ class ExportController
             return;
         }
         $items = $store->all();
-        // Build headers from union of keys, keep stable order with id first
-        $headers = [];
+        // Build headers from union of keys; prefer schema fields order with id first
+        $headersSet = [];
         foreach ($items as $row) {
-            foreach (array_keys($row) as $k) { $headers[$k] = true; }
+            foreach (array_keys($row) as $k) { $headersSet[$k] = true; }
         }
-        $headers = array_keys($headers);
-        usort($headers, function($a, $b) {
-            if ($a === 'id') return -1; if ($b === 'id') return 1; return strcmp($a, $b);
+        $headers = array_keys($headersSet);
+        $schema = \App\Domain\Schemas::get($entity);
+        $schemaOrder = array_map(fn($f) => (string)($f['name'] ?? ''), $schema['fields'] ?? []);
+        $order = array_merge(['id'], $schemaOrder);
+        usort($headers, function($a, $b) use ($order) {
+            $pa = array_search($a, $order, true);
+            $pb = array_search($b, $order, true);
+            if ($pa === false && $pb === false) { return strcmp($a, $b); }
+            if ($pa === false) return 1; if ($pb === false) return -1; return $pa <=> $pb;
         });
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="' . $entity . '.csv"');

@@ -84,6 +84,29 @@ function redirect(string $path): void {
 }
 
 // URL helpers
+function can_url(string $urlOrPath, string $method = 'GET'): bool {
+    // Accept absolute URLs and extract path
+    $path = $urlOrPath;
+    if (preg_match('#^https?://#i', $urlOrPath)) {
+        $parts = parse_url($urlOrPath);
+        $path = isset($parts['path']) ? $parts['path'] : '/';
+    }
+    // Normalize to app-relative path (remove base path if present)
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    $basePath = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+    if ($basePath !== '' && $basePath !== '/' && str_starts_with($path, $basePath)) {
+        $path = substr($path, strlen($basePath)) ?: '/';
+    }
+    // Drop trailing slash (except root)
+    if ($path !== '/' && str_ends_with($path, '/')) {
+        $path = rtrim($path, '/');
+    }
+    // Map to entity/action and check permissions
+    $map = \App\Util\Permission::mapPathToCheck(strtoupper($method), $path);
+    if ($map === null) return true; // not a protected route → visible
+    return \App\Util\Permission::can($map[0], $map[1]);
+}
+
 function current_path(): string {
     $uri = $_SERVER['REQUEST_URI'] ?? '/';
     $path = parse_url($uri, PHP_URL_PATH) ?: '/';

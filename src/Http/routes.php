@@ -67,11 +67,30 @@ return static function (Container $container, Router $router): void {
     });
     $router->post('/login', function() use ($container) {
         $config = $container->get('config');
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        // Rate limit login attempts per IP (max 5 per minute)
+        if (!\App\Util\RateLimit::allow($config, 'login:' . $ip, 5, 60)) {
+            http_response_code(429);
+            render('errors/500', ['message' => __('Too many login attempts. Please wait a minute and try again.')]);
+            return;
+        }
         $username = isset($_POST['username']) ? (string)$_POST['username'] : '';
         $password = isset($_POST['password']) ? (string)$_POST['password'] : '';
+        $otp = isset($_POST['otp']) ? (string)$_POST['otp'] : '';
         $return = isset($_POST['return']) ? (string)$_POST['return'] : '/';
         if (Auth::login($config, $username, $password)) {
             $u = Auth::user();
+            // If user has TOTP secret configured, require OTP verification
+            $secret = is_array($u) ? (string)($u['totp_secret'] ?? '') : '';
+            if ($secret !== '') {
+                $window = (int)($config->getEnv('TOTP_WINDOW') ?: '1');
+                if (!\App\Util\Totp::verify($secret, $otp, 30, 6, $window)) {
+                    // Invalidate session and show error
+                    \App\Util\Auth::logout();
+                    $q = http_build_query(['error' => __('Invalid authentication code'), 'return' => $return]);
+                    redirect('/login?' . $q);
+                }
+            }
             if ($u && !empty($u['must_change_password'])) {
                 redirect(url('/password/change', ['return' => $return]));
             }
@@ -92,9 +111,106 @@ return static function (Container $container, Router $router): void {
     // Generic upload endpoint (for AJAX file uploads)
     $router->post('/upload', [$container->get('uploadController'), 'handle']);
 
+    // Comments
+    $router->post('/comments/add', [$container->get('commentsController'), 'add']);
+    $router->post('/comments/delete', [$container->get('commentsController'), 'delete']);
+
+    // Follows
+    $router->post('/follows/toggle', [$container->get('followsController'), 'toggle']);
+    $router->post('/admin/follows/digest', [$container->get('followsController'), 'digest']);
+
     // Saved views
     $router->post('/views/save', [$container->get('viewsController'), 'save']);
     $router->post('/views/delete', [$container->get('viewsController'), 'delete']);
+
+    // Bulk operations
+    $router->post('/bulk/undo', [$container->get('bulkController'), 'undo']);
+
+    // Backups (admin)
+    $router->get('/admin/backups', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/405', ['path' => '/admin/backups', 'allowed' => ['GET']]); return; }
+        ($container->get('backupsController'))->list();
+    });
+    $router->post('/admin/backups/create', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/405', ['path' => '/admin/backups/create', 'allowed' => ['POST']]); return; }
+        ($container->get('backupsController'))->create();
+    });
+    $router->post('/admin/backups/verify', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/405', ['path' => '/admin/backups/verify', 'allowed' => ['POST']]); return; }
+        ($container->get('backupsController'))->verify();
+    });
+    $router->post('/admin/backups/restore', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/405', ['path' => '/admin/backups/restore', 'allowed' => ['POST']]); return; }
+        ($container->get('backupsController'))->restore();
+    });
+    $router->post('/admin/backups/delete', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/405', ['path' => '/admin/backups/delete', 'allowed' => ['POST']]); return; }
+        ($container->get('backupsController'))->delete();
+    });
+    $router->get('/admin/backups/download', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/405', ['path' => '/admin/backups/download', 'allowed' => ['GET']]); return; }
+        ($container->get('backupsController'))->download();
+    });
+
+    // Admin Settings (.env)
+    $router->get('/admin/settings', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        /** @var \App\Config $config */
+        $config = $container->get('config');
+        $keys = [
+            'APP_ENV','APP_DEBUG','DEFAULT_LANG',
+            'USE_DB','DB_DSN','DB_USER','DB_PASS',
+            'LOG_LEVEL',
+            'API_TOKEN','WEBHOOKS','WEBHOOK_SECRET',
+            'SMTP_HOST','SMTP_PORT','SMTP_USER','SMTP_PASS','SMTP_SECURE','SMTP_FROM','SMTP_FROM_NAME',
+            'NOTIFY_COMMENTS','NOTIFY_SELF','NOTIFY_FOLLOWS',
+            'AUTOMATIONS_ENABLED','AUTOMATIONS_MAX_ACTIONS','AUTOMATIONS_ALLOW_EMAIL',
+            'TOTP_WINDOW',
+            'BACKUP_RETENTION',
+            'INVENTORY_ALLOW_NEGATIVE'
+        ];
+        $vals = [];
+        foreach ($keys as $k) { $vals[$k] = $config->getEnv($k); }
+        render('admin/settings', ['env' => $vals]);
+    });
+    $router->post('/admin/settings', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        $token = $_POST[\App\Util\Csrf::fieldName()] ?? null;
+        if (!\App\Util\Csrf::validate(is_string($token) ? $token : null)) { http_response_code(400); render('errors/400'); return; }
+        /** @var \App\Config $config */
+        $config = $container->get('config');
+        $root = $config->getProjectRoot();
+        $envPath = $root . '/.env';
+        $allowed = [
+            'APP_ENV','APP_DEBUG','DEFAULT_LANG',
+            'USE_DB','DB_DSN','DB_USER','DB_PASS',
+            'LOG_LEVEL',
+            'API_TOKEN','WEBHOOKS','WEBHOOK_SECRET',
+            'SMTP_HOST','SMTP_PORT','SMTP_USER','SMTP_PASS','SMTP_SECURE','SMTP_FROM','SMTP_FROM_NAME',
+            'NOTIFY_COMMENTS','NOTIFY_SELF','NOTIFY_FOLLOWS',
+            'AUTOMATIONS_ENABLED','AUTOMATIONS_MAX_ACTIONS','AUTOMATIONS_ALLOW_EMAIL',
+            'TOTP_WINDOW',
+            'BACKUP_RETENTION',
+            'INVENTORY_ALLOW_NEGATIVE'
+        ];
+        $updates = [];
+        foreach ($allowed as $k) {
+            if (str_ends_with($k, 'PASS') || $k === 'WEBHOOK_SECRET') {
+                if (isset($_POST[$k]) && $_POST[$k] !== '') { $updates[$k] = (string)$_POST[$k]; }
+                continue;
+            }
+            if (isset($_POST[$k])) {
+                $updates[$k] = (string)$_POST[$k];
+            }
+        }
+        try {
+            \App\Util\EnvEditor::update($envPath, $updates);
+            \App\Util\Flash::success(__('Settings updated'));
+        } catch (\Throwable $e) {
+            \App\Util\Flash::error(__('Failed to update settings') . ': ' . $e->getMessage());
+        }
+        redirect('/admin/settings');
+    });
 
     // Secure file serving from var/uploads
     $router->get('/files/{subdir}/{file}', [$container->get('filesController'), 'serve']);
@@ -113,8 +229,14 @@ return static function (Container $container, Router $router): void {
     $router->get('/contacts/edit', [$container->get('contactsController'), 'editForm']);
     $router->post('/contacts/edit', [$container->get('contactsController'), 'update']);
     $router->post('/contacts/delete', [$container->get('contactsController'), 'delete']);
+    $router->post('/contacts/bulk', [$container->get('contactsController'), 'bulk']);
+    // Contacts: Dedupe
+    $router->get('/contacts/dedupe', [$container->get('contactsDedupeController'), 'list']);
+    $router->post('/contacts/merge', [$container->get('contactsDedupeController'), 'merge']);
     // Contact activities
     $router->post('/contacts/activity/add', [$container->get('contactsController'), 'addNote']);
+    // Contact email send
+    $router->post('/contacts/email/send', [$container->get('emailController'), 'sendToContact']);
 
     // Times
     $router->get('/times', function() use ($container) {
@@ -159,6 +281,7 @@ return static function (Container $container, Router $router): void {
     $router->get('/deals/edit', [$container->get('dealsController'), 'editForm']);
     $router->post('/deals/edit', [$container->get('dealsController'), 'update']);
     $router->post('/deals/delete', [$container->get('dealsController'), 'delete']);
+    $router->post('/deals/bulk', [$container->get('dealsController'), 'bulk']);
 
     // Projects
     $router->get('/projects', function() use ($container) {
@@ -171,6 +294,7 @@ return static function (Container $container, Router $router): void {
     $router->get('/projects/new', [$container->get('projectsController'), 'newForm']);
     $router->get('/projects/view', [$container->get('projectsController'), 'view']);
     $router->post('/projects/new', [$container->get('projectsController'), 'create']);
+    $router->post('/projects/bulk', [$container->get('projectsController'), 'bulk']);
 
     // Employees
     $router->get('/employees', function() use ($container) {
@@ -193,6 +317,19 @@ return static function (Container $container, Router $router): void {
     $router->get('/candidates/view', [$container->get('candidatesController'), 'view']);
     $router->get('/candidates/new', [$container->get('candidatesController'), 'newForm']);
     $router->post('/candidates/new', [$container->get('candidatesController'), 'create']);
+
+    // Documents
+    $router->get('/documents', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) { send_list_cache_headers([$cfg->jsonPath('documents.json')], 120); }
+        ($container->get('documentsController'))->list();
+    });
+    $router->get('/documents/view', [$container->get('documentsController'), 'view']);
+    $router->get('/documents/new', [$container->get('documentsController'), 'newForm']);
+    $router->post('/documents/new', [$container->get('documentsController'), 'create']);
+    $router->get('/documents/edit', [$container->get('documentsController'), 'editForm']);
+    $router->post('/documents/edit', [$container->get('documentsController'), 'update']);
+    $router->post('/documents/delete', [$container->get('documentsController'), 'delete']);
 
     // Payments
     $router->get('/payments', function() use ($container) {
@@ -286,7 +423,48 @@ return static function (Container $container, Router $router): void {
     // Audit log
     $router->get('/audit', [$container->get('auditController'), 'list']);
 
+    // Admin backup: download ZIP of data directory
+    $router->get('/admin/backup/download', function() use ($container) {
+        /** @var \App\Config $cfg */
+        $cfg = $container->get('config');
+        $dataDir = $cfg->getDataDir();
+        $tmp = tempnam(sys_get_temp_dir(), 'ppbackup_');
+        $zipPath = $tmp . '.zip';
+        @unlink($tmp);
+        $ok = false;
+        if (class_exists(\ZipArchive::class)) {
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dataDir, \FilesystemIterator::SKIP_DOTS));
+                foreach ($it as $file) {
+                    $path = (string)$file;
+                    $local = substr($path, strlen($dataDir) + 1);
+                    $zip->addFile($path, $local);
+                }
+                $zip->close();
+                $ok = true;
+            }
+        }
+        if (!$ok) {
+            http_response_code(500);
+            echo 'Backup not available';
+            return;
+        }
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="peopleandpixel-backup-' . date('Ymd-His') . '.zip"');
+        header('Content-Length: ' . (string)filesize($zipPath));
+        readfile($zipPath);
+        @unlink($zipPath);
+    });
+
+    // Health (public)
+    $router->get('/health', [$container->get('healthController'), 'json']);
+
     // Public REST API
+    // Enrichment (privacy-first, optional) via API token
+    $router->post('/api/enrich/contact', function() use ($container) {
+        ($container->get('apiController'))->enrichContact();
+    });
     // Lists
     $router->get('/api/{entity}', function(string $entity) use ($container) {
         ($container->get('apiController'))->list($entity);

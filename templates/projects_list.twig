@@ -14,7 +14,12 @@
       title: '',
       items: items|default([]),
       columns: columns,
-      actions: { view_url: url('/projects/view'), edit_url: url('/projects/edit'), delete_url: url('/projects/delete'), id_field: 'id' }
+      actions: { view_url: url('/projects/view'), edit_url: url('/projects/edit'), delete_url: url('/projects/delete'), id_field: 'id' },
+      bulk: {
+        post_url: url('/projects/bulk'),
+        actions: [ {value:'delete',label:__('Delete')}, {value:'set_status',label:__('Set status')} ],
+        placeholders: { set_status: __('Status (e.g., active)') }
+      }
     } %}
     <div class="mt-4">
       {% set extra = {q: q|default(''), per: (per|default(10))|int} %}

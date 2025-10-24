@@ -24,6 +24,9 @@ readonly class ContactsTemplateController
         private ?object $tasksStore = null,
         private ?object $groupsStore = null,
         private ?object $activitiesStore = null,
+        private ?\App\Service\AuditService $audit = null,
+        private ?object $commentsStore = null,
+        private ?object $followsStore = null,
     ) {}
 
     public function view(): void
@@ -31,6 +34,8 @@ readonly class ContactsTemplateController
         $id = (int)($_GET['id'] ?? 0);
         $item = $id ? $this->contactsStore->get($id) : null;
         if (!$item) { redirect('/contacts'); }
+        // Object-level permission: view specific contact
+        if (!\App\Util\Permission::enforceRecord('contacts', 'view', $item)) { return; }
         $schema = Schemas::get('contacts');
         $fields = array_map(fn($f) => ['name' => $f['name'], 'label' => $f['label'] ?? $f['name']], $schema['fields']);
         // Prepend ID and append Created if present
@@ -52,6 +57,29 @@ readonly class ContactsTemplateController
                 return $da < $db ? 1 : -1;
             });
         }
+        $comments = [];
+        if ($this->commentsStore) {
+            try {
+                foreach ($this->commentsStore->all() as $c) {
+                    if (($c['entity'] ?? '') === 'contacts' && (int)($c['entity_id'] ?? 0) === $id) { $comments[] = $c; }
+                }
+                usort($comments, fn($a,$b) => strcmp((string)($a['created_at'] ?? ''), (string)($b['created_at'] ?? '')));
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+        // Follows info
+        $isFollowing = false; $followersCount = 0;
+        if ($this->followsStore) {
+            try {
+                $me = \App\Util\Auth::user();
+                $login = $me ? strtolower((string)($me['login'] ?? '')) : '';
+                foreach ($this->followsStore->all() as $f) {
+                    if (($f['entity'] ?? '') === 'contacts' && (int)($f['entity_id'] ?? 0) === $id) {
+                        $followersCount++;
+                        if ($login !== '' && strtolower((string)($f['user_login'] ?? '')) === $login) { $isFollowing = true; }
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+        }
         render('entity_view', [
             'title' => __('Contact') . ': ' . ($item['name'] ?? ('#' . $id)),
             'fields' => $fields,
@@ -59,7 +87,11 @@ readonly class ContactsTemplateController
             'back_url' => url('/contacts'),
             'edit_url' => url('/contacts/edit', ['id' => $id]),
             'activities' => $activities,
-            'add_note_url' => url('/contacts/activity/add')
+            'add_note_url' => url('/contacts/activity/add'),
+            'comments' => $comments,
+            'comments_entity' => 'contacts',
+            'is_following' => $isFollowing,
+            'followers_count' => $followersCount,
         ]);
     }
 
@@ -139,6 +171,7 @@ readonly class ContactsTemplateController
         $id = (int)($_GET['id'] ?? 0);
         $contact = $id ? $this->contactsStore->get($id) : null;
         if (!$contact) { redirect('/contacts'); }
+        if (!\App\Util\Permission::enforceRecord('contacts', 'edit', $contact)) { return; }
         render('contacts_form', ['title' => __('Edit Contact'), 'form_action' => url('/contacts/edit'), 'contact' => $contact, 'cancel_url' => url('/contacts'), 'groups' => $this->groupsStore ? $this->groupsStore->all() : []] + $contact);
     }
 
@@ -146,6 +179,8 @@ readonly class ContactsTemplateController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) { redirect('/contacts'); }
+        $existing = $this->contactsStore->get($id) ?? null;
+        if (!\App\Util\Permission::enforceRecord('contacts', 'edit', is_array($existing) ? $existing : null)) { return; }
         $uploaded = Uploader::saveUploadedPicture();
         if ($uploaded) { $_POST['picture'] = $uploaded; }
         $dto = ContactDTO::fromInput($_POST);
@@ -169,6 +204,8 @@ readonly class ContactsTemplateController
     {
         $id = (int)($_POST['id'] ?? 0);
         if ($id <= 0) { redirect('/contacts'); }
+        $existing = $this->contactsStore->get($id) ?? null;
+        if (!\App\Util\Permission::enforceRecord('contacts', 'delete', is_array($existing) ? $existing : null)) { return; }
         // Check referential integrity: restrict delete if related records exist
         $hasTimes = false; $hasTasks = false;
         if ($this->timesStore) {
@@ -221,5 +258,62 @@ readonly class ContactsTemplateController
         $this->logActivity('note', $contactId, $note);
         Flash::success(__('Note added.'));
         redirect(url('/contacts/view', ['id' => $contactId]));
+    }
+
+    public function bulk(): void
+    {
+        $t = $_POST[\App\Util\Csrf::fieldName()] ?? null;
+        if (!\App\Util\Csrf::validate(is_string($t) ? $t : null)) { http_response_code(400); render('errors/400'); return; }
+        $action = (string)($_POST['action'] ?? '');
+        $ids = isset($_POST['ids']) && is_array($_POST['ids']) ? array_unique(array_map('intval', $_POST['ids'])) : [];
+        $value = trim((string)($_POST['value'] ?? ''));
+        if (empty($ids)) { Flash::error(__('No items selected.')); redirect('/contacts'); }
+        $ok = 0; $skip = 0; $fail = 0; $blocked = 0; $deleted = [];
+        foreach ($ids as $id) {
+            if ($id <= 0) { $skip++; continue; }
+            $item = $this->contactsStore->get($id);
+            if (!$item) { $skip++; continue; }
+            if ($action === 'delete') {
+                if (!\App\Util\Permission::enforceRecord('contacts', 'delete', $item)) { $fail++; continue; }
+                // Check referential integrity similar to delete()
+                $hasTimes = false; $hasTasks = false;
+                if ($this->timesStore) { foreach ($this->timesStore->all() as $t) { if ((int)($t['contact_id'] ?? 0) === $id) { $hasTimes = true; break; } } }
+                if ($this->tasksStore) { foreach ($this->tasksStore->all() as $t) { if ((int)($t['contact_id'] ?? 0) === $id) { $hasTasks = true; break; } } }
+                if ($hasTimes || $hasTasks) { $blocked++; continue; }
+                $before = is_array($item) ? $item : null;
+                $this->contactsStore->delete($id);
+                $deleted[] = $before;
+                if ($this->audit) { $this->audit->record('deleted','contacts',$id,$before,null,['bulk'=>1]); }
+                $ok++;
+            } elseif ($action === 'add_tag') {
+                if ($value === '') { $fail++; continue; }
+                if (!\App\Util\Permission::enforceRecord('contacts', 'edit', $item)) { $fail++; continue; }
+                $tags = $item['tags'] ?? [];
+                if (!is_array($tags)) { $tags = []; }
+                if (!in_array($value, $tags, true)) { $tags[] = $value; }
+                $item['tags'] = $tags;
+                $this->contactsStore->update($id, $item);
+                if ($this->audit) { $this->audit->record('action','contacts',$id,null,null,['bulk'=>1,'action'=>'add_tag','tag'=>$value]); }
+                $ok++;
+            } else {
+                $fail++;
+            }
+        }
+        // Prepare undo token for deletes
+        if (!empty($deleted)) {
+            if (session_status() !== PHP_SESSION_ACTIVE) { @session_start(); }
+            if (!isset($_SESSION['_bulk_undo'])) { $_SESSION['_bulk_undo'] = []; }
+            $token = bin2hex(random_bytes(8));
+            $_SESSION['_bulk_undo'][$token] = [ 'entity' => 'contacts', 'records' => $deleted, 'at' => time() ];
+            $undoUrl = url('/bulk/undo');
+            $field = \App\Util\Csrf::fieldName();
+            $csrf = '<input type="hidden" name="' . htmlspecialchars($field, ENT_QUOTES) . '" value="' . htmlspecialchars(\App\Util\Csrf::getToken(), ENT_QUOTES) . '">';
+            $msg = __('Deleted: ') . $ok . ' · ' . __('Blocked: ') . $blocked . ' · ' . __('Failed: ') . $fail . ' · ' . __('Undo available for 5 minutes.');
+            $msg .= ' <form method="post" action="' . htmlspecialchars($undoUrl, ENT_QUOTES) . '" class="inline"><input type="hidden" name="token" value="' . htmlspecialchars($token, ENT_QUOTES) . '">' . $csrf . '<input type="hidden" name="entity" value="contacts"><button class="btn btn-xs" type="submit">' . htmlspecialchars(__('Undo'), ENT_QUOTES) . '</button></form>';
+            Flash::info($msg);
+        } else {
+            Flash::success(__('Updated: ') . $ok . ' · ' . __('Skipped: ') . $skip . ' · ' . __('Failed: ') . $fail);
+        }
+        redirect('/contacts');
     }
 }

@@ -57,6 +57,9 @@ class TasksController
         private readonly ?object $projectsStore = null,
         private readonly ?object $timesStore = null,
         private readonly ?\App\Service\ListService $listService = null,
+        private readonly ?object $commentsStore = null,
+        private readonly ?object $followsStore = null,
+        private readonly ?\App\Service\AutomationService $automation = null,
     ) {}
 
     /**
@@ -103,6 +106,13 @@ class TasksController
                 if ($next) { $this->tasksStore->add($next); }
             }
         }
+        // Fire automation event for status change
+        $this->automation?->runForEvent('task.status_changed', [
+            'task_id' => $id,
+            'from_status' => $prevStatus,
+            'to_status' => $status,
+            'task' => $existing,
+        ]);
         \App\Http\Response::json(['ok' => true, 'task' => ['id' => $id, 'status' => $status, 'done_date' => $doneDate]])->send();
     }
 
@@ -115,12 +125,39 @@ class TasksController
         $fields = array_map(fn($f) => ['name' => $f['name'], 'label' => $f['label'] ?? $f['name']], $schema['fields']);
         array_unshift($fields, ['name' => 'id', 'label' => 'ID']);
         $fields[] = ['name' => 'created_at', 'label' => __('Created')];
+        $comments = [];
+        if ($this->commentsStore) {
+            try {
+                foreach ($this->commentsStore->all() as $c) {
+                    if (($c['entity'] ?? '') === 'tasks' && (int)($c['entity_id'] ?? 0) === $id) { $comments[] = $c; }
+                }
+                usort($comments, fn($a,$b) => strcmp((string)($a['created_at'] ?? ''), (string)($b['created_at'] ?? '')));
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+        // Follows info
+        $isFollowing = false; $followersCount = 0;
+        if ($this->followsStore) {
+            try {
+                $me = \App\Util\Auth::user();
+                $login = $me ? strtolower((string)($me['login'] ?? '')) : '';
+                foreach ($this->followsStore->all() as $f) {
+                    if (($f['entity'] ?? '') === 'tasks' && (int)($f['entity_id'] ?? 0) === $id) {
+                        $followersCount++;
+                        if ($login !== '' && strtolower((string)($f['user_login'] ?? '')) === $login) { $isFollowing = true; }
+                    }
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+        }
         render('entity_view', [
             'title' => __('Task') . ': ' . ($item['title'] ?? ('#' . $id)),
             'fields' => $fields,
             'item' => $item,
             'back_url' => url('/tasks'),
-            'edit_url' => url('/tasks/edit', ['id' => $id])
+            'edit_url' => url('/tasks/edit', ['id' => $id]),
+            'comments' => $comments,
+            'comments_entity' => 'tasks',
+            'is_following' => $isFollowing,
+            'followers_count' => $followersCount,
         ]);
     }
 

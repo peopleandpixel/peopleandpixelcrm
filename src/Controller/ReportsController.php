@@ -35,11 +35,20 @@ final class ReportsController
 
     public function create(): void
     {
+        $t = $_POST[\App\Util\Csrf::fieldName()] ?? null;
+        if (!\App\Util\Csrf::validate(is_string($t) ? $t : null)) { http_response_code(400); render('errors/400'); return; }
         $name = isset($_POST['name']) ? trim((string)$_POST['name']) : '';
         $entity = isset($_POST['entity']) ? (string)$_POST['entity'] : 'tasks';
+        $allowedEntities = ['contacts','tasks','deals','projects','times','payments'];
+        if (!in_array($entity, $allowedEntities, true)) { $entity = 'tasks'; }
         $groupBy = isset($_POST['group_by']) ? (string)$_POST['group_by'] : 'status';
+        $allowedGroups = ['status','owner_id','tag','date'];
+        if (!in_array($groupBy, $allowedGroups, true)) { $groupBy = 'status'; }
         $metric = isset($_POST['metric']) ? (string)$_POST['metric'] : 'count';
+        $allowedMetrics = ['count','sum_amount','sum_time'];
+        if (!in_array($metric, $allowedMetrics, true)) { $metric = 'count'; }
         $period = isset($_POST['period']) ? (string)$_POST['period'] : 'month';
+        $period = in_array($period, ['day','month'], true) ? $period : 'month';
         $filters = [];
         foreach (['status','owner_id','from','to','tag'] as $k) {
             if (isset($_POST[$k]) && $_POST[$k] !== '') {

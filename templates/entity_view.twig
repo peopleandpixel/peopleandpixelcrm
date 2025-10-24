@@ -6,7 +6,11 @@
     fields: fields|default([]),
     data: item|default({}),
     back_url: back_url|default('/'),
-    edit_url: edit_url|default(null)
+    edit_url: edit_url|default(null),
+    follow_entity: comments_entity|default(null),
+    follow_entity_id: item.id|default(0),
+    is_following: is_following|default(false),
+    followers_count: followers_count|default(0)
   } %}
 
   {% if activities is defined %}
@@ -42,6 +46,15 @@
       <button type="submit" class="btn btn-primary">{{ __('Add note') }}</button>
     </form>
   </div>
+  {% endif %}
+
+  {% if comments is defined %}
+  <hr>
+  {% include 'partials/comments.twig' with {
+    entity: comments_entity|default(''),
+    entity_id: item.id|default(0),
+    comments: comments|default([])
+  } %}
   {% endif %}
 </section>
 {% endblock %}

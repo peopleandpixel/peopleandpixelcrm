@@ -1,0 +1,74 @@
+{# Reusable comments thread with form. Expects:
+ - entity: 'contacts'|'tasks'|'projects'|'deals'
+ - entity_id: int
+ - comments: array of flat comments {id,entity,entity_id,parent_id,message,mentions,created_at,created_by}
+#}
+<section class="mt-6">
+  <h2 class="text-xl font-semibold">{{ __('Comments')|e }}</h2>
+  {% set byParent = {} %}
+  {% for c in comments|default([]) %}
+    {% set pid = c.parent_id|default(null) %}
+    {% set key = pid is not null ? pid : 0 %}
+    {% if byParent[key] is not defined %}{% set byParent = byParent|merge({ (key) : [c] }) %}{% else %}{% set byParent = byParent|merge({ (key) : byParent[key]|merge([c]) }) %}{% endif %}
+  {% endfor %}
+
+  {% macro render_thread(byParent, parentId) %}
+    {% set key = parentId is not null ? parentId : 0 %}
+    {% for c in byParent[key]|default([]) %}
+      <div class="border rounded p-2 mb-2">
+        <div class="text-xs opacity-70 mb-1">
+          <strong>{{ c.created_by|e }}</strong>
+          • {{ c.created_at|default('')|e }}
+        </div>
+        <div class="prose max-w-none">{{ _self.render_comment(c)|raw }}</div>
+        <div class="mt-2 flex gap-2">
+          <button class="btn btn-xs" type="button" onclick="var f=this.parentNode.nextElementSibling; if(f) f.classList.toggle('hidden');">{{ __('Reply')|e }}</button>
+          <form method="post" action="{{ url('/comments/delete') }}" onsubmit="return confirm('{{ __('Delete this comment?')|e }}');" class="inline">
+            {{ csrf_field()|raw }}
+            <input type="hidden" name="id" value="{{ c.id|e }}">
+            <input type="hidden" name="entity" value="{{ entity|e }}">
+            <input type="hidden" name="entity_id" value="{{ entity_id|int }}">
+            <button class="btn btn-xs btn-error" type="submit">{{ __('Delete')|e }}</button>
+          </form>
+        </div>
+        <form method="post" action="{{ url('/comments/add') }}" class="mt-2 hidden">
+          {{ csrf_field()|raw }}
+          <input type="hidden" name="entity" value="{{ entity|e }}">
+          <input type="hidden" name="entity_id" value="{{ entity_id|int }}">
+          <input type="hidden" name="parent_id" value="{{ c.id|e }}">
+          <textarea name="message" rows="2" class="textarea textarea-bordered w-full" placeholder="{{ __('Write a reply...')|e }}"></textarea>
+          <div class="mt-1"><button class="btn btn-xs" type="submit">{{ __('Reply')|e }}</button></div>
+        </form>
+        <div class="ml-4 mt-2">
+          {{ _self.render_thread(byParent, c.id) }}
+        </div>
+      </div>
+    {% endfor %}
+  {% endmacro %}
+
+  {% macro render_comment(c) %}
+    {# Linkify @mentions and basic URLs, preserving escaping #}
+    {% set text = c.message|e %}
+    {% set text = text|replace({'\n':'<br>'}) %}
+    {% set text = text|replace({'@':''}) %}
+    {# Since Twig escaping is applied above, we cannot safely regex here. Keep simple nl2br via helper. #}
+    {{ nl2br_e(c.message|default('')) }}
+  {% endmacro %}
+
+  <div>
+    {{ _self.render_thread(byParent, null) }}
+  </div>
+
+  <div class="mt-3">
+    <form method="post" action="{{ url('/comments/add') }}">
+      {{ csrf_field()|raw }}
+      <input type="hidden" name="entity" value="{{ entity|e }}">
+      <input type="hidden" name="entity_id" value="{{ entity_id|int }}">
+      <div class="mb-2">
+        <label class="block mb-1" for="c_message">{{ __('Add a comment')|e }}</label>
+        <textarea id="c_message" name="message" rows="3" class="textarea textarea-bordered w-full" placeholder="{{ __('Type @username to mention')|e }}"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">{{ __('Comment')|e }}</button>
+    </form>
+  </div>
+</section>

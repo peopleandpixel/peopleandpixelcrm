@@ -122,6 +122,11 @@ Documentation
 - Contributing: docs/CONTRIBUTING.md
 - Competitive analysis and improvement roadmap: docs/competitive-analysis.md
 
+Install as an app (PWA)
+- Chrome/Edge (desktop & Android): When you see the “Install” banner in the app, click Install. You can also use the browser menu → Install app (or Add to Home screen on Android).
+- iOS Safari: Tap the Share button, then “Add to Home Screen”. The app supports offline mode and opens full-screen.
+- Requirements: Use https, keep the app open for a moment so the service worker can cache the shell, and then reload.
+
 Troubleshooting
 - Logs: var/log/app.log (level depends on APP_ENV/LOG_LEVEL)
 - Clear Twig cache by removing var/cache/twig when developing with caching enabled.

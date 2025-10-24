@@ -346,11 +346,14 @@ class Router
     private function emit500(\Throwable $e): void
     {
         http_response_code(500);
-        // Try to use existing ErrorHandler if wired; otherwise render template
+        // Try to use existing ErrorHandler via container if wired; otherwise render template
         if (class_exists('App\\Util\\ErrorHandler')) {
             try {
-                \App\Util\ErrorHandler::handleException($e);
-                return;
+                if (isset($GLOBALS['container']) && $GLOBALS['container'] instanceof \App\Container) {
+                    /** @var \App\Util\ErrorHandler $eh */
+                    $eh = $GLOBALS['container']->get('errorHandler');
+                    if ($eh) { $eh->handleException($e); return; }
+                }
             } catch (\Throwable) {
                 // fall through to render()
             }

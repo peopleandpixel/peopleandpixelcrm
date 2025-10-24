@@ -11,6 +11,16 @@
   <strong>Valid:</strong> {{ valid_count|int }}<br>
   <strong>Invalid:</strong> {{ invalid_count|int }}
 </p>
+{% if unknown_fields is defined and unknown_fields|length > 0 %}
+  <div class="alert alert-warning">
+    Some rows contained unknown fields that were ignored:
+    <ul>
+      {% for idx, fields in unknown_fields %}
+        <li>Row #{{ (idx + 1)|int }}: {{ fields|join(', ')|e }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
 {% if invalid_count > 0 %}
   <h2>Errors</h2>
   <ol>
@@ -33,7 +43,22 @@
   {% endfor %}
   </ol>
 {% else %}
-  <div class="alert alert-success">Validation passed. {% if dry_run %}You can go back and uncheck dry-run to import.{% else %}Data imported successfully.{% endif %}</div>
+  {% if dry_run %}
+    <h2>Dry-run Preview</h2>
+    {% if actions is defined %}
+      <ul>
+        {% set c = 0 %}{% set u = 0 %}{% set m = 0 %}{% set s = 0 %}
+        {% for a in actions %}
+          {% if a.action == 'create' %}{% set c = c + 1 %}{% elseif a.action == 'update' %}{% set u = u + 1 %}{% elseif a.action == 'merge' %}{% set m = m + 1 %}{% else %}{% set s = s + 1 %}{% endif %}
+          <li>Row #{{ (a.index + 1)|int }} → {{ a.action|e }}{% if a.id is defined %} (id={{ a.id }}){% endif %}{% if a.reason is defined %} – {{ a.reason|e }}{% endif %}</li>
+        {% endfor %}
+      </ul>
+      <p><strong>Summary:</strong> Create {{ c }}, Update {{ u }}, Merge {{ m }}, Skip {{ s }}</p>
+      <div class="alert">If this looks correct, go back and uncheck dry-run to execute.</div>
+    {% endif %}
+  {% else %}
+    <div class="alert alert-success">Data imported successfully.</div>
+  {% endif %}
 {% endif %}
 <p><a href="{{ url('/import') }}" class="btn">Back to Import</a></p>
 {% endblock %}

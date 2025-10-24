@@ -5,8 +5,20 @@
  - data: associative array for the entity
  - back_url: URL for back navigation
 #}
-<section class="space-y-4">
-  {% if title is defined and title %}<h2 class="text-2xl font-semibold">{{ title|e }}</h2>{% endif %}
+<section class="space-y-6">
+  {% if title is defined and title %}
+    <div class="flex items-center gap-3">
+      <h2 class="text-2xl font-semibold">{{ title|e }}</h2>
+      {% if follow_entity is defined and follow_entity and follow_entity_id is defined and follow_entity_id %}
+        {% include 'partials/follow.twig' with {
+          entity: follow_entity,
+          entity_id: follow_entity_id,
+          is_following: is_following|default(false),
+          followers_count: followers_count|default(0)
+        } %}
+      {% endif %}
+    </div>
+  {% endif %}
 
   {% if data.picture is defined and data.picture %}
     <div class="float-left mr-4 mb-2">
@@ -14,69 +26,259 @@
     </div>
   {% endif %}
 
-  <div class="space-y-3 clear-both">
-    {# If fields provided, render in that order; otherwise iterate over data keys #}
-    {% set entries = [] %}
-    {% if fields is defined and fields %}
-      {% set entries = fields %}
-    {% else %}
-      {% for k,v in data %}
-        {% set entries = entries|merge([{ name: k, label: k }]) %}
-      {% endfor %}
-    {% endif %}
+  {# Prepare ordered field groups using heuristics similar to form #}
+  {% set primaryNames = ['title','name','subject','company','project','deal'] %}
+  {% set statusNames  = ['status','stage','phase','priority'] %}
+  {% set idNames      = ['id','code','slug'] %}
+  {% set moneyNames   = ['amount','budget','price','cost','rate','value','total'] %}
+  {% set contactNames = ['email','emails','emails_text','phone','phones','phones_text','website','websites','websites_text','socials','socials_text','address'] %}
+  {% set dateHints    = ['date','_at','due','start','end','birth'] %}
+  {% set textNames    = ['description','notes','comment','comments','summary'] %}
 
-    {% for f in entries %}
-      {% set fname = f.name %}
-      {% set flabel = f.label|default(fname) %}
-      {% if fname in ['id'] %}{# show id too #}{% endif %}
-      {% set val = attribute(data, fname)|default(null) %}
-      {% if val is not null and val is not same as(false) and val != '' %}
-        <div>
-          <div class="font-semibold mb-1">{{ flabel|e }}</div>
-          <div class="prose max-w-none">
-            {# Render arrays as bulleted lists; objects/assoc arrays as key: value pairs #}
-            {% if val is iterable and val is not same as('') %}
-              {% if val|length == 0 %}
-                <span class="opacity-60">—</span>
+  {% set entries = [] %}
+  {% if fields is defined and fields %}
+    {% set entries = fields %}
+  {% else %}
+    {% for k,v in data %}
+      {% set entries = entries|merge([{ name: k, label: k }]) %}
+    {% endfor %}
+  {% endif %}
+
+  {% set prim = [] %}
+  {% set status = [] %}
+  {% set ids = [] %}
+  {% set media = [] %}
+  {% set money = [] %}
+  {% set contacts = [] %}
+  {% set dates = [] %}
+  {% set texts = [] %}
+  {% set others = [] %}
+
+  {% for f in entries %}
+    {% set n = (f.name|default('')) %}
+    {% set lname = n|lower %}
+    {% if lname in primaryNames %}
+      {% set prim = prim|merge([f]) %}
+    {% elseif lname in statusNames %}
+      {% set status = status|merge([f]) %}
+    {% elseif lname in idNames %}
+      {% set ids = ids|merge([f]) %}
+    {% elseif lname in contactNames %}
+      {% set contacts = contacts|merge([f]) %}
+    {% elseif lname in ['picture','avatar','image','logo'] %}
+      {% set media = media|merge([f]) %}
+    {% elseif lname in moneyNames %}
+      {% set money = money|merge([f]) %}
+    {% elseif (dateHints|filter(h => h in lname))|length > 0 %}
+      {% set dates = dates|merge([f]) %}
+    {% elseif lname in textNames %}
+      {% set texts = texts|merge([f]) %}
+    {% else %}
+      {% set others = others|merge([f]) %}
+    {% endif %}
+  {% endfor %}
+
+  {% macro render_value(val) %}
+    {% if val is iterable and val is not same as('') %}
+      {% if val|length == 0 %}
+        <span class="opacity-60">—</span>
+      {% else %}
+        <ul class="list-disc pl-5 space-y-1">
+          {% for row in val %}
+            <li>
+              {% if row is iterable %}
+                {% if row.value is defined %}
+                  {% set bits = [] %}
+                  {% if row.kind is defined and row.kind %}{% set bits = bits|merge([row.kind]) %}{% endif %}
+                  {% if row.tag is defined and row.tag %}{% set bits = bits|merge([row.tag]) %}{% endif %}
+                  {% if bits %}<span class="badge badge-ghost mr-1">{{ bits|join(' • ')|e }}</span> {% endif %}
+                  {% set v = row.value %}
+                  {% if v starts with 'http://' or v starts with 'https://' %}
+                    <a href="{{ v|e }}" target="_blank" rel="noopener" class="link">{{ v|e }}</a>
+                  {% else %}
+                    {{ v|e }}
+                  {% endif %}
+                {% else %}
+                  {{ row|json_encode(constant('JSON_UNESCAPED_UNICODE'))|e }}
+                {% endif %}
               {% else %}
-                <ul class="list-disc pl-5 space-y-1">
-                  {% for row in val %}
-                    <li>
-                      {% if row is iterable %}
-                        {# Try common patterns for contacts arrays #}
-                        {% if row.value is defined %}
-                          {% set bits = [] %}
-                          {% if row.kind is defined and row.kind %}{% set bits = bits|merge([row.kind]) %}{% endif %}
-                          {% if row.tag is defined and row.tag %}{% set bits = bits|merge([row.tag]) %}{% endif %}
-                          {% if bits %}<span class="badge badge-ghost mr-1">{{ bits|join(' • ')|e }}</span> {% endif %}
-                          {% set v = row.value %}
-                          {% if v starts with 'http://' or v starts with 'https://' %}
-                            <a href="{{ v|e }}" target="_blank" rel="noopener" class="link">{{ v|e }}</a>
-                          {% else %}
-                            {{ v|e }}
-                          {% endif %}
-                        {% else %}
-                          {{ row|json_encode(constant('JSON_UNESCAPED_UNICODE'))|e }}
-                        {% endif %}
-                      {% else %}
-                        {{ row|e }}
-                      {% endif %}
-                    </li>
-                  {% endfor %}
-                </ul>
+                {{ row|e }}
               {% endif %}
-            {% else %}
-              {% set text = val %}
-              {% if text starts with 'http://' or text starts with 'https://' %}
-                <a href="{{ text|e }}" target="_blank" rel="noopener" class="link">{{ text|e }}</a>
-              {% else %}
-                {{ text|e }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% else %}
+      {% set text = val %}
+      {% if text is same as(true) %}
+        <span class="badge badge-success">{{ __('Yes')|e }}</span>
+      {% elseif text is same as(false) %}
+        <span class="badge">{{ __('No')|e }}</span>
+      {% elseif text starts with 'http://' or text starts with 'https://' or text starts with '/' %}
+        <a href="{{ url(text) }}" target="_blank" rel="noopener" class="link">{{ text|e }}</a>
+      {% elseif text matches '/^\d+(?:\.\d+)?$/' %}
+        {{ text|number_format(2, '.', ',') }}
+      {% else %}
+        {{ text|e }}
+      {% endif %}
+    {% endif %}
+  {% endmacro %}
+  {% import _self as self %}
+
+  <div class="space-y-4 clear-both">
+    {% if prim or status %}
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
+          <h3 class="card-title text-lg mb-2">{{ __('Summary')|e }}</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for f in prim %}
+              {% set fname = f.name %}
+              {% set flabel = f.label|default(fname) %}
+              {% set val = attribute(data, fname)|default(null) %}
+              {% if val is not null and val is not same as(false) and val != '' %}
+                <div>
+                  <div class="font-semibold mb-1">{{ flabel|e }}</div>
+                  <div class="prose max-w-none">{{ self.render_value(val) }}</div>
+                </div>
               {% endif %}
-            {% endif %}
+            {% endfor %}
+            {% for f in status %}
+              {% set fname = f.name %}
+              {% set flabel = f.label|default(fname) %}
+              {% set val = attribute(data, fname)|default(null) %}
+              {% if val is not null and val is not same as(false) and val != '' %}
+                <div>
+                  <div class="font-semibold mb-1">{{ flabel|e }}</div>
+                  <div>
+                    <span class="badge">{{ val|e }}</span>
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
           </div>
         </div>
-      {% endif %}
-    {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if money or ids %}
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
+          <h3 class="card-title text-lg mb-2">{{ __('Numbers & IDs')|e }}</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for f in money %}
+              {% set fname = f.name %}
+              {% set flabel = f.label|default(fname) %}
+              {% set val = attribute(data, fname)|default(null) %}
+              {% if val is not null and val is not same as(false) and val != '' %}
+                <div>
+                  <div class="font-semibold mb-1">{{ flabel|e }}</div>
+                  <div>
+                    {% if (val is same as(0) or val matches '/^-?\d+(?:\.\d+)?$/' ) %}
+                      <span class="font-mono">{{ val|number_format(2, '.', ',') }}</span>
+                    {% else %}
+                      {{ val|e }}
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+            {% for f in ids %}
+              {% set fname = f.name %}
+              {% set flabel = f.label|default(fname) %}
+              {% set val = attribute(data, fname)|default(null) %}
+              {% if val is not null and val is not same as(false) and val != '' %}
+                <div>
+                  <div class="font-semibold mb-1">{{ flabel|e }}</div>
+                  <div class="font-mono">{{ val|e }}</div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if contacts %}
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
+          <h3 class="card-title text-lg mb-2">{{ __('Contacts & Links')|e }}</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for f in contacts %}
+              {% set fname = f.name %}
+              {% set flabel = f.label|default(fname) %}
+              {% set val = attribute(data, fname)|default(null) %}
+              {% if val is not null and val is not same as(false) and val != '' %}
+                <div>
+                  <div class="font-semibold mb-1">{{ flabel|e }}</div>
+                  <div class="prose max-w-none">{{ self.render_value(val) }}</div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if dates %}
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
+          <h3 class="card-title text-lg mb-2">{{ __('Dates')|e }}</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for f in dates %}
+              {% set fname = f.name %}
+              {% set flabel = f.label|default(fname) %}
+              {% set val = attribute(data, fname)|default(null) %}
+              {% if val is not null and val is not same as(false) and val != '' %}
+                <div>
+                  <div class="font-semibold mb-1">{{ flabel|e }}</div>
+                  <div class="prose max-w-none">{{ val|e }}</div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if others %}
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
+          <h3 class="card-title text-lg mb-2">{{ __('Details')|e }}</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for f in others %}
+              {% set fname = f.name %}
+              {% set flabel = f.label|default(fname) %}
+              {% set val = attribute(data, fname)|default(null) %}
+              {% if val is not null and val is not same as(false) and val != '' %}
+                <div>
+                  <div class="font-semibold mb-1">{{ flabel|e }}</div>
+                  <div class="prose max-w-none">{{ self.render_value(val) }}</div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if texts %}
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body space-y-4">
+          <h3 class="card-title text-lg mb-2">{{ __('Notes')|e }}</h3>
+          {% for f in texts %}
+            {% set fname = f.name %}
+            {% set flabel = f.label|default(fname) %}
+            {% set val = attribute(data, fname)|default(null) %}
+            {% if val is not null and val is not same as(false) and val != '' %}
+              <div>
+                <div class="font-semibold mb-1">{{ flabel|e }}</div>
+                <div class="prose max-w-none">{{ self.render_value(val) }}</div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
   </div>
 
   <div class="divider"></div>

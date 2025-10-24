@@ -13,10 +13,43 @@ namespace App\Domain;
  */
 final class Schemas
 {
+    /**
+     * Simple in-process cache for schema definitions to avoid repeated allocations per request.
+     * @var array<string, array{fields: array<int, array>, columns: array<int, array>}>|null
+     */
+    private static ?array $cache = null;
+
     /** @return array<string, array{fields: array<int, array>, columns: array<int, array>}> */
     public static function all(): array
     {
-        return [
+        if (self::$cache !== null) {
+            return self::$cache;
+        }
+        self::$cache = [
+            'documents' => [
+                'fields' => [
+                    ['name' => 'title', 'label' => __('Title'), 'type' => 'text', 'required' => true],
+                    ['name' => 'file', 'label' => __('File'), 'type' => 'file', 'required' => false],
+                    ['name' => 'file_url', 'label' => __('File URL'), 'type' => 'text', 'placeholder' => '/files/uploads/yourfile.ext'],
+                    ['name' => 'entity', 'label' => __('Assigned to'), 'type' => 'select', 'options' => [
+                        '' => __('— Select —'),
+                        'contacts' => __('Contact'),
+                        'projects' => __('Project'),
+                        'tasks' => __('Task'),
+                        'deals' => __('Deal'),
+                    ]],
+                    ['name' => 'entity_id', 'label' => __('Record ID'), 'type' => 'number'],
+                    ['name' => 'notes', 'label' => __('Notes'), 'type' => 'textarea', 'rows' => 3],
+                ],
+                'columns' => [
+                    ['name' => 'title', 'label' => __('Title')],
+                    ['name' => 'entity', 'label' => __('Entity')],
+                    ['name' => 'entity_id', 'label' => __('Record ID')],
+                    ['name' => 'mime', 'label' => __('Type')],
+                    ['name' => 'size', 'label' => __('Size')],
+                    ['name' => 'created_at', 'label' => __('Created')],
+                ],
+            ],
             'contacts' => [
                 'fields' => [
                     ['name' => 'name', 'label' => __('Name'), 'type' => 'text', 'required' => true],
@@ -236,6 +269,7 @@ final class Schemas
                 ],
             ],
         ];
+        return self::$cache;
     }
 
     /**

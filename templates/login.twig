@@ -32,6 +32,10 @@
           <label for="password" class="label"><span class="label-text">{{ __('Password')|e }}</span></label>
           <input class="input input-bordered" type="password" id="password" name="password" required>
         </div>
+        <div class="form-control">
+          <label for="otp" class="label"><span class="label-text">{{ __('Authentication code (if 2FA enabled)')|e }}</span></label>
+          <input class="input input-bordered" type="text" id="otp" name="otp" inputmode="numeric" pattern="[0-9]*" placeholder="123456">
+        </div>
         <div class="card-actions justify-end mt-2">
           <a class="btn btn-ghost" href="{{ (return|default('/'))|e }}">{{ __('Cancel')|e }}</a>
           <button class="btn btn-primary" type="submit">{{ __('Sign in')|e }}</button>

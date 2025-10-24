@@ -17,6 +17,7 @@ final class ApiController
         private readonly Config $config,
         private readonly WebhookService $webhook,
         private readonly \App\Service\AuditService $audit,
+        private readonly ?\App\Service\EnrichmentService $enrichment = null,
         object $contactsStore,
         object $tasksStore,
         object $dealsStore,
@@ -38,6 +39,54 @@ final class ApiController
             'candidates' => $candidatesStore,
             'storage' => $storageStore,
         ];
+    }
+
+    /**
+     * Privacy-first enrichment for a contact. Input JSON: {"id":123} or {"email":"..."}
+     */
+    public function enrichContact(): void
+    {
+        if (!ApiAuth::enforceToken($this->config)) { return; }
+        if (!$this->enrichment || !$this->enrichment->isEnabled()) {
+            $this->json(['ok' => false, 'error' => 'Enrichment disabled'], 400); return;
+        }
+        $store = $this->store('contacts');
+        if (!$store) { $this->notFound(); return; }
+        $data = $this->readJsonBody();
+        if (!is_array($data)) { $this->badRequest('Invalid JSON'); return; }
+        $id = isset($data['id']) ? (string)$data['id'] : '';
+        $emailLookup = isset($data['email']) ? strtolower(trim((string)$data['email'])) : '';
+        $all = $store->all();
+        $target = null;
+        if ($id !== '') {
+            $target = $this->findById($all, $id);
+        } elseif ($emailLookup !== '') {
+            foreach ($all as $row) {
+                $e = strtolower(trim((string)($row['email'] ?? '')));
+                if ($e === '' && isset($row['emails'][0]['value'])) { $e = strtolower(trim((string)$row['emails'][0]['value'])); }
+                if ($e !== '' && $e === $emailLookup) { $target = $row; break; }
+            }
+        }
+        if (!$target) { $this->notFound(); return; }
+        $result = $this->enrichment->enrichContact($target);
+        if ($result['updated']) {
+            $updated = $store->update((int)$target['id'], $result['after']);
+            // Audit with masked PII
+            $masked = '';
+            $primaryEmail = (string)($target['email'] ?? '');
+            if ($primaryEmail === '' && isset($target['emails'][0]['value'])) { $primaryEmail = (string)$target['emails'][0]['value']; }
+            $masked = \App\Service\EnrichmentService::maskEmail($primaryEmail);
+            $this->audit->record('action', 'contacts', $target['id'] ?? null, $target, is_array($updated) ? $updated : null, [
+                'action' => 'enrich',
+                'providers' => implode(',', $result['providers']),
+                'changes' => json_encode($result['changes'], JSON_UNESCAPED_UNICODE),
+                'subject' => $masked,
+                'source' => 'api',
+            ]);
+            $this->json(['ok' => true, 'updated' => true, 'item' => $updated, 'providers' => $result['providers'], 'changes' => $result['changes']]);
+            return;
+        }
+        $this->json(['ok' => true, 'updated' => false, 'providers' => $result['providers'], 'errors' => $result['errors']]);
     }
 
     public function list(string $entity): void
@@ -113,7 +162,7 @@ final class ApiController
         $data = $this->readJsonBody();
         if (!is_array($data)) { $this->badRequest('Invalid JSON'); return; }
         $data['id'] = $existing['id'];
-        $updated = $store->update($data);
+        $updated = $store->update((int)$existing['id'], $data);
         // Audit + Webhook
         $this->audit->record('updated', $entity, $existing['id'] ?? null, is_array($existing) ? $existing : null, is_array($updated) ? $updated : null, ['source' => 'api']);
         $this->webhook->emit('updated', $entity, $updated, ['before' => $existing]);
@@ -128,7 +177,7 @@ final class ApiController
         $id = isset($_GET['id']) ? (string)$_GET['id'] : '';
         $existing = $this->findById($store->all(), $id);
         if (!$existing) { $this->notFound(); return; }
-        $store->delete((string)$existing['id']);
+        $store->delete((int)$existing['id']);
         // Audit + Webhook
         $this->audit->record('deleted', $entity, $existing['id'] ?? null, is_array($existing) ? $existing : null, null, ['source' => 'api']);
         $this->webhook->emit('deleted', $entity, ['id' => $existing['id']]);
