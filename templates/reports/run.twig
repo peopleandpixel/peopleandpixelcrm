@@ -35,6 +35,18 @@
   </div>
   {% endif %}
 
+  {# Charts #}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card bg-base-100 p-3 shadow">
+      <div class="font-semibold mb-2">{{ __('Chart (Values)')|e }}</div>
+      <canvas id="reportChartValues" height="220" aria-label="{{ __('Chart (Values)')|e }}" role="img"></canvas>
+    </div>
+    <div class="card bg-base-100 p-3 shadow">
+      <div class="font-semibold mb-2">{{ __('Chart (Counts)')|e }}</div>
+      <canvas id="reportChartCounts" height="220" aria-label="{{ __('Chart (Counts)')|e }}" role="img"></canvas>
+    </div>
+  </div>
+
   <div class="overflow-x-auto">
     <table class="table table-zebra w-full">
       <thead>
@@ -55,5 +67,77 @@
       </tbody>
     </table>
   </div>
+
+  {# Chart.js via CDN and rendering script #}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha256-U4WmS8VYxVn3AnxH6Tlp7K5qB/8rYkq7X6nq+3C9WlU=" crossorigin="anonymous"></script>
+  <script>
+    (function(){
+      try {
+        const rows = {{ report.rows|json_encode|raw }};
+        const labels = rows.map(r => String(r.label));
+        const values = rows.map(r => Number(r.value));
+        const counts = rows.map(r => Number(r.count));
+
+        // Choose chart type based on number of buckets
+        const many = labels.length > 8;
+        const typeBar = 'bar';
+        const typePie = many ? 'bar' : 'doughnut';
+
+        const baseOpts = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: { display: true, ticks: { autoSkip: true, maxRotation: 45, minRotation: 0 } },
+            y: { beginAtZero: true }
+          }
+        };
+
+        const palette = [
+          '#60a5fa','#34d399','#f87171','#fbbf24','#a78bfa','#f472b6','#4ade80','#f59e0b','#22d3ee','#93c5fd',
+        ];
+
+        // Values chart
+        const cv = document.getElementById('reportChartValues');
+        if (cv) {
+          new Chart(cv.getContext('2d'), {
+            type: typeBar,
+            data: {
+              labels,
+              datasets: [{
+                label: '{{ __('Value')|e }}',
+                data: values,
+                backgroundColor: labels.map((_,i) => palette[i % palette.length]),
+                borderColor: '#111827',
+                borderWidth: 0,
+              }]
+            },
+            options: baseOpts
+          });
+        }
+
+        // Counts chart
+        const cc = document.getElementById('reportChartCounts');
+        if (cc) {
+          new Chart(cc.getContext('2d'), {
+            type: typePie,
+            data: {
+              labels,
+              datasets: [{
+                label: '{{ __('Count')|e }}',
+                data: counts,
+                backgroundColor: labels.map((_,i) => palette[i % palette.length]),
+                borderWidth: 0,
+              }]
+            },
+            options: Object.assign({}, baseOpts, { scales: typePie === 'doughnut' ? {} : baseOpts.scales })
+          });
+        }
+      } catch (e) { console.error('Chart render failed', e); }
+    })();
+  </script>
 </section>
 {% endblock %}

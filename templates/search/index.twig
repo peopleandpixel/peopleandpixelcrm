@@ -3,33 +3,89 @@
 {% block title %}{{ __('Search') }}{% endblock %}
 
 {% block content %}
-<div class="container">
-  <h1 class="mb-3">{{ __('Search') }}</h1>
-  <form method="get" action="{{ url('/search') }}" class="mb-4">
-    <div class="input-group">
-      <input type="text" name="q" value="{{ q|e }}" class="form-control" placeholder="{{ __('Search contacts, tasks, deals, projects…') }}" autofocus>
-      <button class="btn btn-primary" type="submit">{{ __('Search') }}</button>
-    </div>
-  </form>
+<section class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-bold">{{ __('Search')|e }}</h1>
+    {% include 'partials/dynamic_search.twig' with {
+      path: url('/search'),
+      q: q|default(''),
+      placeholder: __('Search contacts, tasks, deals, projects…'),
+      classes: 'flex items-center gap-2'
+    } %}
+  </div>
 
   {% if q is defined and q %}
-    {% if results is not empty %}
-      <div class="list-group">
-        {% for r in results %}
-          <a class="list-group-item list-group-item-action" href="{{ r.url }}">
-            <div class="d-flex w-100 justify-content-between">
-              <h5 class="mb-1">{{ r.title|e }}</h5>
-              <small class="text-muted text-uppercase">{{ r.type }}</small>
+    {% set resultsList = results|default([]) %}
+    {% if resultsList is not empty %}
+      {# Build groups and counts by type #}
+      {% set groups = {} %}
+      {% set counts = {} %}
+      {% for r in resultsList %}
+        {% set t = r.type|default('other') %}
+        {% set arr = attribute(groups, t)|default([]) %}
+        {% set arr = arr|merge([r]) %}
+        {% set groups = groups|merge({ (t): arr }) %}
+        {% set c = attribute(counts, t)|default(0) + 1 %}
+        {% set counts = counts|merge({ (t): c }) %}
+      {% endfor %}
+      {% set total = resultsList|length %}
+      {% set max = 0 %}
+      {% for t,c in counts %}
+        {% if c > max %}{% set max = c %}{% endif %}
+      {% endfor %}
+
+      <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
+          <h2 class="card-title text-lg">{{ __('Results summary')|e }}</h2>
+          <p class="opacity-80">{{ __('Found')|e }} <strong>{{ total }}</strong> {{ __('results for')|e }} "{{ q|e }}"</p>
+          <div class="mt-3 space-y-2">
+            {% for t,c in counts %}
+              {% set pct = max > 0 ? ((c * 100) / max) : 0 %}
+              <div class="flex items-center gap-3">
+                <div class="w-32 shrink-0 flex items-center gap-2">
+                  <span class="badge badge-ghost uppercase">{{ t|e }}</span>
+                  <span class="opacity-70">{{ c }}</span>
+                </div>
+                <div class="h-3 grow bg-base-200 rounded">
+                  <div class="h-3 bg-primary rounded" style="width: {{ pct|round(0, 'floor') }}%"></div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {% for t,items in groups %}
+          <div class="card bg-base-100 border border-base-300">
+            <div class="card-body">
+              <div class="flex items-center justify-between">
+                <h3 class="card-title text-base uppercase">{{ t|e }}</h3>
+                <span class="badge">{{ items|length }}</span>
+              </div>
+              <ul class="divide-y divide-base-300">
+                {% for r in items %}
+                  <li class="py-3">
+                    <a class="link link-primary font-medium" href="{{ r.url|e }}">{{ r.title|e }}</a>
+                    {% if r.subtitle %}
+                      <div class="opacity-80 text-sm">{{ r.subtitle|e }}</div>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
             </div>
-            {% if r.subtitle %}
-              <p class="mb-1 text-muted">{{ r.subtitle|e }}</p>
-            {% endif %}
-          </a>
+          </div>
         {% endfor %}
       </div>
     {% else %}
-      <p class="text-muted">{{ __('No results for') }} "{{ q|e }}"</p>
+      <div class="alert">
+        <span>{{ __('No results for')|e }} "{{ q|e }}"</span>
+      </div>
     {% endif %}
+  {% else %}
+    <div class="prose max-w-none opacity-80">
+      <p>{{ __('Start typing to search across contacts, tasks, deals, and projects.')|e }}</p>
+    </div>
   {% endif %}
-</div>
+</section>
 {% endblock %}

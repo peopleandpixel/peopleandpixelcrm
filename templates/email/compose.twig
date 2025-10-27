@@ -1,0 +1,25 @@
+{% extends "layout.twig" %}
+{% block title %}{{ __('Compose Email') }}{% endblock %}
+{% block content %}
+<a class="btn" href="{{ url('/email') }}">← {{ __('Back to Inbox') }}</a>
+<h1>{{ __('Compose Email') }}</h1>
+<form method="post" action="{{ url('/email/send') }}" class="form">
+  {{ csrf_field()|raw }}
+  <div class="form-row">
+    <label>{{ __('To') }}</label>
+    <input type="email" name="to" value="{{ request().getQuery('to')|default('') }}" required>
+  </div>
+  <div class="form-row">
+    <label>{{ __('Subject') }}</label>
+    <input type="text" name="subject" value="{{ request().getQuery('subject')|default('') }}" required>
+  </div>
+  <div class="form-row">
+    <label>{{ __('Message') }}</label>
+    <textarea name="body" rows="10" required>{{ request().getQuery('body')|default('') }}</textarea>
+  </div>
+  <input type="hidden" name="return" value="{{ url('/email') }}">
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ __('Send') }}</button>
+  </div>
+</form>
+{% endblock %}

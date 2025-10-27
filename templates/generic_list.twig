@@ -19,7 +19,7 @@
       {% endif %}
 
       {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('name'), dir: dir|default('asc'), extra: { tag: tag|default('') } } %}
-      <a class="btn btn-primary" href="{{ url('/' ~ schema ~ '/new') }}">+ {{ __('Add '  ~ type)|e }}</a>
+      {% if can(schema,'create') %}<a class="btn btn-primary" href="{{ url('/' ~ schema ~ '/new') }}">+ {{ __('Add '  ~ type)|e }}</a>{% endif %}
       {# Save current view button #}
       <form method="post" action="{{ url('/views/save') }}" class="flex items-center gap-2">
         {{ csrf_field()|raw }}

@@ -1,0 +1,13 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% if fields is defined and fields %}
+    {% include 'partials/dynamic_form.twig' with {
+        title: title|default(__('Add Document')),
+        submit_label: (document is defined and document.id|default(0) > 0) ? __('Save') : __('Save'),
+        form_action: form_action|default(url('/documents/new')),
+        fields: fields,
+        data: document|default({}),
+        cancel_url: cancel_url|default(url('/documents'))
+    } %}
+{% endif %}
+{% endblock %}

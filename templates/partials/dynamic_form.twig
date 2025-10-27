@@ -51,7 +51,7 @@
             {% set media = media|merge([f]) %}
         {% elseif lname in moneyNames %}
             {% set money = money|merge([f]) %}
-        {% elseif (dateHints|filter(h => lname contains h))|length > 0 or t in ['date','datetime-local','time'] %}
+        {% elseif (dateHints|filter(h => h in lname))|length > 0 or t in ['date','datetime-local','time'] %}
             {% set dates = dates|merge([f]) %}
         {% elseif lname in textNames or t == 'textarea' %}
             {% set texts = texts|merge([f]) %}
@@ -136,9 +136,6 @@
             </div>
         {% endmacro %}
         {% import _self as self %}
-
-        {% set section = function(name, items, cols) %}
-        {% endset %}
 
         {% if prim or status %}
         <div class="card bg-base-100 border border-base-300">

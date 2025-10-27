@@ -10,7 +10,7 @@ Note: Check off items as you complete them. The list is ordered to reduce risk a
    - [x] Enable declare(strict_types=1) across src/ and tests/
    - [x] Add missing scalar/array types and return types in public APIs (e.g., src/Controller/*.php, src/Util/*.php)
    - [x] Replace mixed/array with dedicated DTOs/value objects where beneficial (Domain layer)
-
+now do 
 3. [x] Introduce static analysis and code quality tooling
    - [x] Add PHPStan (or Psalm) with a baseline, level 6–8, and CI job
    - [x] Add PHP-CS-Fixer (PSR-12 ruleset) and a composer script
@@ -102,10 +102,10 @@ Note: Check off items as you complete them. The list is ordered to reduce risk a
     - [ ] Upload coverage report; set a minimum threshold
     - [ ] Cache composer deps in CI for performance
 
-20. [ ] Developer Experience (DX)
-    - [ ] Add makefile or composer scripts: setup, serve, test, lint, stan, fix
-    - [ ] Provide seed data and reset scripts for local env (data/*)
-    - [ ] Document environment variables (.env.example) and Docker setup (optional)
+20. [x] Developer Experience (DX)
+    - [x] Add makefile or composer scripts: setup, serve, test, lint, stan, fix
+    - [x] Provide seed data and reset scripts for local env (data/*)
+    - [x] Document environment variables (.env.example) and Docker setup (optional)
 
 21. [ ] Data integrity and migrations
     - [ ] Ensure Migrator supports repeated runs and schema versioning; add tests
@@ -138,10 +138,10 @@ Note: Check off items as you complete them. The list is ordered to reduce risk a
     - [x] Watch/follow entities: Allow users to follow records and receive digest notifications
     - [x] Automations MVP: Simple rule engine (event → conditions → actions) with safe, auditable execution
     - [x] PWA offline-first: Cache recent lists and enable offline task edits with queued background sync
-    - [ ] Install UX polish: A2HS prompts, full icon set, and install docs for major browsers
-    - [ ] Integrations: CalDAV/ICS inbound (read-only), optional IMAP email ingest, webhook retry/backoff and catalog
-    - [ ] Data quality: Optional email DNS/MX checks, E.164 phone normalization, background validators
-    - [ ] Privacy-first enrichment: Optional third-party enrichment behind user-provided API keys, fully auditable
-    - [ ] Admin & DX: Health dashboard (storage, jobs, errors), downloadable logs, docker-compose sample, seed/reset scripts
+    - [x] Install UX polish: A2HS prompts, full icon set, and install docs for major browsers
+    - [x] Integrations: CalDAV/ICS inbound (read-only), optional IMAP email ingest, webhook retry/backoff and catalog
+    - [x] Data quality: Optional email DNS/MX checks, E.164 phone normalization, background validators
+    - [x] Privacy-first enrichment: Optional third-party enrichment behind user-provided API keys, fully auditable
+    - [x] Admin & DX: Health dashboard (storage, jobs, errors), downloadable logs, docker-compose sample, seed/reset scripts
     - [ ] Success metrics instrumentation: Log key metrics (TTFV, errors, backups) and surface in admin dashboard
     - [ ] Documentation: Add docs/competitive-analysis.md reference in README (done) and expand feature comparison page

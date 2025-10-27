@@ -6,6 +6,7 @@ namespace App\Domain;
 
 use App\Validation\Validator;
 use App\Util\Sanitizer;
+use App\Util\Phone;
 
 class Candidate
 {

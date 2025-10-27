@@ -9,6 +9,9 @@
     <link rel="canonical" href="{{ canonical_url() }}">
     <meta name="theme-color" content="#2563eb">
     <link rel="manifest" href="{{ url('/manifest.webmanifest') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="People & Pixel">
     <link rel="icon" href="{{ url('/icons/app-icon.svg') }}" type="image/svg+xml">
     <link rel="apple-touch-icon" href="{{ url('/icons/app-icon.svg') }}">
     <!-- Tailwind CSS + DaisyUI -->
@@ -33,15 +36,16 @@
                     {% if can('tasks','view') %}<li><a href="{{ url('/tasks') }}" class="{{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'checklist', classes: 'w-5 h-5 mr-2' } %} {{ __('Tasks')|e }}</a></li>{% endif %}
                     {% if can('deals','view') %}<li><a href="{{ url('/deals') }}" class="{{ active_class('/deals') ? 'active' : '' }}" {{ active_class('/deals') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'chart-up', classes: 'w-5 h-5 mr-2' } %} {{ __('Deals')|e }}</a></li>{% endif %}
                     {% if can('projects','view') %}<li><a href="{{ url('/projects') }}" class="{{ active_class('/projects') ? 'active' : '' }}" {{ active_class('/projects') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'box', classes: 'w-5 h-5 mr-2' } %} {{ __('Projects')|e }}</a></li>{% endif %}
-                    <li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'calendar', classes: 'w-5 h-5 mr-2' } %} {{ __('Calendar')|e }}</a></li>
+                    {% if can_url('/calendar') %}<li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'calendar', classes: 'w-5 h-5 mr-2' } %} {{ __('Calendar')|e }}</a></li>{% endif %}
                     {% if can('reports','view') %}<li><a href="{{ url('/reports') }}" class="{{ active_class('/reports') ? 'active' : '' }}" {{ active_class('/reports') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'chart-pie', classes: 'w-5 h-5 mr-2' } %} {{ __('Reports')|e }}</a></li>{% endif %}
-                    <li><a href="{{ url('/search') }}" class="{{ active_class('/search') ? 'active' : '' }}" {{ active_class('/search') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'search', classes: 'w-5 h-5 mr-2' } %} {{ __('Search')|e }}</a></li>
+                    {% if can_url('/search') %}<li><a href="{{ url('/search') }}" class="{{ active_class('/search') ? 'active' : '' }}" {{ active_class('/search') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'search', classes: 'w-5 h-5 mr-2' } %} {{ __('Search')|e }}</a></li>{% endif %}
 
                     <li class="menu-title"><span>{{ __('More')|e }}</span></li>
                     {% if can('employees','view') %}<li><a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'briefcase', classes: 'w-5 h-5 mr-2' } %} {{ __('Employees')|e }}</a></li>{% endif %}
                     {% if can('times','view') %}<li><a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'stopwatch', classes: 'w-5 h-5 mr-2' } %} {{ __('Working Times')|e }}</a></li>{% endif %}
                     {% if can('candidates','view') %}<li><a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'magnet', classes: 'w-5 h-5 mr-2' } %} {{ __('Recruiting')|e }}</a></li>{% endif %}
                     {% if can('payments','view') %}<li><a href="{{ url('/payments') }}" class="{{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'credit-card', classes: 'w-5 h-5 mr-2' } %} {{ __('Payments')|e }}</a></li>{% endif %}
+                    {% if can('documents','view') %}<li><a href="{{ url('/documents') }}" class="{{ active_class('/documents') ? 'active' : '' }}" {{ active_class('/documents') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %} {{ __('Documents')|e }}</a></li>{% endif %}
                     {% if can('storage','view') %}
                       <li><a href="{{ url('/storage') }}" class="{{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'archive', classes: 'w-5 h-5 mr-2' } %} {{ __('Storage')|e }}</a></li>
                       <li><a href="{{ url('/storage/history') }}" class="{{ active_class('/storage/history') ? 'active' : '' }}">↳ {{ __('Storage history')|e }}</a></li>
@@ -59,7 +63,11 @@
 
                     {% if is_admin() %}
                     <li class="menu-title"><span>{{ __('Administration')|e }}</span></li>
-                    <li><a href="{{ url('/admin/users') }}" class="{{ active_class('/admin') ? 'active' : '' }}" {{ active_class('/admin') ? 'aria-current="page"' : '' }}>{{ __('Users')|e }}</a></li>
+                    <li><a href="{{ url('/admin/health') }}" class="{{ active_class('/admin/health') ? 'active' : '' }}" {{ active_class('/admin/health') ? 'aria-current="page"' : '' }}>{{ __('Health')|e }}</a></li>
+                    <li><a href="{{ url('/admin/logs') }}" class="{{ active_class('/admin/logs') ? 'active' : '' }}" {{ active_class('/admin/logs') ? 'aria-current="page"' : '' }}>{{ __('Logs')|e }}</a></li>
+                    <li><a href="{{ url('/admin/backups') }}" class="{{ active_class('/admin/backups') ? 'active' : '' }}" {{ active_class('/admin/backups') ? 'aria-current="page"' : '' }}>{{ __('Backups')|e }}</a></li>
+                    <li><a href="{{ url('/admin/users') }}" class="{{ active_class('/admin/users') ? 'active' : '' }}" {{ active_class('/admin/users') ? 'aria-current="page"' : '' }}>{{ __('Users')|e }}</a></li>
+                    <li><a href="{{ url('/admin/settings') }}" class="{{ active_class('/admin/settings') ? 'active' : '' }}" {{ active_class('/admin/settings') ? 'aria-current="page"' : '' }}>{{ __('Settings')|e }}</a></li>
                     <li><a href="{{ url('/audit') }}" class="{{ active_class('/audit') ? 'active' : '' }}" {{ active_class('/audit') ? 'aria-current="page"' : '' }}>{{ __('Audit log')|e }}</a></li>
                     {% endif %}
                     <li class="mt-2 px-4 pb-3">
@@ -80,6 +88,20 @@
     </div>
 </div>
 {% include 'partials/footer.twig' %}
+
+<!-- Install banner -->
+<div id="install-banner" class="fixed inset-x-0 bottom-0 z-40 hidden">
+  <div class="mx-auto max-w-3xl px-4 pb-4">
+    <div class="alert shadow-lg bg-base-200">
+      <span>{{ __('Install People & Pixel for a faster, app-like experience.')|e }}</span>
+      <div>
+        <button id="install-dismiss" class="btn btn-ghost btn-sm mr-2" type="button" aria-label="{{ __('Dismiss')|e }}">{{ __('Not now')|e }}</button>
+        <button id="install-accept" class="btn btn-primary btn-sm" type="button">{{ __('Install')|e }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   // Language selector change handler
@@ -108,6 +130,51 @@
       try { navigator.serviceWorker.register('{{ url('/sw.js') }}'); } catch(e) { /* ignore */ }
     });
   }
+
+  // A2HS Install prompt UX
+  (function(){
+    var deferred; // beforeinstallprompt event
+    var banner = document.getElementById('install-banner');
+    var acceptBtn = document.getElementById('install-accept');
+    var dismissBtn = document.getElementById('install-dismiss');
+    var storageKey = 'pp.install.dismissedAt';
+
+    function isStandalone(){
+      return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+    }
+    function show(){ if (banner) banner.classList.remove('hidden'); }
+    function hide(){ if (banner) banner.classList.add('hidden'); }
+    function recentlyDismissed(){
+      try { var t = parseInt(localStorage.getItem(storageKey)||'0',10); return Date.now() - t < 7*24*3600*1000; } catch(e){ return false; }
+    }
+
+    window.addEventListener('beforeinstallprompt', function(e){
+      // Chrome/Edge will fire this when installable
+      e.preventDefault();
+      deferred = e;
+      if (!isStandalone() && !recentlyDismissed()) { show(); }
+    });
+    window.addEventListener('appinstalled', function(){ hide(); deferred = null; try{ localStorage.removeItem(storageKey); }catch(e){} });
+
+    if (acceptBtn) acceptBtn.addEventListener('click', function(){
+      if (!deferred) { hide(); return; }
+      deferred.prompt();
+      deferred.userChoice.then(function(){ hide(); deferred = null; });
+    });
+    if (dismissBtn) dismissBtn.addEventListener('click', function(){ hide(); try{ localStorage.setItem(storageKey, String(Date.now())); }catch(e){} });
+
+    // iOS Safari doesn’t support beforeinstallprompt; show guidance if eligible
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS && !isStandalone() && !recentlyDismissed()) {
+      // Delay slightly to avoid flashing on every page load
+      setTimeout(function(){ show(); }, 1200);
+      if (acceptBtn) acceptBtn.textContent = '{{ __('How to install')|e }}';
+      if (acceptBtn) acceptBtn.addEventListener('click', function(){
+        alert('To install: tap the Share button in Safari, then "Add to Home Screen".');
+        hide();
+      });
+    }
+  })();
 
   // THEME: apply saved or preferred theme on load using DaisyUI data-theme
   const storageKey = 'pp.theme';

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\IcsFeedService;
 use App\Util\Calendar as CalendarUtil;
 use App\Util\Dates;
 
@@ -12,12 +13,14 @@ final class CalendarController
     private readonly object $contactsStore;
     private readonly object $projectsStore;
     private readonly object $tasksStore;
+    private readonly ?IcsFeedService $icsFeed;
 
-    public function __construct(object $contactsStore, object $projectsStore, object $tasksStore)
+    public function __construct(object $contactsStore, object $projectsStore, object $tasksStore, ?IcsFeedService $icsFeed = null)
     {
         $this->contactsStore = $contactsStore;
         $this->projectsStore = $projectsStore;
         $this->tasksStore = $tasksStore;
+        $this->icsFeed = $icsFeed;
     }
 
     public function index(): void
@@ -39,6 +42,20 @@ final class CalendarController
         $tasks = $this->tasksStore->all();
 
         $events = CalendarUtil::buildEvents($contacts, $projects, $tasks, $filters, $from, $to);
+        // Merge external ICS feeds if configured
+        if ($this->icsFeed) {
+            try {
+                $ext = $this->icsFeed->fetchEvents($from, $to);
+                // If filters provided and not including 'external', respect filters
+                if (!empty($filters) && !in_array('external', $filters, true)) {
+                    // keep ext only if includeAll; otherwise skip
+                } else {
+                    $events = array_merge($events, $ext);
+                }
+            } catch (\Throwable) { /* ignore */ }
+        }
+        // Resort
+        usort($events, fn($a,$b) => strcmp($a['start'], $b['start']));
 
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['events' => $events], JSON_UNESCAPED_UNICODE);
@@ -62,6 +79,19 @@ final class CalendarController
         $tasks = $this->tasksStore->all();
 
         $events = CalendarUtil::buildEvents($contacts, $projects, $tasks, $filters, $from, $to);
+        // Merge external ICS feeds if configured
+        if ($this->icsFeed) {
+            try {
+                $ext = $this->icsFeed->fetchEvents($from, $to);
+                if (!empty($filters) && !in_array('external', $filters, true)) {
+                    // skip external
+                } else {
+                    $events = array_merge($events, $ext);
+                }
+            } catch (\Throwable) { /* ignore */ }
+        }
+        // Resort
+        usort($events, fn($a,$b) => strcmp($a['start'], $b['start']));
 
         // Build ICS
         $lines = [];

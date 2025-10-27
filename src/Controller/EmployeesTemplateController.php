@@ -126,7 +126,7 @@ readonly class EmployeesTemplateController
         // generate secure password
         $pwd = rtrim(strtr(base64_encode(random_bytes(12)), '+/', '-_'), '=');
         // default permissions: allow own all, others none
-        $entities = ['contacts','times','tasks','employees','candidates','payments','storage'];
+        $entities = ['contacts','times','tasks','employees','candidates','payments','storage','documents'];
         $permissions = [];
         foreach ($entities as $e) {
             $permissions[$e] = [

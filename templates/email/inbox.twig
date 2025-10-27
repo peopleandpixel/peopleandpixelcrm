@@ -1,0 +1,43 @@
+{% extends "layout.twig" %}
+{% block title %}{{ __('Inbox') }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ __('Inbox') }}</h1>
+  <div class="actions">
+    <a class="btn" href="{{ url('/email/compose') }}">✉️ {{ __('Compose') }}</a>
+    <form method="post" action="{{ url('/email/sync') }}" style="display:inline">
+      {{ csrf_field()|raw }}
+      <button class="btn" type="submit" {% if not enabled %}disabled title="{{ __('IMAP not configured on server') }}"{% endif %}>⟳ {{ __('Sync') }}</button>
+    </form>
+  </div>
+</div>
+
+{% if not enabled %}
+  <div class="alert alert-info">{{ __('IMAP ingest is not configured or the IMAP extension is missing. You can still use Compose/Send.') }}</div>
+{% endif %}
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>{{ __('From') }}</th>
+      <th>{{ __('Subject') }}</th>
+      <th>{{ __('To') }}</th>
+      <th>{{ __('Date') }}</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for it in items %}
+    <tr>
+      <td>{{ it.from }}</td>
+      <td><a href="{{ url('/email/view', {uid: it.uid}) }}">{{ it.subject ?: '—' }}</a></td>
+      <td>{{ it.to }}</td>
+      <td>{{ it.date }}</td>
+      <td><a class="btn btn-small" href="{{ url('/email/view', {uid: it.uid}) }}">{{ __('Open') }}</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">{{ __('No emails yet. Use Sync to fetch unread headers.') }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

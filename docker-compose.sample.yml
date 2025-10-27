@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app:
+    image: php:8.3-cli
+    working_dir: /app
+    command: sh -lc "php -S 0.0.0.0:8080 -t public"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./:/app
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+      # By default JSON storage is used; ensure the data dir exists and is writable in your host project
+      # DATA_DIR: /app/data
+      # To use SQLite inside the container, uncomment the following and create the file on your host under var/
+      # USE_DB: "1"
+      # DB_DSN: sqlite:/app/var/app.sqlite
+    # Optional: persist var/ between container restarts (logs, cache, uploads)
+    # volumes:
+    #   - ./var:/app/var

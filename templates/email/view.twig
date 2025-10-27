@@ -1,0 +1,47 @@
+{% extends "layout.twig" %}
+{% block title %}{{ __('Email') }}{% endblock %}
+{% block content %}
+<a class="btn" href="{{ url('/email') }}">← {{ __('Back to Inbox') }}</a>
+
+<h1>{{ item.subject ?: __('(no subject)') }}</h1>
+<div class="meta">
+  <div><strong>{{ __('From') }}:</strong> {{ item.from }}</div>
+  <div><strong>{{ __('To') }}:</strong> {{ item.to }}</div>
+  <div><strong>{{ __('Date') }}:</strong> {{ item.date }}</div>
+  {% if item.message_id %}<div><strong>Message-ID:</strong> {{ item.message_id }}</div>{% endif %}
+  <div><strong>UID:</strong> {{ item.uid }}</div>
+</div>
+
+<div class="actions" style="margin:1rem 0; display:flex; gap:.5rem; flex-wrap:wrap;">
+  <form method="post" action="{{ url('/email/add-contact') }}">
+    {{ csrf_field()|raw }}
+    <input type="hidden" name="uid" value="{{ item.uid }}">
+    <input type="hidden" name="from" value="{{ item.from }}">
+    <input type="hidden" name="return" value="{{ canonical_url() }}">
+    <button class="btn" type="submit">➕ {{ __('Add sender to contacts') }}</button>
+  </form>
+  <form method="post" action="{{ url('/email/create-task') }}">
+    {{ csrf_field()|raw }}
+    <input type="hidden" name="uid" value="{{ item.uid }}">
+    <input type="hidden" name="from" value="{{ item.from }}">
+    <input type="hidden" name="subject" value="{{ item.subject }}">
+    <input type="hidden" name="return" value="{{ canonical_url() }}">
+    <button class="btn" type="submit">✅ {{ __('Create task') }}</button>
+  </form>
+  <form method="post" action="{{ url('/email/create-project') }}">
+    {{ csrf_field()|raw }}
+    <input type="hidden" name="uid" value="{{ item.uid }}">
+    <input type="hidden" name="from" value="{{ item.from }}">
+    <input type="hidden" name="subject" value="{{ item.subject }}">
+    <input type="hidden" name="return" value="{{ canonical_url() }}">
+    <button class="btn" type="submit">📁 {{ __('Create project') }}</button>
+  </form>
+  <a class="btn" href="{{ url('/email/compose', {to: item.from, subject: 'Re: ' ~ (item.subject ?: '')}) }}">↩️ {{ __('Reply') }}</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <p class="muted">{{ __('This view currently shows header information only. Configure full IMAP parsing to display message bodies and attachments in a future update.') }}</p>
+  </div>
+</div>
+{% endblock %}
