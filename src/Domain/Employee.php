@@ -6,6 +6,7 @@ namespace App\Domain;
 
 use App\Validation\Validator;
 use App\Util\Sanitizer;
+use App\Util\Phone;
 
 class Employee
 {
@@ -33,6 +34,7 @@ class Employee
         $name = Sanitizer::string($in['name'] ?? '');
         $email = Sanitizer::string($in['email'] ?? '');
         $phone = Sanitizer::string($in['phone'] ?? '');
+        $phone = $phone !== '' ? (Phone::normalizeE164($phone) ?: $phone) : '';
         $role = Sanitizer::string($in['role'] ?? '');
         $salary = Sanitizer::float($in['salary'] ?? 0);
         $rawHiredAt = Sanitizer::string($in['hired_at'] ?? '');

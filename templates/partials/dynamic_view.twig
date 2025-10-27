@@ -69,7 +69,7 @@
       {% set media = media|merge([f]) %}
     {% elseif lname in moneyNames %}
       {% set money = money|merge([f]) %}
-    {% elseif (dateHints|filter(h => lname contains h))|length > 0 %}
+    {% elseif (dateHints|filter(h => h in lname))|length > 0 %}
       {% set dates = dates|merge([f]) %}
     {% elseif lname in textNames %}
       {% set texts = texts|merge([f]) %}
@@ -114,8 +114,8 @@
         <span class="badge badge-success">{{ __('Yes')|e }}</span>
       {% elseif text is same as(false) %}
         <span class="badge">{{ __('No')|e }}</span>
-      {% elseif text matches '/^https?:\/\//i' %}
-        <a href="{{ text|e }}" target="_blank" rel="noopener" class="link">{{ text|e }}</a>
+      {% elseif text starts with 'http://' or text starts with 'https://' or text starts with '/' %}
+        <a href="{{ url(text) }}" target="_blank" rel="noopener" class="link">{{ text|e }}</a>
       {% elseif text matches '/^\d+(?:\.\d+)?$/' %}
         {{ text|number_format(2, '.', ',') }}
       {% else %}

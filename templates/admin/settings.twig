@@ -1,0 +1,221 @@
+{% extends 'layout.twig' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-semibold">{{ __('Application Settings')|e }}</h1>
+  </div>
+  <p class="text-sm text-base-content/70">{{ __('Edit settings stored in .env')|e }}</p>
+
+  <form method="post" action="{{ url('/admin/settings') }}" class="space-y-6">
+    {{ csrf_field()|raw }}
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body space-y-4">
+        <h2 class="card-title">{{ __('General')|e }}</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="label"><span class="label-text">APP_ENV</span></label>
+            <select name="APP_ENV" class="select select-bordered w-full">
+              {% set env = env.APP_ENV|default('prod') %}
+              <option value="dev" {{ env=='dev' ? 'selected' : '' }}>dev</option>
+              <option value="test" {{ env=='test' ? 'selected' : '' }}>test</option>
+              <option value="prod" {{ env=='prod' ? 'selected' : '' }}>prod</option>
+            </select>
+          </div>
+          <div>
+            <label class="label"><span class="label-text">APP_DEBUG</span></label>
+            {% set dbg = env.APP_DEBUG|default('0') %}
+            <select name="APP_DEBUG" class="select select-bordered w-full">
+              <option value="0" {{ (dbg in ['','0','false','no','off']) ? 'selected' : '' }}>{{ __('No')|e }}</option>
+              <option value="1" {{ (dbg in ['1','true','yes','on']) ? 'selected' : '' }}>{{ __('Yes')|e }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="label"><span class="label-text">DEFAULT_LANG</span></label>
+            <select name="DEFAULT_LANG" class="select select-bordered w-full">
+              {% set lang = env.DEFAULT_LANG|default('en') %}
+              <option value="en" {{ lang=='en' ? 'selected' : '' }}>EN</option>
+              <option value="de" {{ lang=='de' ? 'selected' : '' }}>DE</option>
+              <option value="pt" {{ lang=='pt' ? 'selected' : '' }}>PT</option>
+            </select>
+          </div>
+          <div>
+            <label class="label"><span class="label-text">LOG_LEVEL</span></label>
+            <input type="text" name="LOG_LEVEL" class="input input-bordered w-full" value="{{ env.LOG_LEVEL|default('')|e }}" placeholder="debug|info|warning|error">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body space-y-4">
+        <h2 class="card-title">{{ __('Database')|e }}</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="label"><span class="label-text">USE_DB</span></label>
+            {% set udb = env.USE_DB|default('0') %}
+            <select name="USE_DB" class="select select-bordered w-full">
+              <option value="0" {{ (udb in ['','0','false','no','off']) ? 'selected' : '' }}>{{ __('No')|e }}</option>
+              <option value="1" {{ (udb in ['1','true','yes','on']) ? 'selected' : '' }}>{{ __('Yes')|e }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="label"><span class="label-text">DB_DSN</span></label>
+            <input type="text" name="DB_DSN" class="input input-bordered w-full" value="{{ env.DB_DSN|default('')|e }}" placeholder="sqlite:/abs/path/app.sqlite or mysql:host=...">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">DB_USER</span></label>
+            <input type="text" name="DB_USER" class="input input-bordered w-full" value="{{ env.DB_USER|default('')|e }}">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">DB_PASS</span> <span class="label-text-alt">{{ __('Leave empty to keep current value')|e }}</span></label>
+            <input type="password" name="DB_PASS" class="input input-bordered w-full" value="" placeholder="••••••">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body space-y-4">
+        <h2 class="card-title">{{ __('Email (SMTP)')|e }}</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="label"><span class="label-text">SMTP_HOST</span></label>
+            <input type="text" name="SMTP_HOST" class="input input-bordered w-full" value="{{ env.SMTP_HOST|default('')|e }}">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">SMTP_PORT</span></label>
+            <input type="number" name="SMTP_PORT" class="input input-bordered w-full" value="{{ env.SMTP_PORT|default('587')|e }}">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">SMTP_USER</span></label>
+            <input type="text" name="SMTP_USER" class="input input-bordered w-full" value="{{ env.SMTP_USER|default('')|e }}">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">SMTP_PASS</span> <span class="label-text-alt">{{ __('Leave empty to keep current value')|e }}</span></label>
+            <input type="password" name="SMTP_PASS" class="input input-bordered w-full" value="" placeholder="••••••">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">SMTP_SECURE</span></label>
+            {% set sec = env.SMTP_SECURE|default('tls') %}
+            <select name="SMTP_SECURE" class="select select-bordered w-full">
+              <option value="">(none)</option>
+              <option value="tls" {{ sec=='tls' ? 'selected' : '' }}>tls</option>
+              <option value="ssl" {{ sec=='ssl' ? 'selected' : '' }}>ssl</option>
+            </select>
+          </div>
+          <div>
+            <label class="label"><span class="label-text">SMTP_FROM</span></label>
+            <input type="email" name="SMTP_FROM" class="input input-bordered w-full" value="{{ env.SMTP_FROM|default('no-reply@example.com')|e }}">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">SMTP_FROM_NAME</span></label>
+            <input type="text" name="SMTP_FROM_NAME" class="input input-bordered w-full" value="{{ env.SMTP_FROM_NAME|default('People & Pixel')|e }}">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body space-y-4">
+        <h2 class="card-title">{{ __('Notifications')|e }}</h2>
+        <div class="grid md:grid-cols-3 gap-4">
+          {% set nc = env.NOTIFY_COMMENTS|default('0') %}
+          {% set ns = env.NOTIFY_SELF|default('0') %}
+          {% set nf = env.NOTIFY_FOLLOWS|default('0') %}
+          <div>
+            <label class="label"><span class="label-text">NOTIFY_COMMENTS</span></label>
+            <select name="NOTIFY_COMMENTS" class="select select-bordered w-full">
+              <option value="0" {{ (nc in ['','0','false','no','off']) ? 'selected' : '' }}>{{ __('No')|e }}</option>
+              <option value="1" {{ (nc in ['1','true','yes','on']) ? 'selected' : '' }}>{{ __('Yes')|e }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="label"><span class="label-text">NOTIFY_SELF</span></label>
+            <select name="NOTIFY_SELF" class="select select-bordered w-full">
+              <option value="0" {{ (ns in ['','0','false','no','off']) ? 'selected' : '' }}>{{ __('No')|e }}</option>
+              <option value="1" {{ (ns in ['1','true','yes','on']) ? 'selected' : '' }}>{{ __('Yes')|e }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="label"><span class="label-text">NOTIFY_FOLLOWS</span></label>
+            <select name="NOTIFY_FOLLOWS" class="select select-bordered w-full">
+              <option value="0" {{ (nf in ['','0','false','no','off']) ? 'selected' : '' }}>{{ __('No')|e }}</option>
+              <option value="1" {{ (nf in ['1','true','yes','on']) ? 'selected' : '' }}>{{ __('Yes')|e }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body space-y-4">
+        <h2 class="card-title">{{ __('Automations')|e }}</h2>
+        <div class="grid md:grid-cols-3 gap-4">
+          {% set ae = env.AUTOMATIONS_ENABLED|default('0') %}
+          {% set aa = env.AUTOMATIONS_ALLOW_EMAIL|default('0') %}
+          <div>
+            <label class="label"><span class="label-text">AUTOMATIONS_ENABLED</span></label>
+            <select name="AUTOMATIONS_ENABLED" class="select select-bordered w-full">
+              <option value="0" {{ (ae in ['','0','false','no','off']) ? 'selected' : '' }}>{{ __('No')|e }}</option>
+              <option value="1" {{ (ae in ['1','true','yes','on']) ? 'selected' : '' }}>{{ __('Yes')|e }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="label"><span class="label-text">AUTOMATIONS_MAX_ACTIONS</span></label>
+            <input type="number" name="AUTOMATIONS_MAX_ACTIONS" class="input input-bordered w-full" value="{{ env.AUTOMATIONS_MAX_ACTIONS|default('10')|e }}">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">AUTOMATIONS_ALLOW_EMAIL</span></label>
+            <select name="AUTOMATIONS_ALLOW_EMAIL" class="select select-bordered w-full">
+              <option value="0" {{ (aa in ['','0','false','no','off']) ? 'selected' : '' }}>{{ __('No')|e }}</option>
+              <option value="1" {{ (aa in ['1','true','yes','on']) ? 'selected' : '' }}>{{ __('Yes')|e }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body space-y-4">
+        <h2 class="card-title">{{ __('Security')|e }}</h2>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div>
+            <label class="label"><span class="label-text">TOTP_WINDOW</span></label>
+            <input type="number" name="TOTP_WINDOW" class="input input-bordered w-full" value="{{ env.TOTP_WINDOW|default('1')|e }}">
+          </div>
+          <div class="md:col-span-2">
+            <label class="label"><span class="label-text">WEBHOOK_SECRET</span> <span class="label-text-alt">{{ __('Leave empty to keep current value')|e }}</span></label>
+            <input type="password" name="WEBHOOK_SECRET" class="input input-bordered w-full" value="" placeholder="••••••">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body space-y-4">
+        <h2 class="card-title">{{ __('Other')|e }}</h2>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div>
+            <label class="label"><span class="label-text">BACKUP_RETENTION</span></label>
+            <input type="number" name="BACKUP_RETENTION" class="input input-bordered w-full" value="{{ env.BACKUP_RETENTION|default('10')|e }}">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">INVENTORY_ALLOW_NEGATIVE</span></label>
+            {% set neg = env.INVENTORY_ALLOW_NEGATIVE|default('0') %}
+            <select name="INVENTORY_ALLOW_NEGATIVE" class="select select-bordered w-full">
+              <option value="0" {{ (neg in ['','0','false','no','off']) ? 'selected' : '' }}>{{ __('No')|e }}</option>
+              <option value="1" {{ (neg in ['1','true','yes','on']) ? 'selected' : '' }}>{{ __('Yes')|e }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end">
+      <button type="submit" class="btn btn-primary">{{ __('Save')|e }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

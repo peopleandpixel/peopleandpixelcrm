@@ -10,7 +10,8 @@
     {% if listTitle %}<h2 class="text-2xl font-semibold">{{ listTitle|e }}</h2>{% endif %}
 
     <div class="overflow-x-auto">
-      {% if bulk is defined and bulk.post_url %}
+      {% set bulkAllowed = (bulk is defined and bulk.post_url and can_url(bulk.post_url, 'POST')) %}
+      {% if bulkAllowed %}
       <form method="post" action="{{ bulk.post_url }}" id="bulkForm">
         {{ csrf_field()|raw }}
       {% endif %}
@@ -31,20 +32,24 @@
                     {{ sort_link(col.label|default(colName), colName, sort|default(null), dir|default('asc'), path|default(current_path()), { q: q|default(''), tag: tag|default(''), per: per|default(10) })|raw }}
                 </th>
             {% endfor %}
-            {% if actions is defined and (actions.edit_url or actions.delete_url) %}
+            {% if actions is defined %}
+                {% set actionsVisible = ((actions.edit_url and can_url(actions.edit_url)) or (actions.delete_url and can_url(actions.delete_url, 'POST'))) %}
+                {% if actionsVisible %}
                 <th scope="col">{{ __('Actions')|e }}</th>
+                {% endif %}
             {% endif %}
         </tr>
         </thead>
         <tbody>
         {% if items|length == 0 %}
             <tr>
-                <td class="text-center opacity-70" colspan="{{ columns|length + (actions is defined and (actions.edit_url or actions.delete_url) ? 1 : 0) + (bulk is defined and bulk.post_url ? 1 : 0) }}">{{ __('No records found')|e }}</td>
+                {% set actionsVisible = (actions is defined and ((actions.edit_url and can_url(actions.edit_url)) or (actions.delete_url and can_url(actions.delete_url, 'POST')))) %}
+                <td class="text-center opacity-70" colspan="{{ columns|length + (actionsVisible ? 1 : 0) + (bulkAllowed ? 1 : 0) }}">{{ __('No records found')|e }}</td>
             </tr>
         {% else %}
             {% for it in items %}
                 <tr>
-                    {% if bulk is defined and bulk.post_url %}
+                    {% if bulk is defined and bulk.post_url and can_url(bulk.post_url, 'POST') %}
                         {% set idf = actions.id_field|default('id') %}
                         {% set idv = attribute(it, idf)|default('') %}
                         <td><input type="checkbox" class="checkbox" name="ids[]" value="{{ idv|e }}" aria-label="{{ __('Select row')|e }}"></td>
@@ -54,13 +59,22 @@
                         {% if loop.first and actions is defined and actions.view_url %}
                             {% set idf = actions.id_field|default('id') %}
                             {% set idv = attribute(it, idf)|default('') %}
+                            {% set viewHref = actions.view_url ~ '?id=' ~ idv %}
                             <td>
                                 {% if col.name in ['picture','image','avatar','photo'] and value %}
-                                    <a href="{{ actions.view_url }}?id={{ idv|e }}" aria-label="{{ __('View details')|e }}">
+                                    {% if can_url(viewHref) %}
+                                    <a href="{{ viewHref }}" aria-label="{{ __('View details')|e }}">
                                         <img src="{{ value|e }}" alt="" class="w-9 h-9 rounded-full object-cover border border-base-300">
                                     </a>
+                                    {% else %}
+                                    <img src="{{ value|e }}" alt="" class="w-9 h-9 rounded-full object-cover border border-base-300">
+                                    {% endif %}
                                 {% else %}
-                                    <a href="{{ actions.view_url }}?id={{ idv|e }}" class="link link-primary">{{ value|e }}</a>
+                                    {% if can_url(viewHref) %}
+                                    <a href="{{ viewHref }}" class="link link-primary">{{ value|e }}</a>
+                                    {% else %}
+                                    {{ value|e }}
+                                    {% endif %}
                                 {% endif %}
                             </td>
                         {% else %}
@@ -86,7 +100,7 @@
                                         </div>
                                     {% else %}
                                         {# Render links for URLs #}
-                                        {% if value matches '/^https?:\\/\\//i' %}
+                                        {% if value starts with 'http://' or value starts with 'https://' %}
                                             <a href="{{ value|e }}" target="_blank" rel="noopener" class="link">{{ value|e }}</a>
                                         {% else %}
                                             {{ value|e }}
@@ -96,14 +110,17 @@
                             </td>
                         {% endif %}
                     {% endfor %}
-                    {% if actions is defined and (actions.edit_url or actions.delete_url) %}
+                    {% if actions is defined %}
                         {% set idf = actions.id_field|default('id') %}
                         {% set idv = attribute(it, idf)|default('') %}
+                        {% set showEdit = (actions.edit_url and can_url(actions.edit_url)) %}
+                        {% set showDelete = (actions.delete_url and can_url(actions.delete_url, 'POST')) %}
+                        {% if showEdit or showDelete %}
                         <td class="whitespace-nowrap space-x-2">
-                            {% if actions.edit_url %}
+                            {% if showEdit %}
                                 <a class="btn btn-xs" href="{{ actions.edit_url }}?id={{ idv|e }}" aria-label="{{ __('Edit')|e }}">{{ __('Edit')|e }}</a>
                             {% endif %}
-                            {% if actions.delete_url %}
+                            {% if showDelete %}
                                 <form method="post" action="{{ actions.delete_url }}" class="inline" onsubmit="return confirm('{{ __('Are you sure?')|e }}');">
                                     {{ csrf_field()|raw }}
                                     <input type="hidden" name="id" value="{{ idv|e }}">
@@ -111,13 +128,14 @@
                                 </form>
                             {% endif %}
                         </td>
+                        {% endif %}
                     {% endif %}
                 </tr>
             {% endfor %}
         {% endif %}
         </tbody>
       </table>
-      {% if bulk is defined and bulk.post_url %}
+      {% if bulkAllowed %}
       <div class="mt-3 flex flex-wrap items-center gap-2">
         <label for="bulkAction" class="sr-only">{{ __('Bulk action')|e }}</label>
         <select class="select select-bordered" id="bulkAction" name="action" onchange="(function(sel){var v=sel.value;var ph='';try{var map=JSON.parse(sel.dataset.placeholders||'{}');ph=map[v]||'';}catch(e){} var inp=document.getElementById('bulkValue'); if(inp){inp.placeholder=ph; inp.classList.toggle('hidden', ph==='');} })(this)" data-placeholders='{{ (bulk.placeholders|default({}))|json_encode|e }}'>

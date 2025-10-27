@@ -16,6 +16,22 @@ return [
     'Storage' => 'Storage',
     'Language' => 'Language',
 
+        // Documents
+        'Documents' => 'Documents',
+        'Document' => 'Document',
+        'Add Document' => 'Add Document',
+        'Edit Document' => 'Edit Document',
+        'Assigned to' => 'Assigned to',
+        'File' => 'File',
+        'File URL' => 'File URL',
+        'Record ID' => 'Record ID',
+        'Type' => 'Type',
+        'Size' => 'Size',
+        'Created' => 'Created',
+        'Document created successfully.' => 'Document created successfully.',
+        'Document updated successfully.' => 'Document updated successfully.',
+        'Document deleted.' => 'Document deleted.',
+
     // Additional navigation
     'Projects' => 'Projects',
     'Calendar' => 'Calendar',
@@ -86,9 +102,35 @@ return [
     'Save' => 'Save',
     'Toggle theme' => 'Toggle theme',
 
+        // Admin & DX
+        'Administration' => 'Administration',
+        'Health' => 'Health',
+        'Health dashboard' => 'Health dashboard',
+        'Logs' => 'Logs',
+        'Backups' => 'Backups',
+        'Browse logs' => 'Browse logs',
+        'Back to health dashboard' => 'Back to health dashboard',
+
     // Home page
     'Welcome to People & Pixel' => 'Welcome to People & Pixel',
     'This is a lightweight CRM to manage your company contacts, team, tasks, time tracking, payments, and inventory.' => 'This is a lightweight CRM to manage your company contacts, team, tasks, time tracking, payments, and inventory.',
     'Open' => 'Open',
     'New' => 'New',
+
+    // Settings UI
+    'Settings' => 'Settings',
+    'Application Settings' => 'Application Settings',
+    'Edit settings stored in .env' => 'Edit settings stored in .env',
+    'General' => 'General',
+    'Database' => 'Database',
+    'Email (SMTP)' => 'Email (SMTP)',
+    'Notifications' => 'Notifications',
+    'Automations' => 'Automations',
+    'Security' => 'Security',
+    'Other' => 'Other',
+    'Settings updated' => 'Settings updated',
+    'Failed to update settings' => 'Failed to update settings',
+    'Leave empty to keep current value' => 'Leave empty to keep current value',
 ];
+
+

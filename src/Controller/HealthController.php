@@ -8,7 +8,7 @@ use App\Config;
 
 final class HealthController
 {
-    public function __construct(private readonly Config $config) {}
+    public function __construct(private readonly Config $config, private readonly ?\App\Service\DataQualityService $dq = null) {}
 
     public function json(): void
     {
@@ -23,6 +23,10 @@ final class HealthController
             'logDirWritable' => (!is_dir($logDir) ? @mkdir($logDir, 0777, true) || is_dir($logDir) : true) && is_writable($logDir),
             'cacheDirWritable' => (!is_dir($cacheDir) ? @mkdir($cacheDir, 0777, true) || is_dir($cacheDir) : true) && is_writable($cacheDir),
         ];
+        $dq = null;
+        try {
+            if ($this->dq) { $dq = $this->dq->summary(); }
+        } catch (\Throwable) { $dq = null; }
         $ok = !in_array(false, $checks, true);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode([
@@ -31,6 +35,7 @@ final class HealthController
             'env' => $cfg->getAppEnv(),
             'debug' => $cfg->isDebug(),
             'checks' => $checks,
+            'dataQuality' => $dq,
         ], JSON_UNESCAPED_UNICODE);
     }
 }

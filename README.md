@@ -122,6 +122,37 @@ Documentation
 - Contributing: docs/CONTRIBUTING.md
 - Competitive analysis and improvement roadmap: docs/competitive-analysis.md
 
+Install as an app (PWA)
+- Chrome/Edge (desktop & Android): When you see the “Install” banner in the app, click Install. You can also use the browser menu → Install app (or Add to Home screen on Android).
+- iOS Safari: Tap the Share button, then “Add to Home Screen”. The app supports offline mode and opens full-screen.
+- Requirements: Use https, keep the app open for a moment so the service worker can cache the shell, and then reload.
+
 Troubleshooting
 - Logs: var/log/app.log (level depends on APP_ENV/LOG_LEVEL)
 - Clear Twig cache by removing var/cache/twig when developing with caching enabled.
+
+
+## Developer experience
+
+Common composer scripts:
+- `composer serve` — start the built-in web server at http://localhost:8080
+- `composer setup` — copy `.env.example` to `.env` (if missing), install deps, and seed demo data
+- `composer seed` — seed demo data
+- `composer reset` — reset local data/cache and re-seed (use `--keep-uploads` with `php bin/reset-dev.php` to preserve uploads)
+- `composer lint` — PHP-CS-Fixer dry-run
+- `composer fix` — PHP-CS-Fixer apply fixes
+- `composer stan` — run PHPStan static analysis
+
+## Docker (optional)
+
+A minimal `docker-compose.sample.yml` is included to run the app via PHP's built-in server:
+
+1. Copy the sample file as `docker-compose.yml`:
+   `cp docker-compose.sample.yml docker-compose.yml`
+2. Start the container:
+   `docker compose up`
+3. Open http://localhost:8080
+
+Notes:
+- By default, JSON storage is used and the project directory is mounted into the container. Ensure `data/` is writable.
+- To use SQLite inside the container, set `USE_DB=1` and `DB_DSN=sqlite:/app/var/app.sqlite` in the `environment` section and create the file under `var/` on your host.

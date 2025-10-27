@@ -5,7 +5,7 @@
     <h2 class="text-2xl font-bold">{{ __('Contacts')|e }}</h2>
     <div class="flex items-center gap-2">
       {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('name'), dir: dir|default('asc') } %}
-      <a class="btn btn-primary" href="{{ url('/' ~ schema ~ '/new') }}">+ {{ __('Add '  ~ type)|e }}</a>
+      {% if can(schema,'create') %}<a class="btn btn-primary" href="{{ url('/' ~ schema ~ '/new') }}">+ {{ __('Add '  ~ type)|e }}</a>{% endif %}
     </div>
   </div>
 

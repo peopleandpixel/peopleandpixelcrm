@@ -5,7 +5,7 @@
     <h2 class="text-2xl font-bold">{{ __('Employees')|e }}</h2>
     <div class="flex items-center gap-2">
       {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('name'), dir: dir|default('asc') } %}
-      <a class="btn" href="{{ url('/employees/new') }}">{{ __('+ Add Employee')|e }}</a>
+      {% if can('employees','create') %}<a class="btn" href="{{ url('/employees/new') }}">{{ __('+ Add Employee')|e }}</a>{% endif %}
     </div>
   </div>
 

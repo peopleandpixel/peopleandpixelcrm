@@ -126,6 +126,20 @@ return static function (Container $container, Router $router): void {
     // Bulk operations
     $router->post('/bulk/undo', [$container->get('bulkController'), 'undo']);
 
+    // Admin Health & Logs
+    $router->get('/admin/health', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        ($container->get('adminController'))->health();
+    });
+    $router->get('/admin/logs', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        ($container->get('adminController'))->logsList();
+    });
+    $router->get('/admin/logs/download', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        ($container->get('adminController'))->logsDownload();
+    });
+
     // Backups (admin)
     $router->get('/admin/backups', function() use ($container) {
         if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/405', ['path' => '/admin/backups', 'allowed' => ['GET']]); return; }
@@ -150,6 +164,66 @@ return static function (Container $container, Router $router): void {
     $router->get('/admin/backups/download', function() use ($container) {
         if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/405', ['path' => '/admin/backups/download', 'allowed' => ['GET']]); return; }
         ($container->get('backupsController'))->download();
+    });
+
+    // Admin Settings (.env)
+    $router->get('/admin/settings', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        /** @var \App\Config $config */
+        $config = $container->get('config');
+        $keys = [
+            'APP_ENV','APP_DEBUG','DEFAULT_LANG',
+            'USE_DB','DB_DSN','DB_USER','DB_PASS',
+            'LOG_LEVEL',
+            'API_TOKEN','WEBHOOKS','WEBHOOK_SECRET',
+            'SMTP_HOST','SMTP_PORT','SMTP_USER','SMTP_PASS','SMTP_SECURE','SMTP_FROM','SMTP_FROM_NAME',
+            'NOTIFY_COMMENTS','NOTIFY_SELF','NOTIFY_FOLLOWS',
+            'AUTOMATIONS_ENABLED','AUTOMATIONS_MAX_ACTIONS','AUTOMATIONS_ALLOW_EMAIL',
+            'TOTP_WINDOW',
+            'BACKUP_RETENTION',
+            'INVENTORY_ALLOW_NEGATIVE'
+        ];
+        $vals = [];
+        foreach ($keys as $k) { $vals[$k] = $config->getEnv($k); }
+        render('admin/settings', ['env' => $vals]);
+    });
+    $router->post('/admin/settings', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        $token = $_POST[\App\Util\Csrf::fieldName()] ?? null;
+        if (!\App\Util\Csrf::validate(is_string($token) ? $token : null)) { http_response_code(400); render('errors/400'); return; }
+        /** @var \App\Config $config */
+        $config = $container->get('config');
+        $root = $config->getProjectRoot();
+        $envPath = $root . '/.env';
+        $allowed = [
+            'APP_ENV','APP_DEBUG','DEFAULT_LANG',
+            'USE_DB','DB_DSN','DB_USER','DB_PASS',
+            'LOG_LEVEL',
+            'API_TOKEN','WEBHOOKS','WEBHOOK_SECRET',
+            'SMTP_HOST','SMTP_PORT','SMTP_USER','SMTP_PASS','SMTP_SECURE','SMTP_FROM','SMTP_FROM_NAME',
+            'NOTIFY_COMMENTS','NOTIFY_SELF','NOTIFY_FOLLOWS',
+            'AUTOMATIONS_ENABLED','AUTOMATIONS_MAX_ACTIONS','AUTOMATIONS_ALLOW_EMAIL',
+            'TOTP_WINDOW',
+            'BACKUP_RETENTION',
+            'INVENTORY_ALLOW_NEGATIVE'
+        ];
+        $updates = [];
+        foreach ($allowed as $k) {
+            if (str_ends_with($k, 'PASS') || $k === 'WEBHOOK_SECRET') {
+                if (isset($_POST[$k]) && $_POST[$k] !== '') { $updates[$k] = (string)$_POST[$k]; }
+                continue;
+            }
+            if (isset($_POST[$k])) {
+                $updates[$k] = (string)$_POST[$k];
+            }
+        }
+        try {
+            \App\Util\EnvEditor::update($envPath, $updates);
+            \App\Util\Flash::success(__('Settings updated'));
+        } catch (\Throwable $e) {
+            \App\Util\Flash::error(__('Failed to update settings') . ': ' . $e->getMessage());
+        }
+        redirect('/admin/settings');
     });
 
     // Secure file serving from var/uploads
@@ -257,6 +331,19 @@ return static function (Container $container, Router $router): void {
     $router->get('/candidates/view', [$container->get('candidatesController'), 'view']);
     $router->get('/candidates/new', [$container->get('candidatesController'), 'newForm']);
     $router->post('/candidates/new', [$container->get('candidatesController'), 'create']);
+
+    // Documents
+    $router->get('/documents', function() use ($container) {
+        $cfg = $container->get('config');
+        if (!$cfg->useDb()) { send_list_cache_headers([$cfg->jsonPath('documents.json')], 120); }
+        ($container->get('documentsController'))->list();
+    });
+    $router->get('/documents/view', [$container->get('documentsController'), 'view']);
+    $router->get('/documents/new', [$container->get('documentsController'), 'newForm']);
+    $router->post('/documents/new', [$container->get('documentsController'), 'create']);
+    $router->get('/documents/edit', [$container->get('documentsController'), 'editForm']);
+    $router->post('/documents/edit', [$container->get('documentsController'), 'update']);
+    $router->post('/documents/delete', [$container->get('documentsController'), 'delete']);
 
     // Payments
     $router->get('/payments', function() use ($container) {
@@ -388,6 +475,10 @@ return static function (Container $container, Router $router): void {
     $router->get('/health', [$container->get('healthController'), 'json']);
 
     // Public REST API
+    // Enrichment (privacy-first, optional) via API token
+    $router->post('/api/enrich/contact', function() use ($container) {
+        ($container->get('apiController'))->enrichContact();
+    });
     // Lists
     $router->get('/api/{entity}', function(string $entity) use ($container) {
         ($container->get('apiController'))->list($entity);

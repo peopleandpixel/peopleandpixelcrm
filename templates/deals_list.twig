@@ -6,7 +6,7 @@
     <div class="flex items-center gap-2">
       {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('expected_close'), dir: dir|default('asc') } %}
       <a class="btn" href="{{ url('/deals/board') }}">{{ __('Board')|e }}</a>
-      <a class="btn btn-primary" href="{{ url('/deals/new') }}">+ {{ __('Add Deal')|e }}</a>
+      {% if can('deals','create') %}<a class="btn btn-primary" href="{{ url('/deals/new') }}">+ {{ __('Add Deal')|e }}</a>{% endif %}
     </div>
   </div>
 

@@ -6,6 +6,7 @@ namespace App\Domain;
 
 use App\Validation\Validator;
 use App\Util\Sanitizer;
+use App\Util\Phone;
 
 class Contact
 {
@@ -75,7 +76,9 @@ class Contact
                 if ($value === '') { continue; }
                 if (!in_array($kind, ['mobile','landline'], true)) { $kind = 'mobile'; }
                 if (!in_array($tag, ['business','private'], true)) { $tag = 'business'; }
-                $self->phones[] = ['value' => $value, 'kind' => $kind, 'tag' => $tag];
+                // Normalize phone to E.164 best-effort
+                $norm = Phone::normalizeE164($value);
+                $self->phones[] = ['value' => $norm !== '' ? $norm : $value, 'kind' => $kind, 'tag' => $tag];
             }
         }
         $self->emails = [];
@@ -211,7 +214,8 @@ class Contact
                 $value = trim(implode(' ', $parts));
             }
             if ($value !== '') {
-                $out[] = ['value' => $value, 'tag' => $tag, 'kind' => $kind];
+                $norm = Phone::normalizeE164($value);
+                $out[] = ['value' => $norm !== '' ? $norm : $value, 'tag' => $tag, 'kind' => $kind];
             }
         }
         return $out;

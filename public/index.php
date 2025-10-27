@@ -184,6 +184,32 @@ function canonical_url(?string $path = null, array $params = []): string {
     return $url->canonical($path, $params);
 }
 
+// URL permission helper
+if (!function_exists('can_url')) {
+    function can_url(string $urlOrPath, string $method = 'GET'): bool {
+        // Accept absolute URLs and extract path
+        $path = $urlOrPath;
+        if (preg_match('#^https?://#i', $urlOrPath)) {
+            $parts = parse_url($urlOrPath);
+            $path = isset($parts['path']) ? $parts['path'] : '/';
+        }
+        // Normalize to app-relative path (remove base path if present)
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $basePath = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+        if ($basePath !== '' && $basePath !== '/' && str_starts_with($path, $basePath)) {
+            $path = substr($path, strlen($basePath)) ?: '/';
+        }
+        // Drop trailing slash (except root)
+        if ($path !== '/' && str_ends_with($path, '/')) {
+            $path = rtrim($path, '/');
+        }
+        // Map to entity/action and check permissions
+        $map = \App\Util\Permission::mapPathToCheck(strtoupper($method), $path);
+        if ($map === null) return true; // not a protected route → visible
+        return \App\Util\Permission::can($map[0], $map[1]);
+    }
+}
+
 function active_class(string $pattern, string $class = 'active'): string {
     $path = current_path();
     // treat pattern as prefix match; allow exact or starts with pattern + '/'

@@ -42,8 +42,12 @@
                     <h3 class="card-title">{{ item.title|e }}</h3>
                     <p class="opacity-80">{{ item.description|e }}</p>
                     <div class="card-actions justify-end">
+                        {% if can(key,'view') %}
                         <a class="btn btn-sm" href="{{ url('/' ~ key ) }}" aria-label="{{ __('Open')|e }} {{ item.title|e }}">{{ __('Open')|e }}</a>
+                        {% endif %}
+                        {% if can(key,'create') %}
                         <a class="btn btn-sm btn-primary" href="{{ url('/' ~ key ~ '/new') }}" aria-label="{{ __('Create new')|e }} {{ item.title|e }}">{{ __('New')|e }}</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

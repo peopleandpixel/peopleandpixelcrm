@@ -130,6 +130,28 @@ class Container
             $twig->addFunction(new TwigFunction('sort_link', fn(string $label, string $key, ?string $currentKey, string $currentDir, string $path, array $extraQuery = []) => \App\Util\View::sortLink($label, $key, $currentKey, $currentDir, $path, $extraQuery), ['is_safe' => ['html']]));
             $twig->addFunction(new TwigFunction('paginate', fn(int $total, int $page, int $perPage, string $path, array $extraQuery = []) => \App\Util\View::paginate($total, $page, $perPage, $path, $extraQuery), ['is_safe' => ['html']]));
             $twig->addFunction(new TwigFunction('nl2br_e', fn(?string $value) => \App\Util\View::nl2brE($value), ['is_safe' => ['html']]));
+            $twig->addFunction(new TwigFunction('can_url', function(string $urlOrPath, string $method = 'GET') {
+                // Accept absolute URLs and extract path
+                $path = $urlOrPath;
+                if (preg_match('#^https?://#i', $urlOrPath)) {
+                    $parts = parse_url($urlOrPath);
+                    $path = isset($parts['path']) ? $parts['path'] : '/';
+                }
+                // Normalize to app-relative path (remove base path if present)
+                $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+                $basePath = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+                if ($basePath !== '' && $basePath !== '/' && str_starts_with($path, $basePath)) {
+                    $path = substr($path, strlen($basePath)) ?: '/';
+                }
+                // Drop trailing slash (except root)
+                if ($path !== '/' && str_ends_with($path, '/')) {
+                    $path = rtrim($path, '/');
+                }
+                // Map to entity/action and check permissions
+                $map = \App\Util\Permission::mapPathToCheck(strtoupper($method), $path);
+                if ($map === null) return true; // not a protected route → visible
+                return \App\Util\Permission::can($map[0], $map[1]);
+            }));
             return $twig;
         };
 
@@ -248,6 +270,11 @@ class Container
         $this->factories['filesController'] = function(self $c) {
             return new \App\Controller\FilesController();
         };
+        $this->factories['documentsController'] = function(self $c) {
+            return new \App\Controller\DocumentsTemplateController(
+                $c->get('documentsStore')
+            );
+        };
         $this->factories['passwordController'] = function(self $c) {
             return new \App\Controller\PasswordController();
         };
@@ -256,7 +283,14 @@ class Container
             return new \App\Controller\CalendarController(
                 $c->get('contactsStore'),
                 $c->get('projectsStore'),
-                $c->get('tasksStore')
+                $c->get('tasksStore'),
+                $c->get('icsFeedService')
+            );
+        };
+        $this->factories['icsFeedService'] = function(self $c) {
+            return new \App\Service\IcsFeedService(
+                $c->get('config'),
+                $c->get('logger')
             );
         };
         $this->factories['viewsController'] = function(self $c) {
@@ -320,6 +354,20 @@ class Container
                 $c->get('logger')
             );
         };
+        // Integrations
+        $this->factories['imapIngestService'] = function(self $c) {
+            return new \App\Service\ImapIngestService(
+                $c->get('config'),
+                $c->get('logger')
+            );
+        };
+        // Privacy-first enrichment (optional)
+        $this->factories['enrichmentService'] = function(self $c) {
+            return new \App\Service\EnrichmentService(
+                $c->get('config'),
+                $c->get('logger')
+            );
+        };
         // Email
         $this->factories['emailService'] = function(self $c) {
             return new \App\Service\EmailService(
@@ -371,7 +419,17 @@ class Container
         // Health
         $this->factories['healthController'] = function(self $c) {
             return new \App\Controller\HealthController(
-                $c->get('config')
+                $c->get('config'),
+                $c->get('dataQualityService')
+            );
+        };
+        // Data quality
+        $this->factories['dataQualityService'] = function(self $c) {
+            return new \App\Service\DataQualityService(
+                $c->get('config'),
+                $c->get('contactsStore'),
+                $c->get('employeesStore'),
+                $c->get('candidatesStore'),
             );
         };
         // Backups
@@ -381,12 +439,17 @@ class Container
         $this->factories['backupsController'] = function(self $c) {
             return new \App\Controller\BackupsController($c->get('backupService'));
         };
+        // Admin
+        $this->factories['adminController'] = function(self $c) {
+            return new \App\Controller\AdminController($c->get('config'));
+        };
         // API Controller
         $this->factories['apiController'] = function(self $c) {
             return new \App\Controller\ApiController(
                 $c->get('config'),
                 $c->get('webhookService'),
                 $c->get('auditService'),
+                $c->get('enrichmentService'),
                 $c->get('contactsStore'),
                 $c->get('tasksStore'),
                 $c->get('dealsStore'),
@@ -443,7 +506,7 @@ class Container
             $path = $cfg->jsonPath($name . '.json');
             return new JsonStore($path);
         };
-        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects','groups','views','deals','activities','reports','audit','comments','follows','automations'] as $entity) {
+        foreach (['contacts','times','tasks','employees','candidates','payments','storage','storage_adjustments','users','projects','groups','views','deals','activities','reports','audit','comments','follows','automations','documents'] as $entity) {
             $this->factories[$entity . 'Store'] = function(self $c) use ($makeStore, $entity) {
                 $store = $makeStore($c, $entity);
                 if ($entity === 'users') {
@@ -464,7 +527,7 @@ class Container
             }
             if ($hasAdmin) return;
             // Build full-rights permissions matrix (own and others all 1)
-            $entities = ['contacts','times','tasks','employees','candidates','payments','storage','projects','deals','users','groups'];
+            $entities = ['contacts','times','tasks','employees','candidates','payments','storage','projects','deals','users','groups','documents'];
             $permissions = [];
             foreach ($entities as $e) {
                 $permissions[$e] = [
