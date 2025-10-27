@@ -126,6 +126,20 @@ return static function (Container $container, Router $router): void {
     // Bulk operations
     $router->post('/bulk/undo', [$container->get('bulkController'), 'undo']);
 
+    // Admin Health & Logs
+    $router->get('/admin/health', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        ($container->get('adminController'))->health();
+    });
+    $router->get('/admin/logs', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        ($container->get('adminController'))->logsList();
+    });
+    $router->get('/admin/logs/download', function() use ($container) {
+        if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/403'); return; }
+        ($container->get('adminController'))->logsDownload();
+    });
+
     // Backups (admin)
     $router->get('/admin/backups', function() use ($container) {
         if (!\App\Util\Auth::isAdmin()) { http_response_code(403); render('errors/405', ['path' => '/admin/backups', 'allowed' => ['GET']]); return; }

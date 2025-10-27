@@ -439,6 +439,10 @@ class Container
         $this->factories['backupsController'] = function(self $c) {
             return new \App\Controller\BackupsController($c->get('backupService'));
         };
+        // Admin
+        $this->factories['adminController'] = function(self $c) {
+            return new \App\Controller\AdminController($c->get('config'));
+        };
         // API Controller
         $this->factories['apiController'] = function(self $c) {
             return new \App\Controller\ApiController(

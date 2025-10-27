@@ -63,6 +63,9 @@
 
                     {% if is_admin() %}
                     <li class="menu-title"><span>{{ __('Administration')|e }}</span></li>
+                    <li><a href="{{ url('/admin/health') }}" class="{{ active_class('/admin/health') ? 'active' : '' }}" {{ active_class('/admin/health') ? 'aria-current="page"' : '' }}>{{ __('Health')|e }}</a></li>
+                    <li><a href="{{ url('/admin/logs') }}" class="{{ active_class('/admin/logs') ? 'active' : '' }}" {{ active_class('/admin/logs') ? 'aria-current="page"' : '' }}>{{ __('Logs')|e }}</a></li>
+                    <li><a href="{{ url('/admin/backups') }}" class="{{ active_class('/admin/backups') ? 'active' : '' }}" {{ active_class('/admin/backups') ? 'aria-current="page"' : '' }}>{{ __('Backups')|e }}</a></li>
                     <li><a href="{{ url('/admin/users') }}" class="{{ active_class('/admin/users') ? 'active' : '' }}" {{ active_class('/admin/users') ? 'aria-current="page"' : '' }}>{{ __('Users')|e }}</a></li>
                     <li><a href="{{ url('/admin/settings') }}" class="{{ active_class('/admin/settings') ? 'active' : '' }}" {{ active_class('/admin/settings') ? 'aria-current="page"' : '' }}>{{ __('Settings')|e }}</a></li>
                     <li><a href="{{ url('/audit') }}" class="{{ active_class('/audit') ? 'active' : '' }}" {{ active_class('/audit') ? 'aria-current="page"' : '' }}>{{ __('Audit log')|e }}</a></li>

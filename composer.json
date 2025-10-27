@@ -24,10 +24,16 @@
   },
   "scripts": {
     "start": "php -S localhost:8080 -t public",
+    "serve": "php -S localhost:8080 -t public",
+    "setup": "cp -n .env.example .env || true && composer install && php bin/seed-dev.php",
+    "seed": "php bin/seed-dev.php",
+    "reset": "php bin/reset-dev.php",
     "stan": "vendor/bin/phpstan analyse -c phpstan.neon.dist --memory-limit=1G",
     "stan-baseline": "vendor/bin/phpstan analyse -c phpstan.neon.dist --generate-baseline",
     "cs-check": "vendor/bin/php-cs-fixer fix --dry-run --diff -v",
+    "lint": "composer cs-check",
     "cs-fix": "vendor/bin/php-cs-fixer fix -v",
+    "fix": "composer cs-fix",
     "rector": "vendor/bin/rector process --dry-run",
     "rector-baseline": "vendor/bin/rector process --generate-baseline"
   },

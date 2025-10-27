@@ -85,6 +85,15 @@ return [
         'Save' => 'Speichern',
         'Toggle theme' => 'Theme umschalten',
 
+                // Admin & DX
+                'Administration' => 'Administration',
+                'Health' => 'Systemstatus',
+                'Health dashboard' => 'Status-Dashboard',
+                'Logs' => 'Protokolle',
+                'Backups' => 'Backups',
+                'Browse logs' => 'Protokolle ansehen',
+                'Back to health dashboard' => 'Zurück zum Status-Dashboard',
+
             // Login extras
             'Authentication code (if 2FA enabled)' => 'Authentifizierungscode (falls 2FA aktiviert ist)',
 

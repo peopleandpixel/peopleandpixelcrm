@@ -102,10 +102,10 @@ now do
     - [ ] Upload coverage report; set a minimum threshold
     - [ ] Cache composer deps in CI for performance
 
-20. [ ] Developer Experience (DX)
-    - [ ] Add makefile or composer scripts: setup, serve, test, lint, stan, fix
-    - [ ] Provide seed data and reset scripts for local env (data/*)
-    - [ ] Document environment variables (.env.example) and Docker setup (optional)
+20. [x] Developer Experience (DX)
+    - [x] Add makefile or composer scripts: setup, serve, test, lint, stan, fix
+    - [x] Provide seed data and reset scripts for local env (data/*)
+    - [x] Document environment variables (.env.example) and Docker setup (optional)
 
 21. [ ] Data integrity and migrations
     - [ ] Ensure Migrator supports repeated runs and schema versioning; add tests
@@ -142,6 +142,6 @@ now do
     - [x] Integrations: CalDAV/ICS inbound (read-only), optional IMAP email ingest, webhook retry/backoff and catalog
     - [x] Data quality: Optional email DNS/MX checks, E.164 phone normalization, background validators
     - [x] Privacy-first enrichment: Optional third-party enrichment behind user-provided API keys, fully auditable
-    - [ ] Admin & DX: Health dashboard (storage, jobs, errors), downloadable logs, docker-compose sample, seed/reset scripts
+    - [x] Admin & DX: Health dashboard (storage, jobs, errors), downloadable logs, docker-compose sample, seed/reset scripts
     - [ ] Success metrics instrumentation: Log key metrics (TTFV, errors, backups) and surface in admin dashboard
     - [ ] Documentation: Add docs/competitive-analysis.md reference in README (done) and expand feature comparison page

@@ -1,0 +1,82 @@
+{% extends 'layout.twig' %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">{{ __('Health dashboard')|e }}</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div class="card bg-base-200">
+    <div class="card-body">
+      <h2 class="card-title">{{ __('Environment')|e }}</h2>
+      <ul class="text-sm">
+        <li><strong>APP_ENV:</strong> {{ env.app_env|e }}</li>
+        <li><strong>APP_DEBUG:</strong> {{ env.app_debug ? 'true' : 'false' }}</li>
+        <li><strong>PHP:</strong> {{ env.php_version|e }}</li>
+        <li><strong>Timezone:</strong> {{ env.timezone|e }}</li>
+        <li><strong>Locale:</strong> {{ env.locale|e }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card bg-base-200">
+    <div class="card-body">
+      <h2 class="card-title">{{ __('Logs (last 10 files)')|e }}</h2>
+      <div class="overflow-x-auto">
+        <table class="table table-zebra text-sm">
+          <thead>
+            <tr>
+              <th>Level</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for level,count in logs %}
+            <tr>
+              <td>{{ level|e }}</td>
+              <td>{{ count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-2">
+        <a class="btn btn-sm" href="{{ url('/admin/logs') }}">{{ __('Browse logs')|e }}</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-200 md:col-span-2">
+    <div class="card-body">
+      <h2 class="card-title">{{ __('Storage')|e }}</h2>
+      <div class="overflow-x-auto">
+        <table class="table table-zebra text-sm">
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>Path</th>
+              <th>Exists</th>
+              <th>Writable</th>
+              <th>Size</th>
+              <th>Free</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for key,info in storage %}
+            <tr>
+              <td>{{ key|e }}</td>
+              <td><code>{{ info.path|e }}</code></td>
+              <td>{{ info.exists ? '✓' : '✗' }}</td>
+              <td>{{ info.writable ? '✓' : '✗' }}</td>
+              <td>{{ (info.size/1024/1024)|number_format(2, '.', ' ') }} MB</td>
+              <td>{% if info.free is not null %}{{ (info.free/1024/1024/1024)|number_format(2, '.', ' ') }} GB{% else %}-{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-3">
+        <a class="btn btn-sm" href="{{ url('/admin/backups') }}">{{ __('Backups')|e }}</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

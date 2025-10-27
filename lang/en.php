@@ -102,6 +102,15 @@ return [
     'Save' => 'Save',
     'Toggle theme' => 'Toggle theme',
 
+        // Admin & DX
+        'Administration' => 'Administration',
+        'Health' => 'Health',
+        'Health dashboard' => 'Health dashboard',
+        'Logs' => 'Logs',
+        'Backups' => 'Backups',
+        'Browse logs' => 'Browse logs',
+        'Back to health dashboard' => 'Back to health dashboard',
+
     // Home page
     'Welcome to People & Pixel' => 'Welcome to People & Pixel',
     'This is a lightweight CRM to manage your company contacts, team, tasks, time tracking, payments, and inventory.' => 'This is a lightweight CRM to manage your company contacts, team, tasks, time tracking, payments, and inventory.',
