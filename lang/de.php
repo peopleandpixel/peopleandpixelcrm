@@ -66,6 +66,18 @@ return [
 
         // Admin / Benutzerverwaltung
         'Users' => 'Benutzer',
+
+        // Metriken UI
+        'Success metrics' => 'Erfolgsmetriken',
+        'Requests (last 24h)' => 'Anfragen (letzte 24h)',
+        'Success rate' => 'Erfolgsquote',
+        'Errors' => 'Fehler',
+        'Last 1h' => 'Letzte 1h',
+        'Last 24h' => 'Letzte 24h',
+        'Backups (last 7d)' => 'Backups (letzte 7 Tage)',
+        'Total' => 'Gesamt',
+        'Last run' => 'Letzter Lauf',
+        'Last failure' => 'Letzter Fehler',
         '+ Add User' => '+ Benutzer hinzufügen',
 
         'No users yet' => 'Noch keine Benutzer',

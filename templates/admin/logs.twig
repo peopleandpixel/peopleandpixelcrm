@@ -19,7 +19,7 @@
           {% for f in files %}
           <tr>
             <td><code>{{ f.file|e }}</code></td>
-            <td>{{ f.mtime ? date('Y-m-d H:i', f.mtime) : '-' }}</td>
+            <td>{{ f.mtime ? (f.mtime|date('Y-m-d H:i')) : '-' }}</td>
             <td>{{ (f.size/1024)|number_format(1, '.', ' ') }} KB</td>
             <td class="text-right">
               <a class="btn btn-xs" href="{{ url('/admin/logs/download', {file: f.file}) }}">{{ __('Download')|e }}</a>

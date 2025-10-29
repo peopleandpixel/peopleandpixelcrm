@@ -81,6 +81,18 @@ return [
 
     // Admin / Users management
     'Users' => 'Users',
+
+    // Metrics UI
+    'Success metrics' => 'Success metrics',
+    'Requests (last 24h)' => 'Requests (last 24h)',
+    'Success rate' => 'Success rate',
+    'Errors' => 'Errors',
+    'Last 1h' => 'Last 1h',
+    'Last 24h' => 'Last 24h',
+    'Backups (last 7d)' => 'Backups (last 7d)',
+    'Total' => 'Total',
+    'Last run' => 'Last run',
+    'Last failure' => 'Last failure',
     '+ Add User' => '+ Add User',
     'Edit' => 'Edit',
     'Delete' => 'Delete',

@@ -78,5 +78,45 @@
       </div>
     </div>
   </div>
+
+  {% if metrics %}
+  <div class="card bg-base-200 md:col-span-2">
+    <div class="card-body">
+      <h2 class="card-title">{{ __('Success metrics')|e }}</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <h3 class="font-semibold mb-2">{{ __('Requests (last 24h)')|e }}</h3>
+          {% set r = metrics.last24h.requests %}
+          <ul class="text-sm">
+            <li>p50: {{ (r.duration_ms.p50)|number_format(1, '.', ' ') }} ms</li>
+            <li>p95: {{ (r.duration_ms.p95)|number_format(1, '.', ' ') }} ms</li>
+            <li>p99: {{ (r.duration_ms.p99)|number_format(1, '.', ' ') }} ms</li>
+            <li>{{ __('Success rate')|e }}: {{ (r.success_rate*100)|number_format(1, '.', ' ') }}%</li>
+            <li>4xx: {{ r.errors4xx|default(0) }}, 5xx: {{ r.errors5xx|default(0) }}</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="font-semibold mb-2">{{ __('Errors')|e }}</h3>
+          {% set e1 = metrics.last1h.errors %}
+          {% set e24 = metrics.last24h.errors %}
+          <ul class="text-sm">
+            <li>{{ __('Last 1h')|e }}: {{ e1.count|default(0) }}</li>
+            <li>{{ __('Last 24h')|e }}: {{ e24.count|default(0) }}</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="font-semibold mb-2">{{ __('Backups (last 7d)')|e }}</h3>
+          {% set b = metrics.last7d.backups %}
+          <ul class="text-sm">
+            <li>{{ __('Total')|e }}: {{ b.count|default(0) }}</li>
+            <li>{{ __('Success rate')|e }}: {{ (b.success_rate*100)|number_format(1, '.', ' ') }}%</li>
+            <li>{{ __('Last run')|e }}: {% if b.last_run_ts %}{{ b.last_run_ts|date('Y-m-d H:i') }}{% else %}-{% endif %}</li>
+            <li>{{ __('Last failure')|e }}: {% if b.last_failure_ts %}{{ b.last_failure_ts|date('Y-m-d H:i') }}{% else %}-{% endif %}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

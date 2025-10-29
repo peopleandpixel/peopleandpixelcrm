@@ -191,6 +191,7 @@ return static function (Container $container, Router $router): void {
             'AUTOMATIONS_ENABLED','AUTOMATIONS_MAX_ACTIONS','AUTOMATIONS_ALLOW_EMAIL',
             'TOTP_WINDOW',
             'BACKUP_RETENTION',
+            'METRICS_ENABLED','METRICS_RETENTION_DAYS',
             'INVENTORY_ALLOW_NEGATIVE'
         ];
         $vals = [];
@@ -215,6 +216,7 @@ return static function (Container $container, Router $router): void {
             'AUTOMATIONS_ENABLED','AUTOMATIONS_MAX_ACTIONS','AUTOMATIONS_ALLOW_EMAIL',
             'TOTP_WINDOW',
             'BACKUP_RETENTION',
+            'METRICS_ENABLED','METRICS_RETENTION_DAYS',
             'INVENTORY_ALLOW_NEGATIVE'
         ];
         $updates = [];

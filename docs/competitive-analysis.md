@@ -115,3 +115,69 @@ Appendix: Quick Feature Matrix (very high‑level)
 - Permissions: P&P basic / Monica basic / Espo medium / Suite advanced / SaaS advanced
 - Integrations: P&P few / Monica few / Espo medium / Suite many / SaaS many
 - Mobile/PWA: P&P basic / Monica basic / Espo basic / Suite basic / SaaS polished
+
+
+## CMS/DMS Competitive Benchmarking and Strategy (initial)
+
+Updated: 2025-10-27
+
+Scope
+- Extend People & Pixel from CRM-lite into adjacent CMS/DMS use cases for small teams and departments while remaining self-hosted, simple, and privacy-first.
+
+Segments and top competitors
+- SMB (self-hosted or budget-conscious)
+  - Directus (headless CMS, data-first; strong admin UI, extensible, light auth/permissions)
+  - Strapi (headless CMS, Node.js; rich plugin ecosystem, popular in SMB/mid; JS stack)
+  - WordPress + plugins (ubiquitous CMS; huge ecosystem; weak structured content governance)
+  - Paperless-ngx (DMS for personal/SMB; strong ingestion/OCR; limited collaboration/workflows)
+  - Docspell/Mayan EDMS (self-hosted DMS; ingestion, OCR, tagging; admin-heavy)
+- Mid-market (teams with IT support)
+  - Contentful/Storyblok (SaaS headless; excellent editorial UX, high polish, cost/lock-in)
+  - NocoDB/Airtable (as headless/storefront backends; flexible but not CMS-native governance)
+  - Alfresco Community (open-source DMS; records mgmt optional; heavy to run)
+  - OpenKM/LogicalDOC (DMS; permissions and workflows; steeper admin/ops)
+- Enterprise (reference, for differentiation only)
+  - Adobe AEM, Sitecore (enterprise CMS suites; extensive workflow, personalization; expensive/complex)
+  - Microsoft SharePoint/OneDrive (DMS/ECM; deep M365 integration; governance, records, compliance)
+
+High-level differentiators vs. these segments
+- P&P strengths to lean into
+  - Self-hosted simplicity (PHP, minimal deps), low TCO, quick setup, backup/restore baked in
+  - Unified platform: contacts/tasks/projects/deals + files + basic CMS/DMS needs for small teams
+  - Privacy-first approach with optional enrichment and clear auditability
+- Where not to compete (on purpose)
+  - Deep enterprise compliance (full records management, SCIM, KMS per-tenant) — reference only
+  - Large marketplace ecosystems and complex workflow designers — offer focused, simple automations
+
+Target personas and primary jobs-to-be-done (CMS/DMS tilt)
+- Content Manager (SMB)
+  - JTBD: Define simple content types, publish updates, manage media, preview changes, schedule posts.
+- Knowledge Worker / Project Lead
+  - JTBD: Store/retrieve project docs, find the right version, annotate/highlight, share read-only links.
+- Compliance-minded Admin (lightweight)
+  - JTBD: Configure access policies by owner/team/role, retention basics, audit key actions without heavy RM.
+- IT/Admin (part-time)
+  - JTBD: Deploy and maintain self-hosted instance, backups/restore, basic monitoring, upgrades with minimal downtime.
+
+Positioning statement
+- For small teams that need an all-in-one workspace to manage content, documents, and day-to-day work without SaaS lock-in, People & Pixel offers a self-hosted, easy-to-run CMS/DMS-lite with pragmatic workflows, privacy-first enrichment, and built-in backup/restore — unlike heavy enterprise suites or lock-in SaaS.
+
+Near-term strategic focus (next 1–2 quarters)
+- CMS core basics: content modeling UI, headless APIs (REST/GraphQL), structured editor, preview environments.
+- DMS essentials: ingest + OCR pipeline, metadata templates, versioning with check-in/out, annotations/redactions.
+- Search: permissions-aware full-text with facets and in-document hit highlighting.
+- Security/governance: practical RBAC/ABAC hybrid, secure shared links, encryption in transit, audit trail.
+- Collaboration: comments/@mentions, subscriptions, digest notifications.
+
+Key differentiators to deliver
+- Install/ops excellence for self-hosters: docker-compose sample, .env templates, health dashboard, one-click backups.
+- Simple, auditable automations: event → conditions → actions; readable config; safe execution with logs.
+- Privacy-first enrichment and DLP basics that are opt-in and fully logged.
+
+KPIs to validate strategy
+- Activation: time-to-first content model and published entry < 30 minutes.
+- Retrieval: median query time for permissions-aware search < 300ms at 10k docs.
+- Reliability: automated daily backups; successful restore drills monthly.
+
+Cadence
+- Keep this analysis updated quarterly; revisit competitor list and differentiators; review KPIs in the admin dashboard.

@@ -11,6 +11,7 @@ use App\Domain\Exception\NotFoundException;
 use App\Domain\Exception\UnauthorizedException;
 use App\Domain\Exception\ValidationException;
 use Psr\Log\LoggerInterface;
+use App\Service\MetricsService;
 
 class ErrorHandler
 {
@@ -18,7 +19,7 @@ class ErrorHandler
     private string $projectRoot;
     private bool $debug;
 
-    public function __construct(Config $config, LoggerInterface $logger)
+    public function __construct(Config $config, LoggerInterface $logger, private readonly ?MetricsService $metrics = null)
     {
         $this->logger = $logger;
         $this->projectRoot = $config->getProjectRoot();
@@ -60,6 +61,19 @@ class ErrorHandler
             $this->logger->warning('HTTP {code} {type}: {message}', $context);
         } else {
             $this->logger->info('HTTP {code} {type}: {message}', $context);
+        }
+        // Record metrics (fingerprinted, no PII)
+        if ($this->metrics && $this->metrics->isEnabled()) {
+            $msg = (string)($e->getMessage() ?? '');
+            $fp = substr(hash('sha256', $e::class . '|' . $msg), 0, 16);
+            $path = isset($_SERVER['REQUEST_URI']) ? (string)$_SERVER['REQUEST_URI'] : '';
+            $this->metrics->recordError([
+                'level' => $level,
+                'code' => $status,
+                'fingerprint' => $fp,
+                'route' => null,
+                'path' => $path,
+            ]);
         }
         $this->renderError($status, $e);
     }

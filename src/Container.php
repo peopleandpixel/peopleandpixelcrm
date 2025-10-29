@@ -76,7 +76,13 @@ class Container
             $cfg = $c->get('config');
             /** @var LoggerInterface $logger */
             $logger = $c->get('logger.http');
-            return new ErrorHandler($cfg, $logger);
+            /** @var \App\Service\MetricsService $metrics */
+            $metrics = $c->get('metricsService');
+            return new ErrorHandler($cfg, $logger, $metrics);
+        };
+        // Metrics
+        $this->factories['metricsService'] = function(self $c) {
+            return new \App\Service\MetricsService($c->get('config'));
         };
         // Twig environment
         $this->factories['request'] = function(self $c) {
@@ -444,14 +450,14 @@ class Container
         };
         // Backups
         $this->factories['backupService'] = function(self $c) {
-            return new \App\Service\BackupService($c->get('config'));
+            return new \App\Service\BackupService($c->get('config'), $c->get('metricsService'));
         };
         $this->factories['backupsController'] = function(self $c) {
             return new \App\Controller\BackupsController($c->get('backupService'));
         };
         // Admin
         $this->factories['adminController'] = function(self $c) {
-            return new \App\Controller\AdminController($c->get('config'));
+            return new \App\Controller\AdminController($c->get('config'), $c->get('metricsService'));
         };
         // API Controller
         $this->factories['apiController'] = function(self $c) {

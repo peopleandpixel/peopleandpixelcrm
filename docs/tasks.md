@@ -143,5 +143,73 @@ now do
     - [x] Data quality: Optional email DNS/MX checks, E.164 phone normalization, background validators
     - [x] Privacy-first enrichment: Optional third-party enrichment behind user-provided API keys, fully auditable
     - [x] Admin & DX: Health dashboard (storage, jobs, errors), downloadable logs, docker-compose sample, seed/reset scripts
-    - [ ] Success metrics instrumentation: Log key metrics (TTFV, errors, backups) and surface in admin dashboard
+    - [x] Success metrics instrumentation: Log key metrics (TTFV, errors, backups) and surface in admin dashboard
     - [ ] Documentation: Add docs/competitive-analysis.md reference in README (done) and expand feature comparison page
+
+
+26. [ ] CMS/DMS Leadership Roadmap
+    - [x] Competitive benchmarking and strategy
+      - [x] Identify top CMS/DMS competitors by segment (SMB, Mid‑market, Enterprise) and map differentiators
+      - [x] Define target personas and primary jobs‑to‑be‑done (Content Managers, Knowledge Workers, Compliance Officers, IT Admins)
+      - [x] Publish docs/competitive-analysis.md and keep updated quarterly
+    - [ ] CMS core (headless + editorial)
+      - [ ] Content modeling UI: create/edit content types with fields, validations, relations, reusable blocks
+      - [ ] Headless APIs: REST + GraphQL with schema introspection, webhooks, SDKs (PHP/JS) and API keys/roles
+      - [ ] Content authoring: structured editor (blocks), media embeds, link picker, internal references, shortcuts
+      - [ ] Real‑time preview and environments: draft/preview/live with branchable environments and scheduled publish
+      - [ ] Content lifecycle: versioning, diff, rollback; workflows with review/approval and assignments
+      - [ ] Localization/i18n at entry + field level with fallbacks and translation workflow
+      - [ ] Media library: image/video/doc management, transformations (resize/crop), metadata, focal point, renditions
+      - [ ] Public site delivery: caching, CDN headers, image optimization, sitemap, SEO meta, OpenGraph
+    - [ ] DMS core (documents + records)
+      - [ ] Ingest: bulk uploads, email ingest (IMAP rules), scanner support; dedupe and checksum
+      - [ ] OCR & text extraction pipeline for PDFs/images (tesseract or service), language detection
+      - [ ] Metadata templates, tags, taxonomies, and custom file plans
+      - [ ] Versioning with check‑in/out, lock indicators, and merge notes
+      - [ ] Annotations (highlights, comments) and redaction tools for PDFs/images
+      - [ ] E‑signature integration and signature status tracking
+      - [ ] Records management: retention schedules, legal hold, disposition review
+      - [ ] Immutable audit trail: who/what/when, exportable and tamper‑evident
+    - [ ] Search and discovery
+      - [ ] Permissions‑aware full‑text search (OpenSearch/Elasticsearch) over entries, files, comments
+      - [ ] Facets/filters, saved searches, alerts, and relevance tuning (boost by recency/popularity)
+      - [ ] Synonyms, typo tolerance, and stemming per language; OCR text indexed per page
+      - [ ] In‑document search with hit highlighting and page thumbnails
+    - [ ] Security, compliance, and governance
+      - [ ] SSO (SAML/OIDC), MFA, SCIM provisioning; fine‑grained RBAC + ABAC (attributes on users/resources)
+      - [ ] Document/field‑level permissions and secure shared links (expiry, watermark, view‑only)
+      - [ ] Encryption at rest (KMS) and in transit; key rotation and per‑tenant keys
+      - [ ] Data residency and regional storage selection; audit logging with retention policies
+      - [ ] DLP: antivirus scanning, sensitive data detectors (PII, IBAN), quarantine & review workflow
+      - [ ] GDPR/DSAR tooling: export, delete, and access logs; consent for enrichment
+    - [ ] Collaboration and workflow
+      - [ ] Comments, @mentions, and notifications (email, Slack/Teams) with digest options
+      - [ ] Real‑time co‑editing for entries and simultaneous annotation sessions for documents
+      - [ ] Workflow builder (visual): event → conditions → actions with templates (approval, review, publish, move)
+      - [ ] Subscriptions: watch lists/folders/entries and batch digests
+    - [ ] Scale and operations
+      - [ ] Object storage support (S3/compatible) with signed URLs and lifecycle policies
+      - [ ] Background jobs/queue with retry/backoff for OCR, transformations, and webhooks
+      - [ ] Caching layers and CDN integration; image/media proxy with transformation cache
+      - [ ] Multi‑tenant mode: per‑tenant configs, quotas, isolation, and usage metering
+      - [ ] Backup/restore at tenant and global level; DR playbooks (RPO/RTO targets) and chaos drills
+      - [ ] Observability: metrics, tracing, and dashboards for OCR, queues, webhooks, API usage
+    - [ ] AI‑assisted features
+      - [ ] Auto‑classification and tagging from content/OCR; entity extraction (names, orgs, dates)
+      - [ ] AI summaries and key points for long docs; suggested titles/descriptions
+      - [ ] Semantic search (vector index) and "find similar" recommendations; hybrid BM25+vector
+      - [ ] Generative document templates with placeholders and policy‑aware outputs
+      - [ ] Smart automation triggers from detected intents (e.g., contracts expiring → create tasks)
+    - [ ] Integrations and ecosystem
+      - [ ] Office integrations (Word/Excel/PowerPoint) and Google Docs/Drive; in‑app open/edit
+      - [ ] Microsoft 365/SharePoint/OneDrive, Box, Dropbox connectors with delta sync
+      - [ ] Slack/Teams bots for search, previews, and approvals
+      - [ ] Email archiving and journaling; outbound mail with DKIM/DMARC configuration
+      - [ ] CRM/ERP connectors (e.g., HubSpot/Salesforce) and webhooks catalog; iPaaS templates (Zapier/Make)
+      - [ ] Public SDKs and extension framework with signed apps and marketplace basics
+    - [ ] Productization and UX
+      - [ ] Onboarding wizard, sample content space, and guided tours
+      - [ ] Theming/branding per tenant and style tokens for frontends
+      - [ ] Pricing/billing: plans, seats, overages, trials; licensing for on‑prem
+      - [ ] Migration tools: importers from popular CMS/DMS and CSV/ZIP with mapping wizards
+      - [ ] Accessibility AA conformance audit and keyboard/reader workflows

@@ -8,7 +8,7 @@ use App\Config;
 
 final class BackupService
 {
-    public function __construct(private readonly Config $config)
+    public function __construct(private readonly \App\Config $config, private readonly ?\App\Service\MetricsService $metrics = null)
     {
     }
 
@@ -25,55 +25,82 @@ final class BackupService
      */
     public function createSnapshot(): string
     {
+        $t0 = microtime(true);
         if ($this->config->useDb()) {
             // For now, only JSON backend is supported for automated backups
-            throw new \RuntimeException('Backups via UI are supported only for JSON storage mode at the moment.');
+            $e = new \RuntimeException('Backups via UI are supported only for JSON storage mode at the moment.');
+            if ($this->metrics && $this->metrics->isEnabled()) {
+                $this->metrics->recordBackup(['action' => 'create', 'ok' => false, 'error' => $e->getMessage(), 'duration_ms' => 0]);
+            }
+            throw $e;
         }
         $dataDir = $this->config->getDataDir();
         $backupDir = $this->getBackupDir();
         $stamp = date('Ymd-His');
         $zipPath = $backupDir . '/snapshot-' . $stamp . '.zip';
 
-        $files = glob($dataDir . '/*.json') ?: [];
-        $manifest = [
-            'created_at' => date(DATE_ATOM),
-            'storage' => 'json',
-            'data_dir' => $dataDir,
-            'files' => [],
-            'version' => 1,
-        ];
-        foreach ($files as $file) {
-            $base = basename($file);
-            $raw = @file_get_contents($file);
-            if ($raw === false) { throw new \RuntimeException('Failed to read ' . $file); }
-            $decoded = json_decode($raw, true);
-            if (!is_array($decoded) && $decoded !== []) {
-                throw new \RuntimeException('Integrity check failed for ' . $base . ' (invalid JSON).');
-            }
-            $manifest['files'][] = [
-                'name' => $base,
-                'size' => filesize($file) ?: 0,
-                'sha256' => hash('sha256', $raw),
-                'count' => is_array($decoded) ? count($decoded) : 0,
+        try {
+            $files = glob($dataDir . '/*.json') ?: [];
+            $manifest = [
+                'created_at' => date(DATE_ATOM),
+                'storage' => 'json',
+                'data_dir' => $dataDir,
+                'files' => [],
+                'version' => 1,
             ];
-        }
+            foreach ($files as $file) {
+                $base = basename($file);
+                $raw = @file_get_contents($file);
+                if ($raw === false) { throw new \RuntimeException('Failed to read ' . $file); }
+                $decoded = json_decode($raw, true);
+                if (!is_array($decoded) && $decoded !== []) {
+                    throw new \RuntimeException('Integrity check failed for ' . $base . ' (invalid JSON).');
+                }
+                $manifest['files'][] = [
+                    'name' => $base,
+                    'size' => filesize($file) ?: 0,
+                    'sha256' => hash('sha256', $raw),
+                    'count' => is_array($decoded) ? count($decoded) : 0,
+                ];
+            }
 
-        $zip = new \ZipArchive();
-        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-            throw new \RuntimeException('Unable to create backup file.');
-        }
-        // Add data files
-        foreach ($files as $file) {
-            $zip->addFile($file, 'data/' . basename($file));
-        }
-        // Add manifest.json
-        $zip->addFromString('manifest.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        $zip->close();
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+                throw new \RuntimeException('Unable to create backup file.');
+            }
+            // Add data files
+            foreach ($files as $file) {
+                $zip->addFile($file, 'data/' . basename($file));
+            }
+            // Add manifest.json
+            $zip->addFromString('manifest.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $zip->close();
 
-        // Retention enforcement
-        $this->enforceRetention($this->getRetention());
+            // Retention enforcement
+            $this->enforceRetention($this->getRetention());
 
-        return $zipPath;
+            if ($this->metrics && $this->metrics->isEnabled()) {
+                $bytes = @filesize($zipPath) ?: 0;
+                $this->metrics->recordBackup([
+                    'action' => 'create',
+                    'ok' => true,
+                    'filename' => basename($zipPath),
+                    'bytes' => $bytes,
+                    'duration_ms' => (float)round((microtime(true)-$t0)*1000, 3)
+                ]);
+            }
+            return $zipPath;
+        } catch (\Throwable $e) {
+            if ($this->metrics && $this->metrics->isEnabled()) {
+                $this->metrics->recordBackup([
+                    'action' => 'create',
+                    'ok' => false,
+                    'error' => $e->getMessage(),
+                    'duration_ms' => (float)round((microtime(true)-$t0)*1000, 3)
+                ]);
+            }
+            throw $e;
+        }
     }
 
     /** Return a list of snapshots with metadata (sorted newest first). */
@@ -100,16 +127,32 @@ final class BackupService
     /** Verify all checksums in the snapshot; return [ok=>bool, errors=>string[]] */
     public function verifySnapshot(string $file): array
     {
+        $t0 = microtime(true);
         $path = $this->resolvePath($file);
         $zip = new \ZipArchive();
-        if ($zip->open($path) !== true) { return ['ok' => false, 'errors' => ['Unable to open snapshot']]; }
+        if ($zip->open($path) !== true) {
+            $res = ['ok' => false, 'errors' => ['Unable to open snapshot']];
+            if ($this->metrics && $this->metrics->isEnabled()) {
+                $this->metrics->recordBackup(['action' => 'verify', 'ok' => false, 'filename' => basename($path), 'error' => 'open_failed', 'duration_ms' => (float)round((microtime(true)-$t0)*1000,3)]);
+            }
+            return $res;
+        }
         $manifestRaw = $zip->getFromName('manifest.json');
-        if (!is_string($manifestRaw)) { $zip->close(); return ['ok' => false, 'errors' => ['Manifest not found']]; }
+        if (!is_string($manifestRaw)) { $zip->close();
+            $res = ['ok' => false, 'errors' => ['Manifest not found']];
+            if ($this->metrics && $this->metrics->isEnabled()) {
+                $this->metrics->recordBackup(['action' => 'verify', 'ok' => false, 'filename' => basename($path), 'error' => 'no_manifest', 'duration_ms' => (float)round((microtime(true)-$t0)*1000,3)]);
+            }
+            return $res; }
         $manifest = json_decode($manifestRaw, true);
         $errors = [];
         if (!is_array($manifest) || !isset($manifest['files']) || !is_array($manifest['files'])) {
             $zip->close();
-            return ['ok' => false, 'errors' => ['Invalid manifest']];
+            $res = ['ok' => false, 'errors' => ['Invalid manifest']];
+            if ($this->metrics && $this->metrics->isEnabled()) {
+                $this->metrics->recordBackup(['action' => 'verify', 'ok' => false, 'filename' => basename($path), 'error' => 'invalid_manifest', 'duration_ms' => (float)round((microtime(true)-$t0)*1000,3)]);
+            }
+            return $res;
         }
         foreach ($manifest['files'] as $fi) {
             $name = 'data/' . ($fi['name'] ?? '');
@@ -125,19 +168,32 @@ final class BackupService
             }
         }
         $zip->close();
-        return ['ok' => empty($errors), 'errors' => $errors];
+        $ok = empty($errors);
+        if ($this->metrics && $this->metrics->isEnabled()) {
+            $this->metrics->recordBackup(['action' => 'verify', 'ok' => $ok, 'filename' => basename($path), 'duration_ms' => (float)round((microtime(true)-$t0)*1000,3)]);
+        }
+        return ['ok' => $ok, 'errors' => $errors];
     }
 
     /** Restore snapshot into data directory after verification. Creates a pre-restore backup automatically. */
     public function restoreSnapshot(string $file): void
     {
+        $t0 = microtime(true);
         if ($this->config->useDb()) {
-            throw new \RuntimeException('Restore via UI is supported only for JSON storage mode at the moment.');
+            $e = new \RuntimeException('Restore via UI is supported only for JSON storage mode at the moment.');
+            if ($this->metrics && $this->metrics->isEnabled()) {
+                $this->metrics->recordBackup(['action' => 'restore', 'ok' => false, 'filename' => basename($file), 'error' => 'db_mode', 'duration_ms' => 0]);
+            }
+            throw $e;
         }
         $path = $this->resolvePath($file);
         $verify = $this->verifySnapshot($file);
         if (!$verify['ok']) {
-            throw new \RuntimeException('Snapshot failed verification: ' . implode('; ', $verify['errors']));
+            $e = new \RuntimeException('Snapshot failed verification: ' . implode('; ', $verify['errors']));
+            if ($this->metrics && $this->metrics->isEnabled()) {
+                $this->metrics->recordBackup(['action' => 'restore', 'ok' => false, 'filename' => basename($path), 'error' => 'verify_failed', 'duration_ms' => (float)round((microtime(true)-$t0)*1000,3)]);
+            }
+            throw $e;
         }
         // Pre-restore safety backup
         try { $this->createSnapshot(); } catch (\Throwable $e) { /* best effort */ }
@@ -148,7 +204,7 @@ final class BackupService
         // Extract to temp dir then move
         $tmp = $this->getBackupDir() . '/.restore-' . bin2hex(random_bytes(6));
         @mkdir($tmp, 0777, true);
-        if (!$zip->extractTo($tmp)) { $zip->close(); throw new \RuntimeException('Failed to extract snapshot.'); }
+        if (!$zip->extractTo($tmp)) { $zip->close(); $e = new \RuntimeException('Failed to extract snapshot.'); if ($this->metrics && $this->metrics->isEnabled()) { $this->metrics->recordBackup(['action'=>'restore','ok'=>false,'filename'=>basename($path),'error'=>'extract_failed','duration_ms'=>(float)round((microtime(true)-$t0)*1000,3)]);} throw $e; }
         $zip->close();
         // Move files from tmp/data/*.json to dataDir
         $extracted = glob($tmp . '/data/*.json') ?: [];
@@ -156,17 +212,30 @@ final class BackupService
             $dest = $dataDir . '/' . basename($src);
             // Write atomically: write to temp then rename
             $contents = file_get_contents($src);
-            if ($contents === false) { throw new \RuntimeException('Failed to read extracted file'); }
+            if ($contents === false) { $e = new \RuntimeException('Failed to read extracted file'); if ($this->metrics && $this->metrics->isEnabled()) { $this->metrics->recordBackup(['action'=>'restore','ok'=>false,'filename'=>basename($path),'error'=>'read_extracted_failed','duration_ms'=>(float)round((microtime(true)-$t0)*1000,3)]);} throw $e; }
             $this->writeAtomic($dest, $contents);
         }
         // Cleanup
         $this->rrmdir($tmp);
+        if ($this->metrics && $this->metrics->isEnabled()) {
+            $this->metrics->recordBackup(['action' => 'restore', 'ok' => true, 'filename' => basename($path), 'duration_ms' => (float)round((microtime(true)-$t0)*1000,3)]);
+        }
     }
 
     public function deleteSnapshot(string $file): bool
     {
+        $t0 = microtime(true);
         $path = $this->resolvePath($file);
-        return @unlink($path);
+        $ok = @unlink($path);
+        if ($this->metrics && $this->metrics->isEnabled()) {
+            $this->metrics->recordBackup([
+                'action' => 'delete',
+                'ok' => $ok,
+                'filename' => basename($path),
+                'duration_ms' => (float)round((microtime(true)-$t0)*1000,3)
+            ]);
+        }
+        return $ok;
     }
 
     public function getRetention(): int

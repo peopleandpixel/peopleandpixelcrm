@@ -10,7 +10,7 @@ use App\Util\Flash;
 
 final class AdminController
 {
-    public function __construct(private readonly Config $config)
+    public function __construct(private readonly Config $config, private readonly ?\App\Service\MetricsService $metrics = null)
     {
     }
 
@@ -51,11 +51,24 @@ final class AdminController
 
         $logsSummary = $this->summarizeLogs($dirs['logs']);
 
+        // Metrics summaries (if service enabled)
+        $metricsSummary = null;
+        if ($this->metrics) {
+            try {
+                $now = new \DateTimeImmutable('now');
+                $h1 = $this->metrics->summarize($now->modify('-1 hour'), $now);
+                $d1 = $this->metrics->summarize($now->modify('-24 hours'), $now);
+                $w1 = $this->metrics->summarize($now->modify('-7 days'), $now);
+                $metricsSummary = [ 'last1h' => $h1, 'last24h' => $d1, 'last7d' => $w1 ];
+            } catch (\Throwable) { $metricsSummary = null; }
+        }
+
         render('admin/health', [
             'title' => __('Health'),
             'env' => $env,
             'storage' => $storage,
             'logs' => $logsSummary,
+            'metrics' => $metricsSummary,
         ]);
     }
 

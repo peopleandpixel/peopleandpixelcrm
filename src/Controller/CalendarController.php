@@ -93,12 +93,45 @@ final class CalendarController
         // Resort
         usort($events, fn($a,$b) => strcmp($a['start'], $b['start']));
 
-        // Build ICS
+        // Prepare ICS
         $lines = [];
         $lines[] = 'BEGIN:VCALENDAR';
         $lines[] = 'VERSION:2.0';
         $lines[] = 'PRODID:-//People & Pixel//Calendar//EN';
         $now = (new \DateTimeImmutable('now'))->format('Ymd\THis\Z');
+
+        // Determine filter for birthdays
+        $includeAll = empty($filters);
+        $wantBirthday = $includeAll || in_array('birthday', $filters, true);
+
+        // Export birthdays as yearly recurring events
+        if ($wantBirthday) {
+            foreach ($contacts as $c) {
+                $b = (string)($c['birthdate'] ?? '');
+                if ($b === '' || !Dates::isValid($b, 'Y-m-d')) { continue; }
+                $name = (string)($c['name'] ?? '');
+                $summary = self::icsEscape($name !== '' ? ($name . ' – Birthday') : 'Birthday');
+                $url = url('/contacts/view', ['id' => $c['id'] ?? null]);
+                $uidSeed = 'bday:' . ($c['id'] ?? ($name . ':' . $b));
+                $uid = self::makeUid($uidSeed);
+                $mm = substr($b, 5, 2);
+                $dd = substr($b, 8, 2);
+
+                $lines[] = 'BEGIN:VEVENT';
+                $lines[] = 'UID:' . $uid;
+                $lines[] = 'DTSTAMP:' . $now;
+                $lines[] = 'DTSTART;VALUE=DATE:' . str_replace('-', '', $b);
+                $lines[] = 'RRULE:FREQ=YEARLY;BYMONTH=' . ltrim($mm, '0') . ';BYMONTHDAY=' . ltrim($dd, '0');
+                $lines[] = 'DURATION:P1D';
+                $lines[] = 'SUMMARY:' . $summary;
+                if ($url) { $lines[] = 'URL:' . self::icsEscape((string)$url); }
+                $lines[] = 'END:VEVENT';
+            }
+            // remove birthday instances from events to avoid duplicates
+            $events = array_values(array_filter($events, fn($ev) => ($ev['type'] ?? '') !== 'birthday'));
+        }
+
+        // Export remaining non-birthday events as discrete entries
         foreach ($events as $ev) {
             $uid = self::makeUid((string)($ev['id'] ?? md5(json_encode($ev))));
             $summary = self::icsEscape((string)($ev['title'] ?? 'Event'));
