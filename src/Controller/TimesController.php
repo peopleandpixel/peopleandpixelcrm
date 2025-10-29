@@ -21,6 +21,180 @@ class TimesController
         private readonly ?object $projectsStore = null,
     ) {}
 
+    public function timerPage(): void
+    {
+        // Build minimal lists for assignment selectors
+        $projects = [];
+        if ($this->projectsStore) {
+            try { $projects = $this->projectsStore->all(); } catch (\Throwable $e) { $projects = []; }
+        }
+        $tasks = [];
+        if ($this->tasksStore) {
+            try {
+                foreach ($this->tasksStore->all() as $t) {
+                    // Prefer open/in_progress tasks for selection
+                    $st = strtolower((string)($t['status'] ?? 'open'));
+                    if (in_array($st, ['open','in_progress','review','blocked'], true)) { $tasks[] = $t; }
+                }
+                usort($tasks, fn($a,$b) => strcmp((string)($a['title'] ?? ''), (string)($b['title'] ?? '')));
+            } catch (\Throwable $e) { $tasks = []; }
+        }
+        // Contacts for default when creating ad-hoc times without a task
+        $contacts = [];
+        try { $contacts = $this->contactsStore->all(); } catch (\Throwable $e) { $contacts = []; }
+        render('timer', [
+            'projects' => $projects,
+            'tasks' => $tasks,
+            'contacts' => $contacts,
+        ]);
+    }
+
+    public function timerStart(): void
+    {
+        $req = \request();
+        $isJson = $req->wantsJson();
+        try {
+            $user = \App\Util\Auth::user();
+            $userId = is_array($user) ? (int)($user['id'] ?? 0) : 0;
+            $taskId = (int)($req->post('task_id') ?? 0);
+            $contactId = (int)($req->post('contact_id') ?? 0);
+            $desc = (string)($req->post('description') ?? '');
+            // If task provided, enrich fields from task
+            $projectId = 0; $employeeId = 0;
+            if ($taskId > 0 && $this->tasksStore) {
+                $task = $this->tasksStore->get($taskId);
+                if ($task) {
+                    $contactId = (int)($task['contact_id'] ?? $contactId);
+                    $employeeId = (int)($task['employee_id'] ?? 0);
+                    $projectId = (int)($task['project_id'] ?? 0);
+                    if ($desc === '') { $desc = __('Time for task') . ' #' . $taskId; }
+                }
+            }
+            if ($contactId <= 0) {
+                // fallback to first contact if exists
+                $allContacts = $this->contactsStore->all();
+                if (!empty($allContacts)) { $contactId = (int)($allContacts[0]['id'] ?? 0); }
+            }
+            // Stop any existing running timer for THIS user to avoid overlaps
+            $running = null; $rid = 0;
+            foreach ($this->timesStore->all() as $t) {
+                if ((string)($t['end_time'] ?? '') !== '') { continue; }
+                if ($userId > 0 && (int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
+                $id = (int)($t['id'] ?? 0);
+                if ($id > $rid) { $rid = $id; $running = $t; }
+            }
+            if ($running) {
+                $now = new \DateTimeImmutable('now');
+                $end = $now->format('H:i');
+                $start = (string)($running['start_time'] ?? '');
+                $hours = 0.0;
+                if ($start !== '') {
+                    $s = \App\Util\Dates::parseExact($start, 'H:i') ?? \App\Util\Dates::parseExact($start, 'H:i:s');
+                    $e = \App\Util\Dates::parseExact($end, 'H:i');
+                    if ($s && $e) { $hours = max(0.01, round(($e->getTimestamp() - $s->getTimestamp())/3600, 2)); }
+                }
+                $this->timesStore->update($rid, ['end_time' => $end, 'hours' => $hours]);
+            }
+            $now = new \DateTimeImmutable('now');
+            $created = $this->timesStore->add([
+                'contact_id' => $contactId,
+                'employee_id' => $employeeId,
+                'task_id' => $taskId,
+                'date' => $now->format('Y-m-d'),
+                'hours' => 0.0,
+                'description' => $desc,
+                'start_time' => $now->format('H:i'),
+                'end_time' => '',
+                'created_at' => \App\Util\Dates::nowAtom(),
+                'owner_user_id' => $userId,
+            ]);
+            if ($isJson) { \App\Http\Response::json(['ok'=>true,'time'=>$created])->send(); return; }
+            redirect('/timer');
+        } catch (\Throwable $e) {
+            if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'server_error'])->send(); return; }
+            http_response_code(500); render('errors/500');
+        }
+    }
+
+    public function timerPause(): void
+    {
+        $req = \request(); $isJson = $req->wantsJson();
+        try {
+            $user = \App\Util\Auth::user();
+            $userId = is_array($user) ? (int)($user['id'] ?? 0) : 0;
+            // Find the most recent running timer for this user and close it
+            $running = null; $rid = 0;
+            foreach ($this->timesStore->all() as $t) {
+                if ((string)($t['end_time'] ?? '') !== '') { continue; }
+                if ($userId > 0 && (int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
+                $id = (int)($t['id'] ?? 0); if ($id > $rid) { $rid = $id; $running = $t; }
+            }
+            if (!$running) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'no_running_timer'])->send(); } else { redirect('/timer'); } return; }
+            $now = new \DateTimeImmutable('now');
+            $end = $now->format('H:i');
+            $start = (string)($running['start_time'] ?? '');
+            $hours = 0.0;
+            if ($start !== '') {
+                $s = \App\Util\Dates::parseExact($start, 'H:i') ?? \App\Util\Dates::parseExact($start, 'H:i:s');
+                $e = \App\Util\Dates::parseExact($end, 'H:i');
+                if ($s && $e) { $hours = max(0.01, round(($e->getTimestamp() - $s->getTimestamp())/3600, 2)); }
+            }
+            $updated = $this->timesStore->update($rid, ['end_time' => $end, 'hours' => $hours]);
+            if ($isJson) { \App\Http\Response::json(['ok'=>true,'time'=>$updated])->send(); return; }
+            redirect('/timer');
+        } catch (\Throwable $e) {
+            if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'server_error'])->send(); return; }
+            http_response_code(500); render('errors/500');
+        }
+    }
+
+    public function timerResume(): void
+    {
+        $req = \request(); $isJson = $req->wantsJson();
+        try {
+            $user = \App\Util\Auth::user();
+            $userId = is_array($user) ? (int)($user['id'] ?? 0) : 0;
+            // Resume by starting a new segment using the latest closed entry's metadata for this user
+            $last = null; $lid = 0;
+            foreach ($this->timesStore->all() as $t) {
+                if ($userId > 0 && (int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
+                $id = (int)($t['id'] ?? 0); if ($id > $lid) { $lid = $id; $last = $t; }
+            }
+            if (!$last) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'nothing_to_resume'])->send(); } else { redirect('/timer'); } return; }
+            // If there is already a running one for this user, do nothing
+            foreach ($this->timesStore->all() as $t) {
+                if ((string)($t['end_time'] ?? '') !== '') { continue; }
+                if ($userId > 0 && (int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
+                if ($isJson) { \App\Http\Response::json(['ok'=>true,'time'=>$t])->send(); return; }
+                redirect('/timer'); return;
+            }
+            $now = new \DateTimeImmutable('now');
+            $created = $this->timesStore->add([
+                'contact_id' => (int)($last['contact_id'] ?? 0),
+                'employee_id' => (int)($last['employee_id'] ?? 0),
+                'task_id' => (int)($last['task_id'] ?? 0),
+                'date' => $now->format('Y-m-d'),
+                'hours' => 0.0,
+                'description' => (string)($last['description'] ?? ''),
+                'start_time' => $now->format('H:i'),
+                'end_time' => '',
+                'created_at' => \App\Util\Dates::nowAtom(),
+                'owner_user_id' => $userId,
+            ]);
+            if ($isJson) { \App\Http\Response::json(['ok'=>true,'time'=>$created])->send(); return; }
+            redirect('/timer');
+        } catch (\Throwable $e) {
+            if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'server_error'])->send(); return; }
+            http_response_code(500); render('errors/500');
+        }
+    }
+
+    public function timerStop(): void
+    {
+        // Same as pause, but returns explicit stopped state
+        $this->timerPause();
+    }
+
     /**
      * Returns the most recent running timer (no end_time) as JSON.
      */
@@ -28,13 +202,15 @@ class TimesController
     {
         header('Content-Type: application/json');
         try {
+            $user = \App\Util\Auth::user();
+            $userId = is_array($user) ? (int)($user['id'] ?? 0) : 0;
             $running = null; $rid = 0;
             $all = $this->timesStore->all();
             foreach ($all as $t) {
-                if ((string)($t['end_time'] ?? '') === '') {
-                    $id = (int)($t['id'] ?? 0);
-                    if ($id > $rid) { $rid = $id; $running = $t; }
-                }
+                if ((string)($t['end_time'] ?? '') !== '') { continue; }
+                if ($userId > 0 && (int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
+                $id = (int)($t['id'] ?? 0);
+                if ($id > $rid) { $rid = $id; $running = $t; }
             }
             if (!$running) {
                 echo json_encode(['ok' => true, 'running' => null, 'now' => (new \DateTimeImmutable('now'))->format(DATE_ATOM)]);
@@ -50,12 +226,10 @@ class TimesController
                 $isoStart = $date . 'T' . (strlen($start) === 5 ? ($start . ':00') : $start);
             }
             // Compute per-user total time for this task
-            $user = \App\Util\Auth::user();
-            $userId = is_array($user) ? (int)($user['id'] ?? 0) : 0;
             $totalSeconds = 0;
             foreach ($all as $t) {
                 if ((int)($t['task_id'] ?? 0) !== $taskId) { continue; }
-                if ((int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
+                if ($userId > 0 && (int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
                 $hours = (float)($t['hours'] ?? 0);
                 $totalSeconds += (int)round($hours * 3600);
                 // If this is the running entry and belongs to the user, add current elapsed since start_time

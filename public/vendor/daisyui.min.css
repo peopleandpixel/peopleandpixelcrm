@@ -1,0 +1,37 @@
+/* Minimal DaisyUI-like local fallback to keep UI styled when CDN fails.
+   NOTE: This is not the full DaisyUI package, only critical components used in the app.
+   It is safe to keep in version control; update or remove if you restore full DaisyUI locally. */
+:root{--p:#22c55e;--pf:#16a34a;--b1:rgba(255,255,255,.95);--bc:#0f172a;--bd:rgba(148,163,184,.18)}
+html,body{color:var(--bc)}
+.btn{display:inline-flex;align-items:center;gap:.375rem;line-height:1.25rem;font-weight:500;border-radius:.5rem;border:1px solid var(--bd);padding:.5rem .8rem;background:var(--b1);color:var(--bc);cursor:pointer;transition:background .15s ease,box-shadow .15s ease}
+.btn:hover{background:rgba(0,0,0,.03)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn-ghost{background:transparent;border-color:transparent}
+.btn-primary{background:var(--p);color:#fff;border-color:transparent}
+.btn-success{background:#16a34a;color:#fff;border-color:transparent}
+.btn-accent{background:#0ea5e9;color:#fff;border-color:transparent}
+.btn-xs{padding:.25rem .5rem;font-size:.75rem;border-radius:.375rem}
+.badge{display:inline-flex;align-items:center;gap:.25rem;padding:.125rem .5rem;border-radius:9999px;font-size:.75rem;border:1px solid var(--bd);background:rgba(2,6,23,.06)}
+.badge-ghost{background:transparent}
+.badge-outline{background:transparent}
+.badge-success{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.45)}
+.badge-error{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.45)}
+.badge-warning{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.45)}
+.badge-info{background:rgba(14,165,233,.15);border-color:rgba(14,165,233,.45)}
+.card{background:rgba(255,255,255,.8);border:1px solid var(--bd);border-radius:.75rem;box-shadow:0 10px 30px -12px rgba(0,0,0,.2)}
+.card-body{padding:1rem}
+.menu{padding:.25rem}
+.menu .menu-title{padding:.5rem .75rem;font-size:.75rem;opacity:.7}
+.menu a{display:block;padding:.5rem .65rem;border-radius:.5rem;color:inherit;text-decoration:none}
+.menu a:hover{background:rgba(2,6,23,.06)}
+.menu a.active{outline:2px solid rgba(34,197,94,.6)}
+.details,details{display:block}
+summary{display:block;cursor:pointer;padding:.5rem .65rem;border-radius:.5rem}
+details[open]>summary{background:rgba(2,6,23,.04)}
+.bg-base-100{background:rgba(255,255,255,.9)}
+.bg-base-200{background:rgba(2,6,23,.06)}
+.text-base-content{color:var(--bc)}
+.border{border:1px solid var(--bd)}
+.border-base-300{border-color:var(--bd)}
+.rounded-box{border-radius:.75rem}
+.shadow-sm{box-shadow:0 6px 18px -10px rgba(0,0,0,.2)}

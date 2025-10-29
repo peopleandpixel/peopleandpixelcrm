@@ -1,0 +1,268 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<section class="max-w-4xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-3xl font-extrabold tracking-tight flex items-center gap-3">
+      <span aria-hidden="true">⏱️</span> {{ __('Timer')|e }}
+    </h1>
+    <div class="flex items-center gap-2">
+      <a class="btn" href="{{ url('/times') }}">{{ __('Times')|e }}</a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Beautiful animated timer card -->
+    <div class="card bg-base-200 overflow-hidden relative">
+      <div class="pointer-events-none absolute inset-0 opacity-60" aria-hidden="true">
+        <div class="animate-pulse w-[140%] h-[140%] -left-[20%] -top-[20%] absolute rounded-full bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 blur-3xl"></div>
+      </div>
+      <div class="card-body relative">
+        <div class="flex flex-col items-center justify-center py-6">
+          <div id="face" class="relative w-56 h-56 md:w-64 md:h-64 rounded-full border-4 border-base-300 bg-base-100 shadow-xl grid place-items-center overflow-hidden">
+            <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
+              <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" class="text-base-300" stroke-width="6" />
+              <circle id="progress" cx="50" cy="50" r="46" fill="none" stroke="url(#grad)" stroke-width="6" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="289"></circle>
+              <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="hsl(var(--p))" />
+                  <stop offset="100%" stop-color="hsl(var(--s))" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="text-center select-none">
+              <div id="timer-display" class="font-mono text-2xl md:text-3xl lg:text-4xl tabular-nums tracking-tight">00:00:00</div>
+              <div id="status-text" class="text-sm mt-1 opacity-80">{{ __('Ready')|e }}</div>
+            </div>
+            <div class="absolute inset-0" aria-hidden="true">
+              <div class="w-2 h-2 bg-primary rounded-full absolute top-2 left-1/2 -translate-x-1/2 shadow"></div>
+            </div>
+          </div>
+          <div class="mt-6 flex items-center gap-2 flex-wrap justify-center">
+            <button id="btn-start" class="btn btn-primary">
+              <span aria-hidden="true">▶️</span> {{ __('Start')|e }}
+            </button>
+            <button id="btn-pause" class="btn" disabled>
+              <span aria-hidden="true">⏸️</span> {{ __('Pause')|e }}
+            </button>
+            <button id="btn-resume" class="btn" disabled>
+              <span aria-hidden="true">⏵</span> {{ __('Resume')|e }}
+            </button>
+            <button id="btn-stop" class="btn btn-error" disabled>
+              <span aria-hidden="true">⏹️</span> {{ __('Stop')|e }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assignment and notes -->
+    <div class="card bg-base-200">
+      <div class="card-body">
+        <h2 class="card-title">{{ __('Assign to')|e }}</h2>
+        <form id="timer-form" class="space-y-4" autocomplete="off">
+          {{ csrf_field()|raw }}
+          <div class="form-control">
+            <label class="label"><span class="label-text">{{ __('Project')|e }}</span></label>
+            <select id="project_id" name="project_id" class="select select-bordered">
+              <option value="0">{{ __('No project')|e }}</option>
+              {% for p in projects %}
+                <option value="{{ p.id|int }}">{{ p.name|e }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">{{ __('Task')|e }}</span></label>
+            <select id="task_id" name="task_id" class="select select-bordered">
+              <option value="0">{{ __('No task')|e }}</option>
+              {% for t in tasks %}
+                <option value="{{ t.id|int }}" data-project="{{ t.project_id|default(0)|int }}">#{{ t.id|int }} — {{ t.title|e }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">{{ __('Contact')|e }}</span></label>
+            <select id="contact_id" name="contact_id" class="select select-bordered">
+              {% for c in contacts %}
+                <option value="{{ c.id|int }}">{{ c.name|e }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">{{ __('Notes')|e }}</span></label>
+            <textarea id="description" name="description" class="textarea textarea-bordered" rows="3" placeholder="{{ __('What are you working on?')|e }}"></textarea>
+          </div>
+          <p class="text-sm opacity-70">{{ __('Tip: You can pause/resume multiple times; each session is saved as a segment.')|e }}</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent segments (optional lightweight) -->
+  <div class="mt-8 card bg-base-200">
+    <div class="card-body">
+      <h3 class="card-title">{{ __('Today')|e }}</h3>
+      <div id="segments" class="text-sm opacity-80">{{ __('Segments will appear here as you log time.')|e }}</div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  const d = document;
+  const display = d.getElementById('timer-display');
+  const statusText = d.getElementById('status-text');
+  const progress = d.getElementById('progress');
+  const btnStart = d.getElementById('btn-start');
+  const btnPause = d.getElementById('btn-pause');
+  const btnResume = d.getElementById('btn-resume');
+  const btnStop = d.getElementById('btn-stop');
+  const form = d.getElementById('timer-form');
+  const taskSel = d.getElementById('task_id');
+  const projectSel = d.getElementById('project_id');
+  const contactSel = d.getElementById('contact_id');
+  const descEl = d.getElementById('description');
+  const segments = d.getElementById('segments');
+  
+  function getCsrf(){
+    const hidden = form ? form.querySelector('input[type="hidden"]') : null;
+    return hidden && hidden.value ? hidden.value : '';
+  }
+
+  // Filter tasks by chosen project
+  function filterTasks(){
+    const pid = parseInt(projectSel.value||'0');
+    const opts = taskSel.querySelectorAll('option');
+    opts.forEach(function(o){
+      if (o.value === '0') { o.classList.remove('hidden'); return; }
+      const p = parseInt(o.getAttribute('data-project')||'0');
+      const show = (pid === 0) || (p === pid);
+      o.classList.toggle('hidden', !show);
+    });
+    // if selected task hidden, reset to 0
+    const sel = taskSel.selectedOptions[0];
+    if (sel && sel.classList.contains('hidden')) { taskSel.value = '0'; }
+  }
+  if (projectSel) { projectSel.addEventListener('change', filterTasks); filterTasks(); }
+
+  let timerIv = null; let startMs = null; let active = false;
+  function fmt(n){ return n<10 ? '0'+n : ''+n; }
+  function render(){
+    if (!active || startMs == null) return;
+    const now = Date.now();
+    let diff = Math.floor((now - startMs)/1000);
+    if (diff < 0) diff = 0;
+    const h = Math.floor(diff/3600); diff -= h*3600;
+    const m = Math.floor(diff/60); const s = diff - m*60;
+    const text = fmt(h)+':'+fmt(m)+':'+fmt(s);
+    display.textContent = text;
+    // progress is purely aesthetic: loop every hour
+    const circumference = 2 * Math.PI * 46; // r=46
+    const mod = (m*60 + s) % 3600; // seconds within the hour
+    const frac = mod / 3600;
+    const dash = Math.max(0, circumference * (1 - frac));
+    progress.setAttribute('stroke-dashoffset', dash.toFixed(2));
+  }
+  function setButtons(state){
+    if (state === 'running'){
+      btnStart.disabled = true; btnPause.disabled = false; btnResume.disabled = true; btnStop.disabled = false;
+      statusText.textContent = '{{ __('Running')|e }}';
+    } else if (state === 'paused'){
+      btnStart.disabled = true; btnPause.disabled = true; btnResume.disabled = false; btnStop.disabled = false;
+      statusText.textContent = '{{ __('Paused')|e }}';
+    } else {
+      btnStart.disabled = false; btnPause.disabled = true; btnResume.disabled = true; btnStop.disabled = true;
+      statusText.textContent = '{{ __('Ready')|e }}';
+      progress.setAttribute('stroke-dashoffset', '289');
+      display.textContent = '00:00:00';
+    }
+  }
+  async function fetchRunning(){
+    try {
+      const res = await fetch('{{ url('/times/running') }}', { headers: { 'Accept': 'application/json' } });
+      const json = await res.json();
+      if (!json || !json.ok) throw new Error('bad');
+      const r = json.running;
+      if (r && r.iso_start){
+        startMs = Date.parse(r.iso_start);
+        active = true;
+        setButtons('running');
+        if (!timerIv) timerIv = setInterval(render, 1000);
+        render();
+      } else {
+        active = false; startMs = null;
+        if (timerIv) { clearInterval(timerIv); timerIv = null; }
+        setButtons('idle');
+      }
+    } catch(e){ /* ignore */ }
+  }
+  fetchRunning();
+
+  async function post(url, data){
+    const token = (function(){ const hid = form.querySelector('input[type="hidden"]'); return hid ? hid.value : ''; })();
+    const body = new URLSearchParams();
+    Object.keys(data||{}).forEach(k => body.append(k, String(data[k])));
+    const headers = { 'Accept': 'application/json' };
+    if (token) headers['X-CSRF-Token'] = token;
+    const res = await fetch(url, { method: 'POST', headers, body });
+    let json = null; try { json = await res.json(); } catch(e) {}
+    return json;
+  }
+
+  btnStart.addEventListener('click', async function(){
+    const taskId = parseInt(taskSel.value||'0');
+    const projectId = parseInt(projectSel.value||'0');
+    const contactId = parseInt(contactSel.value||'0');
+    const desc = descEl.value||'';
+    const data = { task_id: taskId>0?taskId:0, contact_id: contactId>0?contactId:0, description: desc };
+    const json = await post('{{ url('/timer/start') }}', data);
+    if (!json || !json.ok){ alert('Failed to start'); return; }
+    fetchRunning();
+    // small burst animation
+    const face = d.getElementById('face');
+    face.classList.add('ring','ring-primary','ring-offset-2');
+    setTimeout(()=>{ face.classList.remove('ring','ring-primary','ring-offset-2'); }, 500);
+  });
+  btnPause.addEventListener('click', async function(){
+    const json = await post('{{ url('/timer/pause') }}', {});
+    if (!json || !json.ok){ alert('Failed to pause'); return; }
+    active = false; startMs = null; if (timerIv) { clearInterval(timerIv); timerIv = null; }
+    setButtons('paused');
+    appendSegment(json.time);
+  });
+  btnResume.addEventListener('click', async function(){
+    const json = await post('{{ url('/timer/resume') }}', {});
+    if (!json || !json.ok){ alert('Failed to resume'); return; }
+    fetchRunning();
+  });
+  btnStop.addEventListener('click', async function(){
+    const json = await post('{{ url('/timer/stop') }}', {});
+    if (!json || !json.ok){ alert('Failed to stop'); return; }
+    active = false; startMs = null; if (timerIv) { clearInterval(timerIv); timerIv = null; }
+    setButtons('idle');
+    appendSegment(json.time);
+  });
+
+  function appendSegment(t){
+    try{
+      if (!t) return;
+      const el = d.createElement('div');
+      const date = (t.date||'');
+      const desc = (t.description||'');
+      const start = (t.start_time||'');
+      const end = (t.end_time||'');
+      const hours = (typeof t.hours === 'number') ? t.hours.toFixed(2) : '';
+      el.className = 'mt-2';
+      el.textContent = date + ' · ' + start + (end?('–'+end):'') + (hours?(' · '+hours+'h'):'') + (desc?(' · '+desc):'');
+      segments.prepend(el);
+    } catch(e){}
+  }
+
+  // Keyboard shortcuts
+  d.addEventListener('keydown', function(ev){
+    if (ev.target && ['INPUT','TEXTAREA','SELECT'].includes(ev.target.tagName)) return;
+    if (ev.code === 'Space') { ev.preventDefault(); if (!btnPause.disabled) btnPause.click(); else if (!btnResume.disabled) btnResume.click(); else if (!btnStart.disabled) btnStart.click(); }
+    if (ev.key === 's' || ev.key === 'S') { if (!btnStop.disabled) { ev.preventDefault(); btnStop.click(); } }
+  });
+})();
+</script>
+{% endblock %}

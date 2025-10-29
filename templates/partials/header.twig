@@ -7,6 +7,7 @@
     </span>
   </div>
   <div class="flex-none flex items-center gap-2 quick">
+    <a href="{{ url('/timer') }}" class="btn btn-sm btn-accent" title="{{ __('Open Timer')|e }}">⏱️ {{ __('Timer')|e }}</a>
     <a href="{{ url('/contacts/edit') }}" class="btn btn-sm btn-primary" title="{{ __('New Contact')|e }}">➕ {{ __('Contact')|e }}</a>
     <a href="{{ url('/tasks/edit') }}" class="btn btn-sm" title="{{ __('New Task')|e }}">➕ {{ __('Task')|e }}</a>
     <button id="theme-toggle" class="btn btn-ghost btn-circle" title="{{ __('Toggle theme')|e }}" aria-label="{{ __('Toggle theme')|e }}" aria-pressed="false">

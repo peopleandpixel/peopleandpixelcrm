@@ -6,6 +6,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+### Added
+- Styled Tasks page with DaisyUI/Tailwind: toolbar with search/sort/per-page, Kanban columns with drag & drop, badges for due/reminder/done, and an empty state.
+
 ## [0.1.0] - 2025-10-27
 
 ### Changed

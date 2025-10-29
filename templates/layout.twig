@@ -14,9 +14,55 @@
     <meta name="apple-mobile-web-app-title" content="People & Pixel">
     <link rel="icon" href="{{ url('/icons/app-icon.svg') }}" type="image/svg+xml">
     <link rel="apple-touch-icon" href="{{ url('/icons/app-icon.svg') }}">
-    <!-- Tailwind CSS + DaisyUI -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link id="daisyui-css" href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script>
+      // Runtime fallback: if DaisyUI failed to load from jsDelivr, try unpkg mirror
+      (function(){
+        function ready(fn){ if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+        function hasDaisy(){
+          try {
+            var el = document.createElement('button');
+            el.className = 'btn';
+            el.style.position = 'absolute'; el.style.left = '-9999px';
+            document.body.appendChild(el);
+            var cs = window.getComputedStyle(el);
+            var pad = parseFloat(cs.paddingLeft) || 0;
+            var rad = (cs.borderRadius || '0px');
+            document.body.removeChild(el);
+            return pad > 8 && rad !== '0px';
+          } catch(e){ return false; }
+        }
+        function injectFallback(){
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://unpkg.com/daisyui@4.12.10/dist/full.min.css';
+          link.crossOrigin = 'anonymous';
+          document.head.appendChild(link);
+        }
+        function injectLocal(){
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = '{{ url('/vendor/daisyui.min.css') }}';
+          document.head.appendChild(link);
+        }
+        ready(function(){
+          // wait a tick to allow primary CSS to apply
+          setTimeout(function(){
+            if (!hasDaisy()) {
+              injectFallback();
+              // Try mirror; if still missing, try local lightweight fallback; finally enable minimal emergency styles
+              setTimeout(function(){
+                if (!hasDaisy()) {
+                  injectLocal();
+                  setTimeout(function(){ if (!hasDaisy()) { try { document.documentElement.classList.add('no-daisyui'); } catch(_){} } }, 800);
+                }
+              }, 800);
+            }
+          }, 600);
+        });
+      })();
+    </script>
     <!-- Custom overrides (optional) -->
     <link rel="stylesheet" href="{{ url('/style.css') }}">
 </head>
@@ -30,8 +76,30 @@
                 <ul>
                     <li><a href="{{ url('/') }}" class="{{ active_class('/') ? 'active' : '' }}" {{ active_class('/') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'home', classes: 'w-5 h-5 mr-2' } %} {{ __('Home')|e }}</a></li>
                     {% if can('contacts','view') %}
-                    <li><a href="{{ url('/contacts') }}" class="{{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'users', classes: 'w-5 h-5 mr-2' } %} {{ __('Contacts')|e }}</a></li>
-                    <li><a href="{{ url('/contacts/dedupe') }}" class="{{ active_class('/contacts/dedupe') ? 'active' : '' }}">↳ {{ __('Find duplicates')|e }}</a></li>
+                    <li>
+                      <details {{ (active_class('/contacts') or active_class('/contacts/dedupe')) ? 'open' : '' }}>
+                        <summary>
+                          <span class="inline-flex items-center">
+                            {% include 'partials/icon.twig' with { name: 'users', classes: 'w-5 h-5 mr-2' } %}
+                            {{ __('Contacts')|e }}
+                          </span>
+                        </summary>
+                        <ul>
+                          <li>
+                            <a href="{{ url('/contacts') }}" class="{{ active_class('/contacts') ? 'active' : '' }}" {{ active_class('/contacts') ? 'aria-current=\"page\"' : '' }}>
+                              {% include 'partials/icon.twig' with { name: 'users', classes: 'w-5 h-5 mr-2' } %}
+                              {{ __('All Contacts')|e }}
+                            </a>
+                          </li>
+                          <li>
+                            <a href="{{ url('/contacts/dedupe') }}" class="{{ active_class('/contacts/dedupe') ? 'active' : '' }}" {{ active_class('/contacts/dedupe') ? 'aria-current=\"page\"' : '' }}>
+                              {% include 'partials/icon.twig' with { name: 'search', classes: 'w-5 h-5 mr-2' } %}
+                              {{ __('Find duplicates')|e }}
+                            </a>
+                          </li>
+                        </ul>
+                      </details>
+                    </li>
                     {% endif %}
                     {% if can('tasks','view') %}<li><a href="{{ url('/tasks') }}" class="{{ active_class('/tasks') ? 'active' : '' }}" {{ active_class('/tasks') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'checklist', classes: 'w-5 h-5 mr-2' } %} {{ __('Tasks')|e }}</a></li>{% endif %}
                     {% if can('deals','view') %}<li><a href="{{ url('/deals') }}" class="{{ active_class('/deals') ? 'active' : '' }}" {{ active_class('/deals') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'chart-up', classes: 'w-5 h-5 mr-2' } %} {{ __('Deals')|e }}</a></li>{% endif %}
@@ -39,37 +107,197 @@
                     {% if can_url('/calendar') %}<li><a href="{{ url('/calendar') }}" class="{{ active_class('/calendar') ? 'active' : '' }}" {{ active_class('/calendar') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'calendar', classes: 'w-5 h-5 mr-2' } %} {{ __('Calendar')|e }}</a></li>{% endif %}
                     {% if can('reports','view') %}<li><a href="{{ url('/reports') }}" class="{{ active_class('/reports') ? 'active' : '' }}" {{ active_class('/reports') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'chart-pie', classes: 'w-5 h-5 mr-2' } %} {{ __('Reports')|e }}</a></li>{% endif %}
                     {% if can_url('/search') %}<li><a href="{{ url('/search') }}" class="{{ active_class('/search') ? 'active' : '' }}" {{ active_class('/search') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'search', classes: 'w-5 h-5 mr-2' } %} {{ __('Search')|e }}</a></li>{% endif %}
+                    {% if can_url('/email') %}<li><a href="{{ url('/email') }}" class="{{ active_class('/email') ? 'active' : '' }}" {{ active_class('/email') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %} {{ __('Mail')|e }}</a></li>{% endif %}
 
-                    <li class="menu-title"><span>{{ __('More')|e }}</span></li>
-                    {% if can('employees','view') %}<li><a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'briefcase', classes: 'w-5 h-5 mr-2' } %} {{ __('Employees')|e }}</a></li>{% endif %}
-                    {% if can('times','view') %}<li><a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'stopwatch', classes: 'w-5 h-5 mr-2' } %} {{ __('Working Times')|e }}</a></li>{% endif %}
-                    {% if can('candidates','view') %}<li><a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'magnet', classes: 'w-5 h-5 mr-2' } %} {{ __('Recruiting')|e }}</a></li>{% endif %}
-                    {% if can('payments','view') %}<li><a href="{{ url('/payments') }}" class="{{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'credit-card', classes: 'w-5 h-5 mr-2' } %} {{ __('Payments')|e }}</a></li>{% endif %}
-                    {% if can('documents','view') %}<li><a href="{{ url('/documents') }}" class="{{ active_class('/documents') ? 'active' : '' }}" {{ active_class('/documents') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %} {{ __('Documents')|e }}</a></li>{% endif %}
-                    {% if can('storage','view') %}
-                      <li><a href="{{ url('/storage') }}" class="{{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}>{% include 'partials/icon.twig' with { name: 'archive', classes: 'w-5 h-5 mr-2' } %} {{ __('Storage')|e }}</a></li>
-                      <li><a href="{{ url('/storage/history') }}" class="{{ active_class('/storage/history') ? 'active' : '' }}">↳ {{ __('Storage history')|e }}</a></li>
-                    {% endif %}
-                    <li class="menu-title"><span>{{ __('Data I/O')|e }}</span></li>
-                    <li><a href="{{ url('/import') }}" class="{{ active_class('/import') ? 'active' : '' }}">{{ __('Import')|e }}</a></li>
-                    <li class="px-4 py-1 text-xs text-base-content/60">{{ __('Export')|e }}</li>
-                    <li><a href="{{ url('/export/contacts.csv') }}">↳ {{ __('Contacts CSV')|e }}</a></li>
-                    <li><a href="{{ url('/export/tasks.csv') }}">↳ {{ __('Tasks CSV')|e }}</a></li>
-                    <li><a href="{{ url('/export/times.csv') }}">↳ {{ __('Times CSV')|e }}</a></li>
-                    <li><a href="{{ url('/export/employees.csv') }}">↳ {{ __('Employees CSV')|e }}</a></li>
-                    <li><a href="{{ url('/export/candidates.csv') }}">↳ {{ __('Candidates CSV')|e }}</a></li>
-                    <li><a href="{{ url('/export/payments.csv') }}">↳ {{ __('Payments CSV')|e }}</a></li>
-                    <li><a href="{{ url('/export/storage.csv') }}">↳ {{ __('Storage CSV')|e }}</a></li>
+                    {% set moreOpen =
+                      active_class('/employees') or active_class('/times') or active_class('/candidates') or active_class('/payments') or active_class('/documents') or
+                      active_class('/storage') or active_class('/storage/history') or active_class('/import') or active_class('/export') or
+                      active_class('/admin') or active_class('/audit')
+                    %}
+                    <li>
+                      <details {{ moreOpen ? 'open' : '' }}>
+                        <summary>
+                          <span class="inline-flex items-center">
+                            {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                            {{ __('More')|e }}
+                          </span>
+                        </summary>
+                        <ul>
+                          {% if can('employees','view') %}
+                          <li>
+                            <a href="{{ url('/employees') }}" class="{{ active_class('/employees') ? 'active' : '' }}" {{ active_class('/employees') ? 'aria-current="page"' : '' }}>
+                              {% include 'partials/icon.twig' with { name: 'briefcase', classes: 'w-5 h-5 mr-2' } %}
+                              {{ __('Employees')|e }}
+                            </a>
+                          </li>
+                          {% endif %}
+                          {% if can('times','view') %}
+                          <li>
+                            <a href="{{ url('/times') }}" class="{{ active_class('/times') ? 'active' : '' }}" {{ active_class('/times') ? 'aria-current="page"' : '' }}>
+                              {% include 'partials/icon.twig' with { name: 'stopwatch', classes: 'w-5 h-5 mr-2' } %}
+                              {{ __('Working Times')|e }}
+                            </a>
+                          </li>
+                          {% endif %}
+                          {% if can('candidates','view') %}
+                          <li>
+                            <a href="{{ url('/candidates') }}" class="{{ active_class('/candidates') ? 'active' : '' }}" {{ active_class('/candidates') ? 'aria-current="page"' : '' }}>
+                              {% include 'partials/icon.twig' with { name: 'magnet', classes: 'w-5 h-5 mr-2' } %}
+                              {{ __('Recruiting')|e }}
+                            </a>
+                          </li>
+                          {% endif %}
+                          {% if can('payments','view') %}
+                          <li>
+                            <a href="{{ url('/payments') }}" class="{{ active_class('/payments') ? 'active' : '' }}" {{ active_class('/payments') ? 'aria-current="page"' : '' }}>
+                              {% include 'partials/icon.twig' with { name: 'credit-card', classes: 'w-5 h-5 mr-2' } %}
+                              {{ __('Payments')|e }}
+                            </a>
+                          </li>
+                          {% endif %}
+                          {% if can('documents','view') %}
+                          <li>
+                            <a href="{{ url('/documents') }}" class="{{ active_class('/documents') ? 'active' : '' }}" {{ active_class('/documents') ? 'aria-current="page"' : '' }}>
+                              {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                              {{ __('Documents')|e }}
+                            </a>
+                          </li>
+                          {% endif %}
+                          {% if can('storage','view') %}
+                          <li>
+                            <details {{ (active_class('/storage') or active_class('/storage/history')) ? 'open' : '' }}>
+                              <summary>
+                                <a href="{{ url('/storage') }}" class="{{ active_class('/storage') ? 'active' : '' }}" {{ active_class('/storage') ? 'aria-current="page"' : '' }}>
+                                  {% include 'partials/icon.twig' with { name: 'archive', classes: 'w-5 h-5 mr-2' } %}
+                                  {{ __('Storage')|e }}
+                                </a>
+                              </summary>
+                              <ul>
+                                <li>
+                                  <a href="{{ url('/storage/history') }}" class="{{ active_class('/storage/history') ? 'active' : '' }}" {{ active_class('/storage/history') ? 'aria-current="page"' : '' }}>
+                                    {% include 'partials/icon.twig' with { name: 'archive', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Storage history')|e }}
+                                  </a>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          {% endif %}
+                          <li>
+                            <details {{ (active_class('/import') or active_class('/export')) ? 'open' : '' }}>
+                              <summary>
+                                <span class="inline-flex items-center">
+                                  {% include 'partials/icon.twig' with { name: 'archive', classes: 'w-5 h-5 mr-2' } %}
+                                  {{ __('Data I/O')|e }}
+                                </span>
+                              </summary>
+                              <ul>
+                                <li>
+                                  <a href="{{ url('/import') }}" class="{{ active_class('/import') ? 'active' : '' }}" {{ active_class('/import') ? 'aria-current="page"' : '' }}>
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Import')|e }}
+                                  </a>
+                                </li>
+                                <li class="px-4 py-1 text-xs text-base-content/60">{{ __('Export')|e }}</li>
+                                <li>
+                                  <a href="{{ url('/export/contacts.csv') }}">
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Contacts CSV')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/export/tasks.csv') }}">
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Tasks CSV')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/export/times.csv') }}">
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Times CSV')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/export/employees.csv') }}">
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Employees CSV')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/export/candidates.csv') }}">
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Candidates CSV')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/export/payments.csv') }}">
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Payments CSV')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/export/storage.csv') }}">
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Storage CSV')|e }}
+                                  </a>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
 
-                    {% if is_admin() %}
-                    <li class="menu-title"><span>{{ __('Administration')|e }}</span></li>
-                    <li><a href="{{ url('/admin/health') }}" class="{{ active_class('/admin/health') ? 'active' : '' }}" {{ active_class('/admin/health') ? 'aria-current="page"' : '' }}>{{ __('Health')|e }}</a></li>
-                    <li><a href="{{ url('/admin/logs') }}" class="{{ active_class('/admin/logs') ? 'active' : '' }}" {{ active_class('/admin/logs') ? 'aria-current="page"' : '' }}>{{ __('Logs')|e }}</a></li>
-                    <li><a href="{{ url('/admin/backups') }}" class="{{ active_class('/admin/backups') ? 'active' : '' }}" {{ active_class('/admin/backups') ? 'aria-current="page"' : '' }}>{{ __('Backups')|e }}</a></li>
-                    <li><a href="{{ url('/admin/users') }}" class="{{ active_class('/admin/users') ? 'active' : '' }}" {{ active_class('/admin/users') ? 'aria-current="page"' : '' }}>{{ __('Users')|e }}</a></li>
-                    <li><a href="{{ url('/admin/settings') }}" class="{{ active_class('/admin/settings') ? 'active' : '' }}" {{ active_class('/admin/settings') ? 'aria-current="page"' : '' }}>{{ __('Settings')|e }}</a></li>
-                    <li><a href="{{ url('/audit') }}" class="{{ active_class('/audit') ? 'active' : '' }}" {{ active_class('/audit') ? 'aria-current="page"' : '' }}>{{ __('Audit log')|e }}</a></li>
-                    {% endif %}
+                          {% if is_admin() %}
+                          <li>
+                            <details {{ (active_class('/admin') or active_class('/audit')) ? 'open' : '' }}>
+                              <summary>
+                                <span class="inline-flex items-center">
+                                  {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                  {{ __('Administration')|e }}
+                                </span>
+                              </summary>
+                              <ul>
+                                <li>
+                                  <a href="{{ url('/admin/health') }}" class="{{ active_class('/admin/health') ? 'active' : '' }}" {{ active_class('/admin/health') ? 'aria-current="page"' : '' }}>
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Health')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/admin/logs') }}" class="{{ active_class('/admin/logs') ? 'active' : '' }}" {{ active_class('/admin/logs') ? 'aria-current="page"' : '' }}>
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Logs')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/admin/backups') }}" class="{{ active_class('/admin/backups') ? 'active' : '' }}" {{ active_class('/admin/backups') ? 'aria-current="page"' : '' }}>
+                                    {% include 'partials/icon.twig' with { name: 'archive', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Backups')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/admin/users') }}" class="{{ active_class('/admin/users') ? 'active' : '' }}" {{ active_class('/admin/users') ? 'aria-current="page"' : '' }}>
+                                    {% include 'partials/icon.twig' with { name: 'users', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Users')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/admin/settings') }}" class="{{ active_class('/admin/settings') ? 'active' : '' }}" {{ active_class('/admin/settings') ? 'aria-current="page"' : '' }}>
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Settings')|e }}
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="{{ url('/audit') }}" class="{{ active_class('/audit') ? 'active' : '' }}" {{ active_class('/audit') ? 'aria-current="page"' : '' }}>
+                                    {% include 'partials/icon.twig' with { name: 'file', classes: 'w-5 h-5 mr-2' } %}
+                                    {{ __('Audit log')|e }}
+                                  </a>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          {% endif %}
+                        </ul>
+                      </details>
+                    </li>
                     <li class="mt-2 px-4 pb-3">
                         <label class="label" for="lang-select"><span class="label-text">{{ __('Language')|e }}</span></label>
                         <select id="lang-select" class="select select-bordered w-full max-w-xs" aria-label="{{ __('Language')|e }}">

@@ -437,12 +437,32 @@ class TasksController
         if ($taskId <= 0) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'bad_request'], 400)->send(); } else { redirect('/tasks'); } return; }
         $task = $this->tasksStore->get($taskId);
         if (!$task) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'task_not_found'], 404)->send(); } else { redirect('/tasks'); } return; }
+        $user = \App\Util\Auth::user();
+        $userId = is_array($user) ? (int)($user['id'] ?? 0) : 0;
         $now = new \DateTimeImmutable('now');
         $date = $now->format('Y-m-d');
         $start = $now->format('H:i');
         $contactId = (int)($task['contact_id'] ?? 0);
         // employee_id not linked to Auth users yet; leave 0 (Unassigned) for now
         $employeeId = 0;
+        // Close existing running entry for this user (if any)
+        $running = null; $rid = 0;
+        foreach ($this->timesStore->all() as $t) {
+            if ((string)($t['end_time'] ?? '') !== '') { continue; }
+            if ($userId > 0 && (int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
+            $id = (int)($t['id'] ?? 0); if ($id > $rid) { $rid = $id; $running = $t; }
+        }
+        if ($running) {
+            $end = $now->format('H:i');
+            $startPrev = (string)($running['start_time'] ?? '');
+            $hoursPrev = 0.0;
+            if ($startPrev !== '') {
+                $s = \App\Util\Dates::parseExact($startPrev, 'H:i') ?? \App\Util\Dates::parseExact($startPrev, 'H:i:s');
+                $e = \App\Util\Dates::parseExact($end, 'H:i');
+                if ($s && $e) { $hoursPrev = max(0.01, round(($e->getTimestamp() - $s->getTimestamp())/3600, 2)); }
+            }
+            $this->timesStore->update($rid, ['end_time' => $end, 'hours' => $hoursPrev]);
+        }
         $added = $this->timesStore->add([
             'contact_id' => $contactId,
             'employee_id' => $employeeId,
@@ -453,6 +473,7 @@ class TasksController
             'start_time' => $start,
             'end_time' => '',
             'created_at' => \App\Util\Dates::nowAtom(),
+            'owner_user_id' => $userId,
         ]);
         if ($isJson) { \App\Http\Response::json(['ok'=>true,'time'=>$added])->send(); } else { redirect('/tasks'); }
     }
@@ -466,12 +487,15 @@ class TasksController
         if (!$this->timesStore) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'times_store_unavailable'], 500)->send(); } else { redirect('/tasks'); } return; }
         $taskId = (int)($req->post('id') ?? $req->post('task_id') ?? 0);
         if ($taskId <= 0) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'bad_request'], 400)->send(); } else { redirect('/tasks'); } return; }
-        // Find last running entry for this task (end_time empty)
+        // Find last running entry for this task for this user (end_time empty)
+        $user = \App\Util\Auth::user();
+        $userId = is_array($user) ? (int)($user['id'] ?? 0) : 0;
         $running = null; $rid = 0;
         foreach ($this->timesStore->all() as $t) {
-            if ((int)($t['task_id'] ?? 0) === $taskId && (string)($t['end_time'] ?? '') === '') {
-                if (!$running || (int)$t['id'] > (int)$running['id']) { $running = $t; $rid = (int)$t['id']; }
-            }
+            if ((int)($t['task_id'] ?? 0) !== $taskId) { continue; }
+            if ((string)($t['end_time'] ?? '') !== '') { continue; }
+            if ($userId > 0 && (int)($t['owner_user_id'] ?? 0) !== $userId) { continue; }
+            if (!$running || (int)$t['id'] > (int)$running['id']) { $running = $t; $rid = (int)$t['id']; }
         }
         if (!$running) { if ($isJson) { \App\Http\Response::json(['ok'=>false,'error'=>'no_running_timer'], 404)->send(); } else { redirect('/tasks'); } return; }
         $now = new \DateTimeImmutable('now');

@@ -187,6 +187,8 @@ return static function (Container $container, Router $router): void {
             'LOG_LEVEL',
             'API_TOKEN','WEBHOOKS','WEBHOOK_SECRET',
             'SMTP_HOST','SMTP_PORT','SMTP_USER','SMTP_PASS','SMTP_SECURE','SMTP_FROM','SMTP_FROM_NAME',
+            // IMAP ingest settings
+            'IMAP_HOST','IMAP_USER','IMAP_PASS','IMAP_MAILBOX','IMAP_OPTIONS',
             'NOTIFY_COMMENTS','NOTIFY_SELF','NOTIFY_FOLLOWS',
             'AUTOMATIONS_ENABLED','AUTOMATIONS_MAX_ACTIONS','AUTOMATIONS_ALLOW_EMAIL',
             'TOTP_WINDOW',
@@ -212,6 +214,8 @@ return static function (Container $container, Router $router): void {
             'LOG_LEVEL',
             'API_TOKEN','WEBHOOKS','WEBHOOK_SECRET',
             'SMTP_HOST','SMTP_PORT','SMTP_USER','SMTP_PASS','SMTP_SECURE','SMTP_FROM','SMTP_FROM_NAME',
+            // IMAP ingest settings
+            'IMAP_HOST','IMAP_USER','IMAP_PASS','IMAP_MAILBOX','IMAP_OPTIONS',
             'NOTIFY_COMMENTS','NOTIFY_SELF','NOTIFY_FOLLOWS',
             'AUTOMATIONS_ENABLED','AUTOMATIONS_MAX_ACTIONS','AUTOMATIONS_ALLOW_EMAIL',
             'TOTP_WINDOW',
@@ -276,6 +280,13 @@ return static function (Container $container, Router $router): void {
     $router->get('/times/view', [$container->get('timesController'), 'view']);
     $router->get('/times/running', [$container->get('timesController'), 'running']);
     $router->post('/times/new', [$container->get('timesController'), 'create']);
+
+    // Timer UX
+    $router->get('/timer', [$container->get('timesController'), 'timerPage']);
+    $router->post('/timer/start', [$container->get('timesController'), 'timerStart']);
+    $router->post('/timer/pause', [$container->get('timesController'), 'timerPause']);
+    $router->post('/timer/resume', [$container->get('timesController'), 'timerResume']);
+    $router->post('/timer/stop', [$container->get('timesController'), 'timerStop']);
 
     // Tasks
     $router->get('/tasks', function() use ($container) {

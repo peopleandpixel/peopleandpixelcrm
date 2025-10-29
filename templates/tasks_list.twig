@@ -1,20 +1,52 @@
 {% extends 'layout.twig' %}
 {% block content %}
 <section class="space-y-4">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h2 class="text-2xl font-bold">{{ __('Tasks')|e }}</h2>
-    <div class="flex items-center gap-2">
-      {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('due_date'), dir: dir|default('asc') } %}
-      {% if can('tasks','create') %}<a class="btn btn-primary" href="{{ url('/tasks/new') }}">+ {{ __('Add Task')|e }}</a>{% endif %}
+  <div class="card bg-base-200 border border-base-300">
+    <div class="card-body p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="tasks-title" class="text-2xl font-bold">{{ __('Tasks')|e }}</h2>
+        <div class="flex items-center gap-2">
+          {% include 'partials/dynamic_search.twig' with { path: path|default(current_path()), q: q|default(''), sort: sort|default('due_date'), dir: dir|default('asc') } %}
+          <form method="get" action="{{ path|default(current_path()) }}" class="flex items-center gap-2">
+            <input type="hidden" name="q" value="{{ q|default('')|e }}">
+            <label class="label hidden sm:flex"><span class="label-text pr-2">{{ __('Sort')|e }}:</span>
+              <select name="sort" class="select select-bordered select-sm" aria-label="{{ __('Sort')|e }}">
+                {% set so = sort|default('due_date') %}
+                <option value="due_date" {{ so=='due_date' ? 'selected' : '' }}>{{ __('Due date')|e }}</option>
+                <option value="status" {{ so=='status' ? 'selected' : '' }}>{{ __('Status')|e }}</option>
+                <option value="title" {{ so=='title' ? 'selected' : '' }}>{{ __('Title')|e }}</option>
+                <option value="contact_name" {{ so=='contact_name' ? 'selected' : '' }}>{{ __('Contact')|e }}</option>
+              </select>
+            </label>
+            <label class="label hidden sm:flex"><span class="label-text pr-2">{{ __('Dir')|e }}:</span>
+              {% set di = dir|default('asc') %}
+              <select name="dir" class="select select-bordered select-sm" aria-label="{{ __('Direction')|e }}">
+                <option value="asc" {{ di=='asc' ? 'selected' : '' }}>{{ __('Asc')|e }}</option>
+                <option value="desc" {{ di=='desc' ? 'selected' : '' }}>{{ __('Desc')|e }}</option>
+              </select>
+            </label>
+            <label class="label hidden md:flex"><span class="label-text pr-2">{{ __('Per')|e }}:</span>
+              {% set pp = (per|default(10))|int %}
+              <select name="per" class="select select-bordered select-sm" aria-label="{{ __('Per page')|e }}">
+                {% for n in [10,20,50,100] %}
+                  <option value="{{ n }}" {{ pp==n ? 'selected' : '' }}>{{ n }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <button class="btn btn-sm" type="submit">{{ __('Apply')|e }}</button>
+          </form>
+          {% if can('tasks','create') %}<a class="btn btn-primary" href="{{ url('/tasks/new') }}">+ {{ __('Add Task')|e }}</a>{% endif %}
+        </div>
+      </div>
+      {% if counts is defined and counts %}
+        <p class="opacity-80">
+          <strong>{{ __('Open')|e }}:</strong> {{ (counts.open|default(0))|int }}
+          &nbsp;|&nbsp;
+          <strong>{{ __('Done')|e }}:</strong> {{ (counts.done|default(0))|int }}
+        </p>
+      {% endif %}
     </div>
   </div>
-  {% if counts is defined and counts %}
-    <p class="opacity-80">
-      <strong>{{ __('Open')|e }}:</strong> {{ (counts.open|default(0))|int }}
-      &nbsp;|&nbsp;
-      <strong>{{ __('Done')|e }}:</strong> {{ (counts.done|default(0))|int }}
-    </p>
-  {% endif %}
 
   <div id="kanban-csrf" class="hidden">{{ csrf_field()|raw }}</div>
 
@@ -39,17 +71,34 @@
     {% set grouped = grouped|merge({ (k): col }) %}
   {% endfor %}
 
-  <div id="kanban-board" class="flex gap-4 overflow-x-auto pb-2">
+  {% set totalCount = total|default(tasks|length)|int %}
+  {% if totalCount == 0 %}
+    <div class="card bg-base-200 border border-base-300">
+      <div class="card-body items-center text-center">
+        <div class="text-5xl mb-2" aria-hidden="true">✅</div>
+        <h3 class="text-lg font-semibold mb-1">{{ __('No tasks yet')|e }}</h3>
+        <p class="opacity-80 mb-3">{{ __('Create your first task to get started.')|e }}</p>
+        {% if can('tasks','create') %}
+          <a class="btn btn-primary" href="{{ url('/tasks/new') }}">+ {{ __('Add Task')|e }}</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div id="kanban-board" class="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory" role="list" aria-labelledby="tasks-title">
     {% for s in statuses %}
       {% set cards = grouped[s.key]|default([]) %}
-      <div class="min-w-[260px] w-72 bg-base-200 rounded-lg p-3 flex-shrink-0" data-status="{{ s.key }}">
+      <div class="min-w-[240px] w-64 sm:w-72 bg-base-200 rounded-lg p-3 flex-shrink-0 snap-center" data-status="{{ s.key }}" role="group" aria-labelledby="col-{{ s.key }}-title">
         <div class="flex items-center justify-between mb-2">
-          <h3 class="font-semibold">{{ s.label|e }}</h3>
-          <span class="badge column-count">{{ cards|length }}</span>
+          <h3 id="col-{{ s.key }}-title" class="font-semibold inline-flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full {% if s.key=='done' %}bg-green-500{% elseif s.key=='blocked' %}bg-red-500{% elseif s.key=='review' %}bg-sky-500{% elseif s.key=='in_progress' %}bg-amber-500{% else %}bg-slate-400{% endif %}"></span>
+            {{ s.label|e }}
+          </h3>
+          <span class="badge column-count" aria-label="{{ __('Count')|e }}">{{ cards|length }}</span>
         </div>
-        <div class="space-y-3 column-cards min-h-[20px]" data-dropzone="true">
+        <div class="space-y-3 column-cards min-h-[20px]" data-dropzone="true" role="list">
           {% for it in cards %}
-            <div class="card bg-base-100 shadow-sm border border-base-300" draggable="true" data-id="{{ it.id|int }}">
+            <div class="card bg-base-100 shadow-sm border border-base-300" draggable="true" data-id="{{ it.id|int }}" role="listitem">
               <div class="card-body p-3 gap-2">
                 <div class="flex items-start justify-between">
                   <a href="{{ url('/tasks/view', {id: it.id}) }}" class="font-medium hover:underline line-clamp-2">{{ it.title|default('#'~it.id)|e }}</a>

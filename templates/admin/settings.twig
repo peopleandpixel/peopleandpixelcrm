@@ -119,6 +119,37 @@
 
     <div class="card bg-base-100 shadow">
       <div class="card-body space-y-4">
+        <h2 class="card-title">{{ __('Email (IMAP ingest)')|e }}</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="label"><span class="label-text">IMAP_HOST</span><span class="label-text-alt">{{ __('e.g. imap.example.com:993')|e }}</span></label>
+            <input type="text" name="IMAP_HOST" class="input input-bordered w-full" value="{{ env.IMAP_HOST|default('')|e }}" placeholder="imap.example.com:993">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">IMAP_USER</span></label>
+            <input type="text" name="IMAP_USER" class="input input-bordered w-full" value="{{ env.IMAP_USER|default('')|e }}">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">IMAP_PASS</span> <span class="label-text-alt">{{ __('Leave empty to keep current value')|e }}</span></label>
+            <input type="password" name="IMAP_PASS" class="input input-bordered w-full" value="" placeholder="••••••">
+          </div>
+          <div>
+            <label class="label"><span class="label-text">IMAP_MAILBOX</span><span class="label-text-alt">{{ __('default INBOX')|e }}</span></label>
+            <input type="text" name="IMAP_MAILBOX" class="input input-bordered w-full" value="{{ env.IMAP_MAILBOX|default('INBOX')|e }}" placeholder="INBOX">
+          </div>
+          <div class="md:col-span-2">
+            <label class="label"><span class="label-text">IMAP_OPTIONS</span><span class="label-text-alt">{{ __('/imap/ssl/novalidate-cert by default')|e }}</span></label>
+            <input type="text" name="IMAP_OPTIONS" class="input input-bordered w-full" value="{{ env.IMAP_OPTIONS|default('/imap/ssl/novalidate-cert')|e }}" placeholder="/imap/ssl/novalidate-cert">
+          </div>
+          <div class="md:col-span-2 text-sm text-base-content/70">
+            {{ __('IMAP is used only to ingest headers into the Inbox. Full message bodies are not downloaded.')|e }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow">
+      <div class="card-body space-y-4">
         <h2 class="card-title">{{ __('Notifications')|e }}</h2>
         <div class="grid md:grid-cols-3 gap-4">
           {% set nc = env.NOTIFY_COMMENTS|default('0') %}
