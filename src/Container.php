@@ -202,7 +202,9 @@ class Container
             return new \App\Controller\TimesController(
                 $c->get('timesStore'),
                 $c->get('contactsStore'),
-                $c->get('employeesStore')
+                $c->get('employeesStore'),
+                $c->get('tasksStore'),
+                $c->get('projectsStore'),
             );
         };
         $this->factories['tasksRepository'] = function(self $c) {

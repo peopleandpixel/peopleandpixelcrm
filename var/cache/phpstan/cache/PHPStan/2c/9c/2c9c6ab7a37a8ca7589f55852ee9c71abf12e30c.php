@@ -2,6 +2,6 @@
 
 // variadic-method-App\Domain\Candidate-toArray-/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Candidate.php
 return \PHPStan\Cache\CacheItem::__set_state(array(
-   'variableKey' => '1758868975-v4',
+   'variableKey' => '1761424225-v4',
    'data' => false,
 ));

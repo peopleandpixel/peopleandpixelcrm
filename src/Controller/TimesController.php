@@ -17,6 +17,8 @@ class TimesController
         private readonly object $timesStore,
         private readonly object $contactsStore,
         private readonly object $employeesStore,
+        private readonly ?object $tasksStore = null,
+        private readonly ?object $projectsStore = null,
     ) {}
 
     /**

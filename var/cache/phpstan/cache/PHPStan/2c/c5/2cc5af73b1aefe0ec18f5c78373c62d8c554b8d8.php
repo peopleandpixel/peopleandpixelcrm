@@ -2,6 +2,6 @@
 
 // variadic-method-App\Controller\ImportController-supportedEntities-/home/jens/PhpstormProjects/peopleandpixel/src/Controller/ImportController.php
 return \PHPStan\Cache\CacheItem::__set_state(array(
-   'variableKey' => '1758727212-v4',
+   'variableKey' => '1761383242-v4',
    'data' => false,
 ));

@@ -95,7 +95,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/TasksController.php' => 
     array (
-      0 => '33376a2804860c349d1ee7b0563ace0cdc45e5c7',
+      0 => '776ef1a9a4867d0cf8b13e68f3afa6933ce5441f',
       1 => 
       array (
         0 => 'app\\controller\\taskscontroller',
@@ -163,7 +163,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/ContactsTemplateController.php' => 
     array (
-      0 => 'e47321a14da85aea4b3c0e58c6056232c8d3e40e',
+      0 => '231015674e494e944b4c2a7ecfc187fc48d6e4f4',
       1 => 
       array (
         0 => 'app\\controller\\contactstemplatecontroller',
@@ -180,6 +180,9 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
         7 => 'app\\controller\\editform',
         8 => 'app\\controller\\update',
         9 => 'app\\controller\\delete',
+        10 => 'app\\controller\\logactivity',
+        11 => 'app\\controller\\addnote',
+        12 => 'app\\controller\\bulk',
       ),
       3 => 
       array (
@@ -187,7 +190,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/ImportController.php' => 
     array (
-      0 => '934fc99d3af4492b376efa4924087f77ac79a172',
+      0 => 'b2c32585b9c8fb17894d4bbb1d5a5f0c51779360',
       1 => 
       array (
         0 => 'app\\controller\\importcontroller',
@@ -229,7 +232,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/TimesController.php' => 
     array (
-      0 => 'cb4d62626d472a40a231ad51e5b932f22f4c4e06',
+      0 => '325aa34761cf26f42cf57d71f6d5a7b8f0d72bbd',
       1 => 
       array (
         0 => 'app\\controller\\timescontroller',
@@ -253,7 +256,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/CalendarController.php' => 
     array (
-      0 => 'ad473a5d7e20a8b1a6a122e4323c5686a8574ec8',
+      0 => '6cb0ab2ed902a49722968feba958d25b46ef265f',
       1 => 
       array (
         0 => 'app\\controller\\calendarcontroller',
@@ -263,6 +266,9 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
         0 => 'app\\controller\\__construct',
         1 => 'app\\controller\\index',
         2 => 'app\\controller\\events',
+        3 => 'app\\controller\\ics',
+        4 => 'app\\controller\\icsescape',
+        5 => 'app\\controller\\makeuid',
       ),
       3 => 
       array (
@@ -270,7 +276,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/ProjectsController.php' => 
     array (
-      0 => 'a06a3ba1f9060cbcb7d5e83228e9182f4b7cc84d',
+      0 => '959291387ceb93ada387e63c47b816f5f040e4fc',
       1 => 
       array (
         0 => 'app\\controller\\projectscontroller',
@@ -285,7 +291,8 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
         5 => 'app\\controller\\editform',
         6 => 'app\\controller\\update',
         7 => 'app\\controller\\delete',
-        8 => 'app\\controller\\injectoptions',
+        8 => 'app\\controller\\bulk',
+        9 => 'app\\controller\\injectoptions',
       ),
       3 => 
       array (
@@ -351,7 +358,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/EmployeesTemplateController.php' => 
     array (
-      0 => '9545a33e7723fcc7a415d4b330976329df23cafc',
+      0 => '69c8c0435c131ed987a39fb700c9340d1df33290',
       1 => 
       array (
         0 => 'app\\controller\\employeestemplatecontroller',
@@ -396,7 +403,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/DealsController.php' => 
     array (
-      0 => '8477b678c62bf284a38f1d7c3861cdec2201fd2e',
+      0 => '104139e93ffc0d9b3dd95b1c83d1b4293470722f',
       1 => 
       array (
         0 => 'app\\controller\\dealscontroller',
@@ -412,9 +419,10 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
         6 => 'app\\controller\\create',
         7 => 'app\\controller\\update',
         8 => 'app\\controller\\delete',
-        9 => 'app\\controller\\stages',
-        10 => 'app\\controller\\normalize',
-        11 => 'app\\controller\\validate',
+        9 => 'app\\controller\\bulk',
+        10 => 'app\\controller\\stages',
+        11 => 'app\\controller\\normalize',
+        12 => 'app\\controller\\validate',
       ),
       3 => 
       array (
@@ -453,7 +461,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/ExportController.php' => 
     array (
-      0 => 'f5d0c7a3ad71d14c8b24601630c213d0e21952aa',
+      0 => 'ccf7655e6fbab8b516ebc8a089f19262bd041078',
       1 => 
       array (
         0 => 'app\\controller\\exportcontroller',
@@ -599,7 +607,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Http/routes.php' => 
     array (
-      0 => '66c8a57862fd543c307f3c5f0deb508c8869908e',
+      0 => '53450503941db8a831138c15c4247e53140d00c3',
       1 => 
       array (
       ),
@@ -629,7 +637,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/JsonStore.php' => 
     array (
-      0 => 'a99cd80033da8edac9346f05e849368e0007c603',
+      0 => '9e925e21ae918bdcf10eb1d92599da0bfc29699d',
       1 => 
       array (
         0 => 'app\\jsonstore',
@@ -724,7 +732,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/I18n.php' => 
     array (
-      0 => 'e532766fab88fd7e036b473ae1e45fed072145cd',
+      0 => 'ce1ca517ae2eb62f70c42d50aa8fa637799332b7',
       1 => 
       array (
         0 => 'app\\i18n',
@@ -778,7 +786,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Employee.php' => 
     array (
-      0 => '6892a4a5710ee5f18645071af98e26d725987948',
+      0 => 'af1a2919f48376d7ec6fbe7fdaf48aeb05e26b7c',
       1 => 
       array (
         0 => 'app\\domain\\employee',
@@ -796,7 +804,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Contact.php' => 
     array (
-      0 => '9029e2fcc686439e6bb7f9ff55279d9319b0ecdd',
+      0 => 'e594a0b3c76d3034dbabfc068e4821804d7c1f54',
       1 => 
       array (
         0 => 'app\\domain\\contact',
@@ -895,7 +903,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Schemas.php' => 
     array (
-      0 => '880e0c7f68b8a17a667109d5574ad628d92b7c56',
+      0 => '55ae18cbfc903efe1c22a417c9870655571513bd',
       1 => 
       array (
         0 => 'app\\domain\\schemas',
@@ -947,7 +955,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Candidate.php' => 
     array (
-      0 => '1b2221a58e439e0c313319fbea0f7419d168ab86',
+      0 => 'b3b872dd818201acf8c42b3d8a68684d07a8c3bf',
       1 => 
       array (
         0 => 'app\\domain\\candidate',
@@ -983,7 +991,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Container.php' => 
     array (
-      0 => '75247b0b1153aa05a6266e14fd3e0aa7460e9daf',
+      0 => 'db397f2a2d6b2dbcd212d3466e315bf1df2f712e',
       1 => 
       array (
         0 => 'app\\container',
@@ -1027,7 +1035,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Router.php' => 
     array (
-      0 => 'b9993b4fddde86173343c0149c622713eed05a32',
+      0 => '9938529c73b52198c7d4dc38487ccdc12fa68198',
       1 => 
       array (
         0 => 'app\\router',
@@ -1036,21 +1044,24 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
       array (
         0 => 'app\\get',
         1 => 'app\\post',
-        2 => 'app\\group',
-        3 => 'app\\add',
-        4 => 'app\\use',
-        5 => 'app\\setnotfoundhandler',
-        6 => 'app\\setmethodnotallowedhandler',
-        7 => 'app\\resolvehandler',
-        8 => 'app\\dispatch',
-        9 => 'app\\runpipeline',
-        10 => 'app\\normalizepath',
-        11 => 'app\\applygroupprefix',
-        12 => 'app\\currentgroupmiddleware',
-        13 => 'app\\compilepattern',
-        14 => 'app\\emit404',
-        15 => 'app\\emit405',
-        16 => 'app\\emit500',
+        2 => 'app\\put',
+        3 => 'app\\patch',
+        4 => 'app\\delete',
+        5 => 'app\\group',
+        6 => 'app\\add',
+        7 => 'app\\use',
+        8 => 'app\\setnotfoundhandler',
+        9 => 'app\\setmethodnotallowedhandler',
+        10 => 'app\\resolvehandler',
+        11 => 'app\\dispatch',
+        12 => 'app\\runpipeline',
+        13 => 'app\\normalizepath',
+        14 => 'app\\applygroupprefix',
+        15 => 'app\\currentgroupmiddleware',
+        16 => 'app\\compilepattern',
+        17 => 'app\\emit404',
+        18 => 'app\\emit405',
+        19 => 'app\\emit500',
       ),
       3 => 
       array (
@@ -1058,7 +1069,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Util/helpers.php' => 
     array (
-      0 => '5be24fe0bd2572fd93a4e61e87cf5c0a6e5d4d9d',
+      0 => '360662a16857189dbb035a4a0035f46b176c8e81',
       1 => 
       array (
       ),
@@ -1074,15 +1085,16 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
         7 => 'csrf_field',
         8 => 'render',
         9 => 'redirect',
-        10 => 'current_path',
-        11 => 'url',
-        12 => 'canonical_url',
-        13 => 'active_class',
-        14 => 'e',
-        15 => 'nl2br_e',
-        16 => 'sort_link',
-        17 => 'paginate',
-        18 => 'send_list_cache_headers',
+        10 => 'can_url',
+        11 => 'current_path',
+        12 => 'url',
+        13 => 'canonical_url',
+        14 => 'active_class',
+        15 => 'e',
+        16 => 'nl2br_e',
+        17 => 'sort_link',
+        18 => 'paginate',
+        19 => 'send_list_cache_headers',
       ),
       3 => 
       array (
@@ -1213,17 +1225,19 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Util/Permission.php' => 
     array (
-      0 => 'c9cba93402f0c9dbaca7f1e6a98104a42d4e7038',
+      0 => 'e2b9819a551531675e8a15a9f57351bb45f41b6b',
       1 => 
       array (
         0 => 'app\\util\\permission',
       ),
       2 => 
       array (
-        0 => 'app\\util\\can',
-        1 => 'app\\util\\canonrecord',
-        2 => 'app\\util\\enforce',
-        3 => 'app\\util\\mappathtocheck',
+        0 => 'app\\util\\isobjectlevelenabled',
+        1 => 'app\\util\\can',
+        2 => 'app\\util\\canonrecord',
+        3 => 'app\\util\\enforcerecord',
+        4 => 'app\\util\\enforce',
+        5 => 'app\\util\\mappathtocheck',
       ),
       3 => 
       array (
@@ -1231,7 +1245,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Util/ListSort.php' => 
     array (
-      0 => 'cb00930934f2d4d075439ac7b296656a35baa568',
+      0 => 'fd08ddcdf1e00f6ee6f8b761f52897029a6238b0',
       1 => 
       array (
         0 => 'app\\util\\listsort',
@@ -1246,7 +1260,7 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
     ),
     '/home/jens/PhpstormProjects/peopleandpixel/src/Util/ErrorHandler.php' => 
     array (
-      0 => '174e962f001e6662598bdbee867c0db90c3f834a',
+      0 => '9154784ce09249f3e06eb168a79bc8128c17969d',
       1 => 
       array (
         0 => 'app\\util\\errorhandler',
@@ -1258,8 +1272,8 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
         2 => 'app\\util\\handleerror',
         3 => 'app\\util\\handleexception',
         4 => 'app\\util\\handleshutdown',
-        5 => 'app\\util\\render500',
-        6 => 'app\\util\\isdebug',
+        5 => 'app\\util\\rendererror',
+        6 => 'app\\util\\mapstatusandlevel',
       ),
       3 => 
       array (
@@ -1334,6 +1348,732 @@ return \PHPStan\Cache\CacheItem::__set_state(array(
         0 => 'app\\util\\buildevents',
         1 => 'app\\util\\inrange',
         2 => 'app\\util\\rangesoverlap',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/AdminController.php' => 
+    array (
+      0 => 'f87e751024339f3fbf8205d75dcaa00e340da297',
+      1 => 
+      array (
+        0 => 'app\\controller\\admincontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\health',
+        2 => 'app\\controller\\summarizelogs',
+        3 => 'app\\controller\\dirsize',
+        4 => 'app\\controller\\logslist',
+        5 => 'app\\controller\\logsdownload',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/ContactsDedupeController.php' => 
+    array (
+      0 => '261ab9e6546b9139ee8d0bd82a40438aaba2c8f5',
+      1 => 
+      array (
+        0 => 'app\\controller\\contactsdedupecontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\list',
+        2 => 'app\\controller\\merge',
+        3 => 'app\\controller\\findduplicates',
+        4 => 'app\\controller\\normphone',
+        5 => 'app\\controller\\findbyid',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/HealthController.php' => 
+    array (
+      0 => '1c87483aaa2b141df9ef497eec2ba7c8dfc35878',
+      1 => 
+      array (
+        0 => 'app\\controller\\healthcontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\json',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/EmailController.php' => 
+    array (
+      0 => 'bf1ce9af3d7094650d42ff211fda1b89d8d4ead9',
+      1 => 
+      array (
+        0 => 'app\\controller\\emailcontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\sendtocontact',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/SearchController.php' => 
+    array (
+      0 => '2ea7ea41b3cc7797a5513d53ec008aa67bac3edf',
+      1 => 
+      array (
+        0 => 'app\\controller\\searchcontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\html',
+        2 => 'app\\controller\\json',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/AuditController.php' => 
+    array (
+      0 => '841e714dd1de5098a545ed1fe698e5a36155fad7',
+      1 => 
+      array (
+        0 => 'app\\controller\\auditcontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\list',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/BackupsController.php' => 
+    array (
+      0 => '1169eb588cfd1d5c753ac88c979cdd89e759f0ac',
+      1 => 
+      array (
+        0 => 'app\\controller\\backupscontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\list',
+        2 => 'app\\controller\\create',
+        3 => 'app\\controller\\verify',
+        4 => 'app\\controller\\restore',
+        5 => 'app\\controller\\download',
+        6 => 'app\\controller\\delete',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/BulkController.php' => 
+    array (
+      0 => '0d702fce1ea65bd484b2f9860268f583ec404175',
+      1 => 
+      array (
+        0 => 'app\\controller\\bulkcontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\undo',
+        2 => 'app\\controller\\storefor',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/EmailUiController.php' => 
+    array (
+      0 => 'a4dce39941fd21e55c298a342bb9968d159e2ba8',
+      1 => 
+      array (
+        0 => 'app\\controller\\emailuicontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\inbox',
+        2 => 'app\\controller\\sync',
+        3 => 'app\\controller\\view',
+        4 => 'app\\controller\\addcontact',
+        5 => 'app\\controller\\createtask',
+        6 => 'app\\controller\\createproject',
+        7 => 'app\\controller\\composeform',
+        8 => 'app\\controller\\send',
+        9 => 'app\\controller\\findingestitem',
+        10 => 'app\\controller\\guessnamefromemail',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/DocumentsTemplateController.php' => 
+    array (
+      0 => 'fd06c090f7ff67ae28ec75749a4c4a127a05821e',
+      1 => 
+      array (
+        0 => 'app\\controller\\documentstemplatecontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\list',
+        2 => 'app\\controller\\view',
+        3 => 'app\\controller\\newform',
+        4 => 'app\\controller\\create',
+        5 => 'app\\controller\\editform',
+        6 => 'app\\controller\\update',
+        7 => 'app\\controller\\delete',
+        8 => 'app\\controller\\extractdocumentdata',
+        9 => 'app\\controller\\detectmimefromurl',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/ApiController.php' => 
+    array (
+      0 => 'ebeaf66b1ece4f4af97274f83b2ddc37a45fd799',
+      1 => 
+      array (
+        0 => 'app\\controller\\apicontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\enrichcontact',
+        2 => 'app\\controller\\list',
+        3 => 'app\\controller\\get',
+        4 => 'app\\controller\\create',
+        5 => 'app\\controller\\update',
+        6 => 'app\\controller\\delete',
+        7 => 'app\\controller\\store',
+        8 => 'app\\controller\\findbyid',
+        9 => 'app\\controller\\readjsonbody',
+        10 => 'app\\controller\\json',
+        11 => 'app\\controller\\notfound',
+        12 => 'app\\controller\\badrequest',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/ReportsController.php' => 
+    array (
+      0 => 'a2054185eeab3a26bba0801a2976a19bbb4d3d61',
+      1 => 
+      array (
+        0 => 'app\\controller\\reportscontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\list',
+        2 => 'app\\controller\\newform',
+        3 => 'app\\controller\\create',
+        4 => 'app\\controller\\run',
+        5 => 'app\\controller\\exportcsv',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/CommentsController.php' => 
+    array (
+      0 => 'b1c29ec91b1457e42fa7aaa3f628771530b300ab',
+      1 => 
+      array (
+        0 => 'app\\controller\\commentscontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\add',
+        2 => 'app\\controller\\delete',
+        3 => 'app\\controller\\parsementions',
+        4 => 'app\\controller\\notifymentions',
+        5 => 'app\\controller\\backurl',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Controller/FollowsController.php' => 
+    array (
+      0 => '1002921055a9ac42371102d25d7180fc8371457e',
+      1 => 
+      array (
+        0 => 'app\\controller\\followscontroller',
+      ),
+      2 => 
+      array (
+        0 => 'app\\controller\\__construct',
+        1 => 'app\\controller\\toggle',
+        2 => 'app\\controller\\digest',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Http/ApiAuth.php' => 
+    array (
+      0 => '16494290666b65a83438f2c96eea29f7b2f3ae78',
+      1 => 
+      array (
+        0 => 'app\\http\\apiauth',
+      ),
+      2 => 
+      array (
+        0 => 'app\\http\\enforcetoken',
+        1 => 'app\\http\\getprovidedtoken',
+        2 => 'app\\http\\getallowedtokens',
+        3 => 'app\\http\\ratelimit',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/EmailService.php' => 
+    array (
+      0 => '31cf4080668aaae12ccf978d60db3ea9840fba5c',
+      1 => 
+      array (
+        0 => 'app\\service\\emailservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\send',
+        2 => 'app\\service\\sendmail',
+        3 => 'app\\service\\sendsmtp',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/AuditService.php' => 
+    array (
+      0 => '19b1ac9f9ed900e217e1f8d71d270287bb80c62e',
+      1 => 
+      array (
+        0 => 'app\\service\\auditservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\record',
+        2 => 'app\\service\\slim',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/DataQualityService.php' => 
+    array (
+      0 => 'a6b25b1c7552bec882860c2f593d3bdeabbf8228',
+      1 => 
+      array (
+        0 => 'app\\service\\dataqualityservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\summary',
+        2 => 'app\\service\\isemaildnsenabled',
+        3 => 'app\\service\\hasdns',
+        4 => 'app\\service\\ref',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/AutomationService.php' => 
+    array (
+      0 => 'ca1c4fd8eea663ddb9f85c7d927b0fdc2d688334',
+      1 => 
+      array (
+        0 => 'app\\service\\automationservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\runforevent',
+        2 => 'app\\service\\safeall',
+        3 => 'app\\service\\conditionspass',
+        4 => 'app\\service\\getbypath',
+        5 => 'app\\service\\executeactions',
+        6 => 'app\\service\\actaddcomment',
+        7 => 'app\\service\\actsendemail',
+        8 => 'app\\service\\interpolate',
+        9 => 'app\\service\\flag',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/MetricsService.php' => 
+    array (
+      0 => '2e30bc2fc9bcb948c77f32e008c6c4171c465893',
+      1 => 
+      array (
+        0 => 'app\\service\\metricsservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\isenabled',
+        2 => 'app\\service\\record',
+        3 => 'app\\service\\recordrequest',
+        4 => 'app\\service\\recorderror',
+        5 => 'app\\service\\recordbackup',
+        6 => 'app\\service\\prune',
+        7 => 'app\\service\\summarize',
+        8 => 'app\\service\\filesinrange',
+        9 => 'app\\service\\appendline',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/SearchService.php' => 
+    array (
+      0 => '37572d439fd63ba9b57250a87ee5671f14cb1572',
+      1 => 
+      array (
+        0 => 'app\\service\\searchservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\ensurebuilt',
+        2 => 'app\\service\\search',
+        3 => 'app\\service\\datasignature',
+        4 => 'app\\service\\searchcachefile',
+        5 => 'app\\service\\initsqlitefts',
+        6 => 'app\\service\\ftssearch',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/IcsFeedService.php' => 
+    array (
+      0 => '14478c29c38f9dd88f95e58c8e2627334ea8e8a4',
+      1 => 
+      array (
+        0 => 'app\\service\\icsfeedservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\fetchevents',
+        2 => 'app\\service\\fetchone',
+        3 => 'app\\service\\getcontents',
+        4 => 'app\\service\\parseics',
+        5 => 'app\\service\\eventfromparsed',
+        6 => 'app\\service\\isdateonly',
+        7 => 'app\\service\\normalizedate',
+        8 => 'app\\service\\datemodify',
+        9 => 'app\\service\\formatymd',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/ReportService.php' => 
+    array (
+      0 => '0edfa2c98d346ac8f05d36edcb84f08386c89bd6',
+      1 => 
+      array (
+        0 => 'app\\service\\reportservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\run',
+        2 => 'app\\service\\loaddata',
+        3 => 'app\\service\\applyfilters',
+        4 => 'app\\service\\extractgroupandvalue',
+        5 => 'app\\service\\makecachekey',
+        6 => 'app\\service\\cachedir',
+        7 => 'app\\service\\cacheget',
+        8 => 'app\\service\\cacheset',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/EnrichmentService.php' => 
+    array (
+      0 => '04da3b5aa8e8b94a22b95f66bb50d9193f966dc8',
+      1 => 
+      array (
+        0 => 'app\\service\\enrichmentservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\isenabled',
+        2 => 'app\\service\\enrichcontact',
+        3 => 'app\\service\\maskemail',
+        4 => 'app\\service\\gravatarenabled',
+        5 => 'app\\service\\gravatarurl',
+        6 => 'app\\service\\hasclearbit',
+        7 => 'app\\service\\fetchclearbit',
+        8 => 'app\\service\\listmissingcontains',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/BackupService.php' => 
+    array (
+      0 => '250ba1799d180772bd1ccf42a59bea67436e9f00',
+      1 => 
+      array (
+        0 => 'app\\service\\backupservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\getbackupdir',
+        2 => 'app\\service\\createsnapshot',
+        3 => 'app\\service\\listsnapshots',
+        4 => 'app\\service\\verifysnapshot',
+        5 => 'app\\service\\restoresnapshot',
+        6 => 'app\\service\\deletesnapshot',
+        7 => 'app\\service\\getretention',
+        8 => 'app\\service\\enforceretention',
+        9 => 'app\\service\\writeatomic',
+        10 => 'app\\service\\readmanifest',
+        11 => 'app\\service\\resolvepath',
+        12 => 'app\\service\\rrmdir',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/WebhookService.php' => 
+    array (
+      0 => '9355e521d53e28fa1ab80385456114632a148d45',
+      1 => 
+      array (
+        0 => 'app\\service\\webhookservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\emit',
+        2 => 'app\\service\\catalog',
+        3 => 'app\\service\\retrydue',
+        4 => 'app\\service\\endpoints',
+        5 => 'app\\service\\catalogenabled',
+        6 => 'app\\service\\postjson',
+        7 => 'app\\service\\enqueueretry',
+        8 => 'app\\service\\reschedule',
+        9 => 'app\\service\\backoffseconds',
+        10 => 'app\\service\\queuepath',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Service/ImapIngestService.php' => 
+    array (
+      0 => '205ff683e39d19e5008d18c8ae181a425653c630',
+      1 => 
+      array (
+        0 => 'app\\service\\imapingestservice',
+      ),
+      2 => 
+      array (
+        0 => 'app\\service\\__construct',
+        1 => 'app\\service\\isenabled',
+        2 => 'app\\service\\ingestonce',
+        3 => 'app\\service\\appendjson',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Exception/BadRequestException.php' => 
+    array (
+      0 => 'b9a97fa57856ecd7367d764f132f03b0e99ba1e5',
+      1 => 
+      array (
+        0 => 'app\\domain\\exception\\badrequestexception',
+      ),
+      2 => 
+      array (
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Exception/ConflictException.php' => 
+    array (
+      0 => '4db52538e160e54adb16d3c50bf28286de7662e0',
+      1 => 
+      array (
+        0 => 'app\\domain\\exception\\conflictexception',
+      ),
+      2 => 
+      array (
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Exception/DomainException.php' => 
+    array (
+      0 => '1d886aba9506e830b88f6976304e6f25b7d92301',
+      1 => 
+      array (
+        0 => 'app\\domain\\exception\\domainexception',
+      ),
+      2 => 
+      array (
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Exception/ValidationException.php' => 
+    array (
+      0 => '28fe20851a193bcfb1354b9c3d03903ad4a2dc12',
+      1 => 
+      array (
+        0 => 'app\\domain\\exception\\validationexception',
+      ),
+      2 => 
+      array (
+        0 => 'app\\domain\\exception\\__construct',
+        1 => 'app\\domain\\exception\\geterrors',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Exception/UnauthorizedException.php' => 
+    array (
+      0 => 'e05fc77300f25c1ad1d3fe81db144f524e4b7409',
+      1 => 
+      array (
+        0 => 'app\\domain\\exception\\unauthorizedexception',
+      ),
+      2 => 
+      array (
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Exception/ForbiddenException.php' => 
+    array (
+      0 => 'c404f0db36e2959097ebe529457d4d2311cc13f2',
+      1 => 
+      array (
+        0 => 'app\\domain\\exception\\forbiddenexception',
+      ),
+      2 => 
+      array (
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Domain/Exception/NotFoundException.php' => 
+    array (
+      0 => '2df9df31b69e355100599ba3060a414305760a96',
+      1 => 
+      array (
+        0 => 'app\\domain\\exception\\notfoundexception',
+      ),
+      2 => 
+      array (
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Util/EnvEditor.php' => 
+    array (
+      0 => '80f29a5dd762476068054b302111c95c6f00d1c8',
+      1 => 
+      array (
+        0 => 'app\\util\\enveditor',
+      ),
+      2 => 
+      array (
+        0 => 'app\\util\\readlines',
+        1 => 'app\\util\\update',
+        2 => 'app\\util\\backup',
+        3 => 'app\\util\\encodevalue',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Util/Phone.php' => 
+    array (
+      0 => '7423656814321fa2cbd3e888103a0e41f745ffac',
+      1 => 
+      array (
+        0 => 'app\\util\\phone',
+      ),
+      2 => 
+      array (
+        0 => 'app\\util\\normalizee164',
+        1 => 'app\\util\\ise164',
+        2 => 'app\\util\\envdefaultcountry',
+        3 => 'app\\util\\countrycallingcode',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Util/RateLimit.php' => 
+    array (
+      0 => '59026d58684624f0dd9fe91bb852b00c9fdff940',
+      1 => 
+      array (
+        0 => 'app\\util\\ratelimit',
+      ),
+      2 => 
+      array (
+        0 => 'app\\util\\allow',
+      ),
+      3 => 
+      array (
+      ),
+    ),
+    '/home/jens/PhpstormProjects/peopleandpixel/src/Util/Totp.php' => 
+    array (
+      0 => '4b906ee522981c4989221e5aade9c4f1d69575cc',
+      1 => 
+      array (
+        0 => 'app\\util\\totp',
+      ),
+      2 => 
+      array (
+        0 => 'app\\util\\currentcode',
+        1 => 'app\\util\\verify',
+        2 => 'app\\util\\hotp',
+        3 => 'app\\util\\base32decode',
       ),
       3 => 
       array (

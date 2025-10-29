@@ -2,6 +2,6 @@
 
 // variadic-method-App\I18n-t-/home/jens/PhpstormProjects/peopleandpixel/src/I18n.php
 return \PHPStan\Cache\CacheItem::__set_state(array(
-   'variableKey' => '1758693986-v4',
+   'variableKey' => '1761383242-v4',
    'data' => false,
 ));

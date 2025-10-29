@@ -2,6 +2,6 @@
 
 // variadic-method-App\Controller\ProjectsController-injectOptions-/home/jens/PhpstormProjects/peopleandpixel/src/Controller/ProjectsController.php
 return \PHPStan\Cache\CacheItem::__set_state(array(
-   'variableKey' => '1760976905-v4',
+   'variableKey' => '1761383242-v4',
    'data' => false,
 ));
